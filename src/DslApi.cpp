@@ -403,7 +403,8 @@ DslReturnType dsl_display_type_source_dimensions_new(const wchar_t* name,
 // TODO: leaving this implementation as is without including in the header file for now.
 // Needs to be completed and tested for all source types.
 DslReturnType dsl_display_type_source_frame_rate_new(const wchar_t* name, 
-    uint x_offset, uint y_offset, const wchar_t* font, boolean has_bg_color, const wchar_t* bg_color)
+    uint x_offset, uint y_offset, const wchar_t* font, boolean has_bg_color, 
+    const wchar_t* bg_color)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(font);
@@ -425,14 +426,31 @@ DslReturnType dsl_display_type_source_frame_rate_new(const wchar_t* name,
         x_offset, y_offset, cstrFont.c_str(), has_bg_color, cstrBgColor.c_str());
 }
 
-DslReturnType dsl_display_type_meta_add(const wchar_t* name, void* display_meta, void* frame_meta)
+DslReturnType dsl_display_type_rgba_text_shadow_add(const wchar_t* name, 
+    uint x_offset, uint y_offset, const wchar_t* color)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(color);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    std::wstring wstrColor(color);
+    std::string cstrColor(wstrColor.begin(), wstrColor.end());
+
+    return DSL::Services::GetServices()->DisplayRgbaTextShadowAdd(cstrName.c_str(), 
+        x_offset, y_offset, cstrColor.c_str());
+}
+    
+DslReturnType dsl_display_type_meta_add(const wchar_t* name, 
+    void* display_meta, void* frame_meta)
 {
     RETURN_IF_PARAM_IS_NULL(name);
 
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
 
-    return DSL::Services::GetServices()->DisplayTypeMetaAdd(cstrName.c_str(), display_meta, frame_meta);
+    return DSL::Services::GetServices()->DisplayTypeMetaAdd(cstrName.c_str(), 
+        display_meta, frame_meta);
 }
     
 DslReturnType dsl_display_type_delete(const wchar_t* name)
@@ -3720,34 +3738,132 @@ DslReturnType dsl_tap_record_mailer_remove(const wchar_t* name,
         cstrName.c_str(), cstrMailer.c_str());
 }
 
-DslReturnType dsl_segvisual_new(const wchar_t* name, uint width, uint height)
+DslReturnType dsl_preproc_new(const wchar_t* name, 
+    const wchar_t* config_file)
 {
     RETURN_IF_PARAM_IS_NULL(name);
-
+    RETURN_IF_PARAM_IS_NULL(config_file);
+    
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
+    std::wstring wstrConfigFile(config_file);
+    std::string cstrConfigFile(wstrConfigFile.begin(), wstrConfigFile.end());
 
-    return DSL::Services::GetServices()->SegVisualNew(cstrName.c_str(), width, height);
+    return DSL::Services::GetServices()->PreprocNew(
+        cstrName.c_str(), cstrConfigFile.c_str());
 }
 
-DslReturnType dsl_segvisual_dimensions_get(const wchar_t* name, uint* width, uint* height)
+DslReturnType dsl_preproc_config_file_get(const wchar_t* name, 
+    const wchar_t** config_file)
 {
     RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(config_file);
 
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
 
-    return DSL::Services::GetServices()->SegVisualDimensionsGet(cstrName.c_str(), width, height);
+    const char* cConfig;
+    static std::string cstrConfig;
+    static std::wstring wcstrConfig;
+    
+    uint retval = DSL::Services::GetServices()->PreprocConfigFileGet(cstrName.c_str(), 
+        &cConfig);
+    if (retval ==  DSL_RESULT_SUCCESS)
+    {
+        cstrConfig.assign(cConfig);
+        wcstrConfig.assign(cstrConfig.begin(), cstrConfig.end());
+        *config_file = wcstrConfig.c_str();
+    }
+    return retval;
 }
 
-DslReturnType dsl_segvisual_dimensions_set(const wchar_t* name, uint width, uint height)
+DslReturnType dsl_preproc_config_file_set(const wchar_t* name, 
+    const wchar_t* config_file)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(config_file);
+    
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    std::wstring wstrConfig(config_file);
+    std::string cstrConfig(wstrConfig.begin(), wstrConfig.end());
+
+    return DSL::Services::GetServices()->PreprocConfigFileSet(cstrName.c_str(), 
+        cstrConfig.c_str());
+}
+
+DslReturnType dsl_preproc_enabled_get(const wchar_t* name, 
+    boolean* enabled)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(enabled);
+    
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->PreprocEnabledGet(cstrName.c_str(), 
+        enabled);
+}
+
+DslReturnType dsl_preproc_enabled_set(const wchar_t* name, 
+    boolean enabled)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->PreprocEnabledSet(cstrName.c_str(), 
+        enabled);
+}
+
+DslReturnType dsl_preproc_unique_id_get(const wchar_t* name, 
+    uint* id)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(id);
+    
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->PreprocUniqueIdGet(cstrName.c_str(), 
+        id);
+}
+
+DslReturnType dsl_segvisual_new(const wchar_t* name, 
+    uint width, uint height)
 {
     RETURN_IF_PARAM_IS_NULL(name);
 
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
 
-    return DSL::Services::GetServices()->SegVisualDimensionsSet(cstrName.c_str(), width, height);
+    return DSL::Services::GetServices()->SegVisualNew(cstrName.c_str(), 
+        width, height);
+}
+
+DslReturnType dsl_segvisual_dimensions_get(const wchar_t* name, 
+    uint* width, uint* height)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->SegVisualDimensionsGet(cstrName.c_str(), 
+        width, height);
+}
+
+DslReturnType dsl_segvisual_dimensions_set(const wchar_t* name, 
+    uint width, uint height)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->SegVisualDimensionsSet(cstrName.c_str(), 
+        width, height);
 }
 
 DslReturnType dsl_segvisual_pph_add(const wchar_t* name, const wchar_t* handler)
@@ -3760,7 +3876,8 @@ DslReturnType dsl_segvisual_pph_add(const wchar_t* name, const wchar_t* handler)
     std::wstring wstrHandler(handler);
     std::string cstrHandler(wstrHandler.begin(), wstrHandler.end());
     
-    return DSL::Services::GetServices()->SegVisualPphAdd(cstrName.c_str(), cstrHandler.c_str());
+    return DSL::Services::GetServices()->SegVisualPphAdd(cstrName.c_str(), 
+        cstrHandler.c_str());
 }
 
 DslReturnType dsl_segvisual_pph_remove(const wchar_t* name, const wchar_t* handler)
@@ -3773,11 +3890,12 @@ DslReturnType dsl_segvisual_pph_remove(const wchar_t* name, const wchar_t* handl
     std::wstring wstrHandler(handler);
     std::string cstrHandler(wstrHandler.begin(), wstrHandler.end());
     
-    return DSL::Services::GetServices()->SegVisualPphRemove(cstrName.c_str(), cstrHandler.c_str());
+    return DSL::Services::GetServices()->SegVisualPphRemove(cstrName.c_str(), 
+        cstrHandler.c_str());
 }
 
-DslReturnType dsl_infer_gie_primary_new(const wchar_t* name, const wchar_t* infer_config_file,
-    const wchar_t* model_engine_file, uint interval)
+DslReturnType dsl_infer_gie_primary_new(const wchar_t* name, 
+    const wchar_t* infer_config_file, const wchar_t* model_engine_file, uint interval)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(infer_config_file);
@@ -3793,8 +3911,8 @@ DslReturnType dsl_infer_gie_primary_new(const wchar_t* name, const wchar_t* infe
         std::wstring wstrEngine(model_engine_file);
         cstrEngine.assign(wstrEngine.begin(), wstrEngine.end());
     }
-    return DSL::Services::GetServices()->PrimaryGieNew(cstrName.c_str(), cstrConfig.c_str(),
-        cstrEngine.c_str(), interval);
+    return DSL::Services::GetServices()->InferPrimaryGieNew(cstrName.c_str(), 
+        cstrConfig.c_str(), cstrEngine.c_str(), interval);
 }
 
 DslReturnType dsl_infer_tis_primary_new(const wchar_t* name, 
@@ -3808,12 +3926,13 @@ DslReturnType dsl_infer_tis_primary_new(const wchar_t* name,
     std::wstring wstrConfig(infer_config_file);
     std::string cstrConfig(wstrConfig.begin(), wstrConfig.end());
     
-    return DSL::Services::GetServices()->PrimaryTisNew(cstrName.c_str(), 
+    return DSL::Services::GetServices()->InferPrimaryTisNew(cstrName.c_str(), 
         cstrConfig.c_str(), interval);
 }
 
-DslReturnType dsl_infer_gie_secondary_new(const wchar_t* name, const wchar_t* infer_config_file,
-    const wchar_t* model_engine_file, const wchar_t* infer_on_gie, uint interval)
+DslReturnType dsl_infer_gie_secondary_new(const wchar_t* name, 
+    const wchar_t* infer_config_file, const wchar_t* model_engine_file, 
+    const wchar_t* infer_on_gie, uint interval)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(infer_config_file);
@@ -3832,11 +3951,12 @@ DslReturnType dsl_infer_gie_secondary_new(const wchar_t* name, const wchar_t* in
         std::wstring wstrEngine(model_engine_file);
         cstrEngine.assign(wstrEngine.begin(), wstrEngine.end());
     }
-    return DSL::Services::GetServices()->SecondaryGieNew(cstrName.c_str(), cstrConfig.c_str(),
-        cstrEngine.c_str(), cstrInferOnGie.c_str(), interval);
+    return DSL::Services::GetServices()->InferSecondaryGieNew(cstrName.c_str(), 
+        cstrConfig.c_str(), cstrEngine.c_str(), cstrInferOnGie.c_str(), interval);
 }
 
-DslReturnType dsl_infer_tis_secondary_new(const wchar_t* name, const wchar_t* infer_config_file,
+DslReturnType dsl_infer_tis_secondary_new(const wchar_t* name, 
+    const wchar_t* infer_config_file,
     const wchar_t* infer_on_tis, uint interval)
 {
     RETURN_IF_PARAM_IS_NULL(name);
@@ -3850,8 +3970,29 @@ DslReturnType dsl_infer_tis_secondary_new(const wchar_t* name, const wchar_t* in
     std::wstring wstrInferOnTis(infer_on_tis);
     std::string cstrInferOnTis(wstrInferOnTis.begin(), wstrInferOnTis.end());
 
-    return DSL::Services::GetServices()->SecondaryTisNew(cstrName.c_str(), cstrConfig.c_str(),
-        cstrInferOnTis.c_str(), interval);
+    return DSL::Services::GetServices()->InferSecondaryTisNew(cstrName.c_str(), 
+        cstrConfig.c_str(), cstrInferOnTis.c_str(), interval);
+}
+
+DslReturnType dsl_infer_batch_size_get(const wchar_t* name, uint* size)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(size);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->InferBatchSizeGet(cstrName.c_str(), size);
+}
+
+DslReturnType dsl_infer_batch_size_set(const wchar_t* name, uint size)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->InferBatchSizeSet(cstrName.c_str(), size);
 }
 
 DslReturnType dsl_infer_unique_id_get(const wchar_t* name, uint* id)
@@ -3875,7 +4016,8 @@ DslReturnType dsl_infer_primary_pph_add(const wchar_t* name,
     std::wstring wstrHandler(handler);
     std::string cstrHandler(wstrHandler.begin(), wstrHandler.end());
     
-    return DSL::Services::GetServices()->PrimaryInferPphAdd(cstrName.c_str(), cstrHandler.c_str(), pad);
+    return DSL::Services::GetServices()->InferPrimaryPphAdd(cstrName.c_str(), 
+        cstrHandler.c_str(), pad);
 }
 
 DslReturnType dsl_infer_primary_pph_remove(const wchar_t* name,
@@ -3889,10 +4031,12 @@ DslReturnType dsl_infer_primary_pph_remove(const wchar_t* name,
     std::wstring wstrHandler(handler);
     std::string cstrHandler(wstrHandler.begin(), wstrHandler.end());
     
-    return DSL::Services::GetServices()->PrimaryInferPphRemove(cstrName.c_str(), cstrHandler.c_str(), pad);
+    return DSL::Services::GetServices()->InferPrimaryPphRemove(cstrName.c_str(), 
+        cstrHandler.c_str(), pad);
 }
 
-DslReturnType dsl_infer_config_file_get(const wchar_t* name, const wchar_t** infer_config_file)
+DslReturnType dsl_infer_config_file_get(const wchar_t* name, 
+    const wchar_t** infer_config_file)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(infer_config_file);
@@ -3904,7 +4048,8 @@ DslReturnType dsl_infer_config_file_get(const wchar_t* name, const wchar_t** inf
     static std::string cstrConfig;
     static std::wstring wcstrConfig;
     
-    uint retval = DSL::Services::GetServices()->InferConfigFileGet(cstrName.c_str(), &cConfig);
+    uint retval = DSL::Services::GetServices()->InferConfigFileGet(
+        cstrName.c_str(), &cConfig);
     if (retval ==  DSL_RESULT_SUCCESS)
     {
         cstrConfig.assign(cConfig);
@@ -3914,7 +4059,8 @@ DslReturnType dsl_infer_config_file_get(const wchar_t* name, const wchar_t** inf
     return retval;
 }
 
-DslReturnType dsl_infer_config_file_set(const wchar_t* name, const wchar_t* infer_config_file)
+DslReturnType dsl_infer_config_file_set(const wchar_t* name, 
+    const wchar_t* infer_config_file)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(infer_config_file);
@@ -3924,10 +4070,12 @@ DslReturnType dsl_infer_config_file_set(const wchar_t* name, const wchar_t* infe
     std::wstring wstrConfig(infer_config_file);
     std::string cstrConfig(wstrConfig.begin(), wstrConfig.end());
 
-    return DSL::Services::GetServices()->InferConfigFileSet(cstrName.c_str(), cstrConfig.c_str());
+    return DSL::Services::GetServices()->InferConfigFileSet(cstrName.c_str(), 
+        cstrConfig.c_str());
 }
 
-DslReturnType dsl_gie_model_engine_file_get(const wchar_t* name, const wchar_t** model_engine_file)
+DslReturnType dsl_infer_gie_model_engine_file_get(const wchar_t* name, 
+    const wchar_t** model_engine_file)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(model_engine_file);
@@ -3939,7 +4087,8 @@ DslReturnType dsl_gie_model_engine_file_get(const wchar_t* name, const wchar_t**
     static std::string cstrEngine;
     static std::wstring wcstrEngine;
     
-    uint retval = DSL::Services::GetServices()->GieModelEngineFileGet(cstrName.c_str(), &cEngine);
+    uint retval = DSL::Services::GetServices()->InferGieModelEngineFileGet(
+        cstrName.c_str(), &cEngine);
     if (retval ==  DSL_RESULT_SUCCESS)
     {
         cstrEngine.assign(cEngine);
@@ -3949,7 +4098,8 @@ DslReturnType dsl_gie_model_engine_file_get(const wchar_t* name, const wchar_t**
     return retval;
 }
  
-DslReturnType dsl_gie_model_engine_file_set(const wchar_t* name, const wchar_t* model_engine_file)
+DslReturnType dsl_infer_gie_model_engine_file_set(const wchar_t* name, 
+    const wchar_t* model_engine_file)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(model_engine_file);
@@ -3959,12 +4109,40 @@ DslReturnType dsl_gie_model_engine_file_set(const wchar_t* name, const wchar_t* 
     std::wstring wstrEngine(model_engine_file);
     std::string cstrEngine(wstrEngine.begin(), wstrEngine.end());
 
-    return DSL::Services::GetServices()->GieModelEngineFileSet(cstrName.c_str(), cstrEngine.c_str());
+    return DSL::Services::GetServices()->InferGieModelEngineFileSet(
+        cstrName.c_str(), cstrEngine.c_str());
 }
 
+DslReturnType dsl_infer_gie_tensor_meta_settings_get(const wchar_t* name, 
+    boolean* input_enabled, boolean* output_enabled)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(input_enabled);
+    RETURN_IF_PARAM_IS_NULL(output_enabled);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->InferGieTensorMetaSettingsGet(
+        cstrName.c_str(), input_enabled, output_enabled);
+}
+    
+DslReturnType dsl_infer_gie_tensor_meta_settings_set(const wchar_t* name, 
+    boolean input_enabled, boolean output_enabled)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->InferGieTensorMetaSettingsSet(
+        cstrName.c_str(), input_enabled, output_enabled);
+}
+    
 DslReturnType dsl_infer_interval_get(const wchar_t* name, uint* interval)
 {
     RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(interval);
 
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
