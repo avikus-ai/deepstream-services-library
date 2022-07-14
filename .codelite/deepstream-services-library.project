@@ -146,6 +146,7 @@
       <File Name="../test/api/DslOdeAccumulatorApiTest.cpp"/>
       <File Name="../test/api/DslOdeHeatMapperApiTest.cpp"/>
       <File Name="../test/api/DslPreprocApiText.cpp"/>
+      <File Name="../test/api/DslInfoApiTest.cpp.tmp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="unit">
       <File Name="../test/unit/DslDemuxerAndTeeUnitTest.cpp"/>
@@ -205,6 +206,7 @@
       <File Name="../examples/cpp/ode_occurrence_trigger_with_mot_challenge_file_action.cpp"/>
       <File Name="../examples/cpp/1file_ptis_ktl_osd_window.cpp"/>
       <File Name="../examples/cpp/1file_preproc_pgie_iou_osd_window.cpp"/>
+      <File Name="../examples/cpp/non_maximum_suppression.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="python">
       <File Name="../examples/python/1csi_live_pgie_demuxer_osd_overlay_rtsp_h254.py"/>
@@ -268,7 +270,6 @@
       <File Name="../examples/tkinter/tkapp.py"/>
       <File Name="../examples/tkinter/tkapp_window.py"/>
     </VirtualDirectory>
-    <File Name="../test/api/DslInfoApiTest.cpp.tmp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
