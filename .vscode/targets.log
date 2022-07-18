@@ -1,0 +1,1569 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.1
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2014 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Mon Jul 18 22:52:41 2022
+
+# Variables
+
+# 'override' directive
+GNUMAKEFLAGS := 
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# automatic
+?F = $(notdir $?)
+# makefile (from 'Makefile', line 142)
+PKGS := gstreamer-1.0 gstreamer-video-1.0 gstreamer-rtsp-server-1.0 x11 opencv4
+# environment
+DESKTOP_SESSION = ubuntu
+# default
+.SHELLFLAGS := -c
+# makefile (from 'Makefile', line 47)
+INC_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/sources/includes
+# environment
+XDG_SESSION_TYPE = x11
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# environment
+IM_CONFIG_PHASE = 2
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+XAUTHORITY = /run/user/1000/gdm/Xauthority
+# environment
+GDMSESSION = ubuntu
+# environment
+XMODIFIERS = @im=ibus
+# makefile
+CURDIR := /home/yyj-avikus/contrib/deepstream-services-library
+# makefile
+SHELL = /bin/sh
+# environment
+VTE_VERSION = 5202
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
+# environment
+_ = /usr/bin/code
+# makefile (from 'Makefile', line 155)
+CFLAGS = -I$(INC_INSTALL_DIR) -std=$(CXX_VERSION) -I$(SRC_INSTALL_DIR)/apps/apps-common/includes -I/opt/include -I/usr/include -I/usr/include/gstreamer-$(GSTREAMER_VERSION) -I/usr/include/glib-$(GLIB_VERSION) -I/usr/include/glib-$(GLIB_VERSION)/glib -I/usr/lib/$(TARGET_DEVICE)-linux-gnu/glib-$(GLIB_VERSION)/include -I/usr/local/cuda/targets/$(TARGET_DEVICE)-linux/include -I./src -I./src/thirdparty -I./test -I./test/api -DDSL_VERSION=$(DSL_VERSION) -DDSL_LOGGER_IMP='"DslLogGst.h"' -DGSTREAMER_SUB_VERSION=$(GSTREAMER_SUB_VERSION) -DBUILD_MESSAGE_SINK=$(BUILD_MESSAGE_SINK) -DNVDS_DCF_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvdcf.so"' -DNVDS_KLT_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_klt.so"' -DNVDS_IOU_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_iou.so"' -DNVDS_MOT_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvmultiobjecttracker.so"' -DNVDS_AMQP_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_amqp_proto.so"' -DNVDS_AZURE_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_azure_proto.so"' -DNVDS_AZURE_EDGE_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_azure_edge_proto"' -DNVDS_KAFKA_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_kafka_proto.so"' -DNVDS_REDIS_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_redis_proto.so"' -fPIC  `geos-config --cflags`	 `pkg-config --cflags $(PKGS)`
+# makefile (from 'Makefile', line 40)
+GSTREAMER_SUB_VERSION := 14
+# environment
+XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST :=  Makefile
+# automatic
+@F = $(notdir $@)
+# environment
+GIO_LAUNCHED_DESKTOP_FILE = /etc/xdg/autostart/org.gnome.SettingsDaemon.MediaKeys.desktop
+# environment
+USERNAME = yyj-avikus
+# environment
+MAKELEVEL := 0
+# environment
+XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# makefile (from 'Makefile', line 43)
+LIBSOUP_VERSION := 2.4
+# makefile (from 'Makefile', line 73)
+ 
+OBJS := ./src/DslGeosTypes.o ./src/DslServicesInfo.o ./src/DslServicesOdeTrigger.o ./src/DslServicesTracker.o ./src/DslApi.o ./src/DslTilerBintr.o ./src/DslServicesOdeAction.o ./src/DslRecordMgr.o ./src/DslOdeHeatMapper.o ./src/DslPreprocBintr.o ./src/DslInferBintr.o ./src/DslServicesTee.o ./src/DslServicesOdeHeatMapper.o ./src/DslServicesOdeArea.o ./src/DslPadProbeHandler.o ./src/DslOsdBintr.o ./src/DslServicesSource.o ./src/DslSegVisualBintr.o ./src/DslServicesMessageBroker.o ./src/DslPipelineBintr.o ./src/DslOdeArea.o ./src/DslMultiComponentsBintr.o ./src/DslServicesBranch.o ./src/DslOfvBintr.o ./src/DslServicesMailer.o ./src/DslOdeAccumulator.o ./src/DslServicesSink.o ./src/DslSinkBintr.o ./src/DslServicesPipeline.o ./src/DslPipelineXWinMgr.o ./src/DslDewarperBintr.o ./src/DslPipelineSourcesBintr.o ./src/DslMailer.o ./src/DslServicesPlayer.o ./src/DslServicesOdeAccumulator.o ./src/DslPipelineSInfersBintr.o ./src/DslMessageBroker.o ./src/DslServicesDisplayType.o ./src/DslServicesInfer.o ./src/DslDisplayTypes.o ./src/DslPipelineStateMgr.o ./src/DslOdeTrackedObject.o ./src/DslServicesTiler.o ./src/DslOdeAction.o ./src/DslPlayerBintr.o ./src/DslOdeTrigger.o ./src/DslTrackerBintr.o ./src/DslServicesPph.o ./src/DslBranchBintr.o ./src/DslServicesOsd.o ./src/DslServicesComponent.o ./src/DslSourceBintr.o ./src/DslServices.o ./src/DslTapBintr.o ./src/DslServicesPreproc.o ./src/thirdparty/randomcolor.o ./test/DslCatch.o ./test/api/DslBranchMgtApiTest.o ./test/api/DslImageSourceBehaviorTest.o ./test/api/DslOdeTriggerApiTest.o ./test/api/DslOsdApiTest.o ./test/api/DslPipelineSourcesApiTest.o ./test/api/DslPipelineMgtApiTest.o ./test/api/DslDisplayTypesApiTest.o ./test/api/DslPipelineXWindowApiTest.o ./test/api/DslPipelinePlayTrackerTest.o ./test/api/DslPreprocApiText.o ./test/api/DslOdeBehaviorTest.o ./test/api/DslPipelineTilerApiTest.o ./test/api/DslPlayerApiTest.o ./test/api/DslMessageSinkBehaviorTest.o ./test/api/DslTrackerApiTest.o ./test/api/DslOdeActionApiTest.o ./test/api/DslSinkMessageApiTest.o ./test/api/DslPipelineCbApiTest.o ./test/api/DslSourceApiTest.o ./test/api/DslPipelineMainLoopTest.o ./test/api/DslOdeHeatMapperApiTest.o ./test/api/DslPipelineDbgApiTest.o ./test/api/DslOdeAccumulatorApiTest.o ./test/api/DslInferApiTest.o ./test/api/DslSinkApiTest.o ./test/api/DslTilerApiTest.o ./test/api/DslComponentMgt.o ./test/api/DslPipelineStateMgt.o ./test/api/DslDisplayTypesBehaviorTest.o ./test/api/DslTeeApiTest.o ./test/api/DslTapApiTest.o ./test/api/DslImageSourceApiTest.o ./test/api/DslPipelinePlayComponentsTest.o ./test/api/DslSegVisualApiTest.o ./test/api/DslMessageBrokerApiTest.o ./test/api/DslMailerApiTest.o ./test/api/DslCrossTriggerExampleTest.o ./test/api/DslPphApiTest.o ./test/api/DslOdeAreaApiTest.o ./test/api/DslPipelineStreamMuxerApiTest.o ./test/unit/DslOdeTrackedObjectUnitTest.o ./test/unit/DslGeosTypesUnitTest.o ./test/unit/DslPipelineSInfersUnitTest.o ./test/unit/DslPadProbeHandlerUnitTest.o ./test/unit/DslNodetrUnitTest.o ./test/unit/DslDewarperUnitTest.o ./test/unit/DslMailerUnitTest.o ./test/unit/DslPipelineSourcesUnitTest.o ./test/unit/DslOdeAreaUnitTest.o ./test/unit/DslSourceUnitTest.o ./test/unit/DslDisplayTypesUnitTest.o ./test/unit/DslSecondaryGieUnitTest.o ./test/unit/DslMessageBrokerAzureDeviceClientUnitTest.o ./test/unit/DslPrimaryGieUnitTest.o ./test/unit/DslTapUnitTest.o ./test/unit/DslOdeTriggerUnitTest.o ./test/unit/DslSinkUnitTest.o ./test/unit/DslOdeAccumulatorUnitTest.o ./test/unit/DslPlayerUnitTest.o ./test/unit/DslPipelineUnitTest.o ./test/unit/DslOdeActionUnitTest.o ./test/unit/DslTrackerUnitTest.o ./test/unit/DslOsdUnitTest.o ./test/unit/DslPipelineMainLoopUnitTest.o ./test/unit/DslMsgSinkUnitTest.o ./test/unit/DslPreprocUnitTest.o ./test/unit/DslMultiSinksUnitTest.o ./test/unit/DslTilerUnitTest.o ./test/unit/DslSegVisualUnitTest.o ./test/unit/DslElementrUnitTest.o ./test/unit/DslOfvUnitTest.o ./test/unit/DslDemuxerAndTeeUnitTest.o ./test/unit/DslOdeHeatMapperUnitTest.o
+# environment
+TERMINATOR_UUID = urn:uuid:6a96f55c-a073-43a6-a61c-0d7425d45445
+# environment
+CLUTTER_IM_MODULE = xim
+# makefile (from 'Makefile', line 58)
+INCS = $(wildcard ./src/*.h) $(wildcard ./src/thirdparty/*.h) $(wildcard ./test/*.hpp)
+# environment
+LESSOPEN = | /usr/bin/lesspipe %s
+# environment
+LC_NAME = ko_KR.UTF-8
+# environment
+VSCODE_CWD = /home/yyj-avikus/contrib/deepstream-services-library
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# environment
+PATH = /home/yyj-avikus/anaconda3/bin:/home/yyj-avikus/anaconda3/condabin:/usr/local/cuda/bin:/home/yyj-avikus/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+# makefile (from 'Makefile', line 165)
+PCH_OUT = ./src/Dsl.h.gch
+# environment
+GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
+# environment
+SESSION_MANAGER = local/yyj-avikus:@/tmp/.ICE-unix/2188,unix/yyj-avikus:/tmp/.ICE-unix/2188
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# environment
+TEXTDOMAIN = im-config
+# environment
+CONDA_PREFIX = /home/yyj-avikus/anaconda3
+# environment
+XDG_MENU_PREFIX = gnome-
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# makefile (from 'Makefile', line 29)
+LIB := libdsl
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
+# environment
+LS_COLORS = rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:
+# environment
+XDG_SESSION_DESKTOP = ubuntu
+# environment
+SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
+# environment
+GIO_LAUNCHED_DESKTOP_FILE_PID = 2488
+# automatic
+%F = $(notdir $%)
+# makefile (from 'Makefile', line 46)
+SRC_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/sources
+# environment
+DISPLAY = :1
+# environment
+CONDA_EXE = /home/yyj-avikus/anaconda3/bin/conda
+# makefile (from 'Makefile', line 38)
+GLIB_VERSION := 2.0
+# environment
+GTK_IM_MODULE = ibus
+# environment
+PWD = /home/yyj-avikus/contrib/deepstream-services-library
+# makefile (from 'Makefile', line 67)
+TEST_OBJS = $(wildcard ./test/api/*.o) $(wildcard ./test/unit/*.o)
+# makefile (from 'Makefile', line 28)
+APP := dsl-test-app.exe
+# environment
+XDG_SEAT = seat0
+# environment
+SSH_AGENT_PID = 2265
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
+# environment
+GTK_MODULES = gail:atk-bridge
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/yyj-avikus
+# environment
+LD_LIBRARY_PATH = /usr/local/cuda/lib64:
+# environment
+LESSCLOSE = /usr/bin/lesspipe %s %s
+# environment
+VSCODE_CLI = 1
+# environment
+VSCODE_CODE_CACHE_PATH = /home/yyj-avikus/.config/Code/CachedData/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a
+# environment
+LOGNAME = yyj-avikus
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# environment
+CONDA_PROMPT_MODIFIER = (base) 
+# automatic
++F = $(notdir $+)
+# environment
+ELECTRON_NO_ATTACH_CONSOLE = 1
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+MAKE_VERSION := 4.1
+# environment
+GNOME_DESKTOP_SESSION_ID = this-is-deprecated
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+XDG_VTNR = 2
+# makefile (from 'Makefile', line 164)
+PCH_INC = ./src/Dsl.h
+# environment
+LC_TIME = ko_KR.UTF-8
+# environment
+CONDA_DEFAULT_ENV = base
+# environment
+COLORTERM = truecolor
+# default
+MAKE = $(MAKE_COMMAND)
+# default
+MAKECMDGOALS := all
+# environment
+QT_IM_MODULE = ibus
+# makefile (from 'Makefile', line 54)
+SRCS = $(wildcard ./src/*.cpp) $(wildcard ./src/thirdparty/*.cpp) $(wildcard ./test/*.cpp) $(wildcard ./test/api/*.cpp) $(wildcard ./test/unit/*.cpp)
+# environment
+SHLVL = 1
+# environment
+GNOME_SHELL_SESSION_MODE = ubuntu
+# makefile (from 'Makefile', line 34)
+USER_SITE = "`python3 -m site --user-site`"
+# environment
+XDG_SESSION_ID = 2
+# environment
+USER = yyj-avikus
+# environment
+LC_MONETARY = ko_KR.UTF-8
+# makefile
+.DEFAULT_GOAL := all
+# makefile (from 'Makefile', line 33)
+TARGET_DEVICE = $(shell gcc -dumpmachine | cut -f1 -d -)
+# environment
+XDG_CURRENT_DESKTOP = Unity
+# makefile (from 'Makefile', line 37)
+DSL_VERSION := 'L"v0.25.alpha"'
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+LC_TELEPHONE = ko_KR.UTF-8
+# makefile (from 'Makefile', line 39)
+GSTREAMER_VERSION := 1.0
+# environment
+CONDA_SHLVL = 1
+# default
+MAKE_COMMAND := make
+# environment
+OLDPWD = /home/yyj-avikus
+# environment
+TERMINATOR_DBUS_PATH = /net/tenshu/Terminator2
+# default
+.VARIABLES := 
+# automatic
+*F = $(notdir $*)
+# environment
+VSCODE_IPC_HOOK = /run/user/1000/vscode-9bed1d1a-1.69.1-main.sock
+# makefile (from 'Makefile', line 48)
+LIB_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/lib
+# makefile
+MAKEFLAGS = pqrR
+# environment
+MFLAGS = -pqrR
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+GDK_BACKEND = x11
+# environment
+LC_PAPER = ko_KR.UTF-8
+# environment
+NO_AT_BRIDGE = 1
+# makefile (from 'Makefile', line 41)
+GSTREAMER_SDP_VERSION := 1.0
+# environment
+QT_ACCESSIBILITY = 1
+# environment
+DESKTOP_AUTOSTART_ID = 10b516a74ac105aef4165809978519695000000021880007
+# environment
+TEXTDOMAINDIR = /usr/share/locale/
+# default
+MAKEFILES := 
+# environment
+LC_NUMERIC = ko_KR.UTF-8
+# automatic
+<F = $(notdir $<)
+# makefile (from 'Makefile', line 42)
+GSTREAMER_WEBRTC_VERSION := 1.0
+# makefile (from 'Makefile', line 31)
+CXX = g++
+# environment
+LC_MEASUREMENT = ko_KR.UTF-8
+# makefile (from 'Makefile', line 44)
+JSON_GLIB_VERSION := 1.0
+# environment
+LC_ALL = C
+# makefile (from 'Makefile', line 36)
+CXX_VERSION := c++17
+# environment
+CONDA_PYTHON_EXE = /home/yyj-avikus/anaconda3/bin/python
+# environment
+QT4_IM_MODULE = xim
+# makefile (from 'Makefile', line 157)
+LIBS = -L$(LIB_INSTALL_DIR) -laprutil-1 -lapr-1 -lX11 -lcuda -L/usr/lib/$(TARGET_DEVICE)-linux-gnu -lgeos_c -lcurl -lnvdsgst_meta -lnvds_meta -lnvdsgst_helper -lnvds_utils -lnvbufsurface -lnvbufsurftransform -lnvdsgst_smartrecord -lnvds_msgbroker -lglib-$(GLIB_VERSION) -lgstreamer-$(GSTREAMER_VERSION) -Lgstreamer-video-$(GSTREAMER_VERSION) -Lgstreamer-rtsp-server-$(GSTREAMER_VERSION) -L/usr/local/cuda/lib64/ -lcudart -Wl,-rpath,$(LIB_INSTALL_DIR) `pkg-config --libs $(PKGS)`
+# automatic
+^F = $(notdir $^)
+# default
+SUFFIXES := 
+# environment
+_CE_M = 
+# environment
+CHROME_DESKTOP = code-url-handler.desktop
+# environment
+WINDOWPATH = 2
+# default
+.INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# environment
+LC_IDENTIFICATION = ko_KR.UTF-8
+# default
+.RECIPEPREFIX := 
+# environment
+LC_ADDRESS = ko_KR.UTF-8
+# environment
+LANG = C
+# environment
+TERM = xterm-256color
+# environment
+TERMINATOR_DBUS_NAME = net.tenshu.Terminator20x1a6021154d881d
+ 
+# environment
+VSCODE_PID = 6881
+# environment
+_CE_CONDA = 
+# variable set hash-table stats:
+# Load=148/1024=14%, Rehash=0, Collisions=52/254=20%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 66309, inode 16416835): 22 files, no impossibilities.
+# ./src (device 66309, inode 16416869): 161 files, no impossibilities.
+# ./test (device 66309, inode 16416872): 11 files, no impossibilities.
+# test (device 66309, inode 16416872): 11 files, no impossibilities.
+# src/thirdparty (device 66309, inode 16416870): 5 files, no impossibilities.
+# ./test/unit (device 66309, inode 16416876): 69 files, no impossibilities.
+# src (device 66309, inode 16416869): 161 files, no impossibilities.
+# ./src/thirdparty (device 66309, inode 16416870): 5 files, no impossibilities.
+# ./test/api (device 66309, inode 16416873): 83 files, no impossibilities.
+
+# 528 files, no impossibilities in 9 directories.
+
+# Implicit Rules
+
+%.o: %.cpp src/Dsl.h.gch src/DslLogGst.h src/DslPipelineSourcesBintr.h src/DslOdeAction.h src/DslMutex.h src/DslStateChange.h src/DslTrackerBintr.h src/DslLog.h src/DslBintr.h src/DslBranchBintr.h src/DslPadProbeHandler.h src/DslPipelineSInfersBintr.h src/DslElementr.h src/DslTilerBintr.h src/DslOdeHeatMapper.h src/DslOdeArea.h src/DslTapBintr.h src/DslMessageBroker.h src/DslSourceBintr.h src/DslGeosTypes.h src/DslApi.h src/DslServices.h src/DslOsdBintr.h src/DslSourceMeter.h src/Dsl.h src/DslOdeAccumulator.h src/DslServicesValidate.h src/DslSegVisualBintr.h src/DslOdeBase.h src/DslRecordMgr.h src/DslInferBintr.h src/DslPipelineBintr.h src/DslMultiComponentsBintr.h src/DslPlayerBintr.h src/DslOfvBintr.h src/DslPreprocBintr.h src/DslSinkBintr.h src/DslSurfaceTransform.h src/DslPipelineXWinMgr.h src/DslDewarperBintr.h src/DslMailer.h src/DslDisplayTypes.h src/DslBase.h src/DslNodetr.h src/DslOdeTrigger.h src/DslPipelineStateMgr.h src/DslOdeTrackedObject.h src/thirdparty/randomcolor.h test/catch.hpp Makefile
+#  recipe to execute (from 'Makefile', line 170):
+	$(CXX) -c -o $@ $(CFLAGS) $<
+
+# 1 implicit rules, 0 (0.0%) terminal.
+
+# Files
+
+# Not a target:
+src/DslOdeHeatMapper.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSourceBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslSegVisualApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslSinkUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslTapBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslTrackerBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslGeosTypes.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-11 09:05:11.316273676
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+test/api/DslPphApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineCbApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/thirdparty/randomcolor.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslLog.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeTrigger.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslInferBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslNodetr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+all: dsl-test-app.exe
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/33=0%
+
+# Not a target:
+test/unit/DslOdeTrackedObjectUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslBase.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslComponentMgt.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineSInfersBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineDbgApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineXWinMgr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslMailer.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslImageSourceApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSinkBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+ 
+# Not a target:
+test/api/DslMessageSinkBehaviorTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPreprocBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOfvBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineStreamMuxerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslOdeTriggerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelinePlayTrackerTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesSource.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOsdBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesOdeHeatMapper.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesValidate.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslMultiSinksUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/Dsl.h:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-18 22:51:36.179835528
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+src/DslOdeAccumulator.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesTracker.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslRecordMgr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslSinkApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslElementrUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesOdeTrigger.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslStateChange.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslMessageBroker.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslSourceUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslTapBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPadProbeHandler.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+ 
+#  Last modified 2022-07-18 22:51:36.175835562
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+src/DslInferBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeArea.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineMgtApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslOsdApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslBranchBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# makefile (from 'Makefile', line 161)
+debug: CFLAGS += -DDEBUG -g
+debug: dsl-test-app.exe
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+# variable set hash-table stats:
+# Load=1/32=3%, Rehash=0, Collisions=0/2=0%
+
+# Not a target:
+src/DslLogGst.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslOdeHeatMapperUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslDisplayTypes.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslMutex.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesDisplayType.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPlayerBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeAction.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslMailerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesInfer.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeTrackedObject.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineStateMgr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslMailerUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslDisplayTypes.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslTeeApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesOsd.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslOfvUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslInferApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesPlayer.o:
+ 
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServices.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslTilerUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslDewarperBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslTilerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineTilerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslOdeAccumulatorApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineXWindowApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslDemuxerAndTeeUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslMultiComponentsBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslOdeAccumulatorUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesMessageBroker.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPrimaryGieUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeBase.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslOdeAreaApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSegVisualBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslOdeActionUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslElementr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineSourcesBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslApi.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPadProbeHandlerUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+ 
+src/DslGeosTypes.o: src/DslGeosTypes.cpp src/Dsl.h.gch src/DslLogGst.h src/DslPipelineSourcesBintr.h src/DslOdeAction.h src/DslMutex.h src/DslStateChange.h src/DslTrackerBintr.h src/DslLog.h src/DslBintr.h src/DslBranchBintr.h src/DslPadProbeHandler.h src/DslPipelineSInfersBintr.h src/DslElementr.h src/DslTilerBintr.h src/DslOdeHeatMapper.h src/DslOdeArea.h src/DslTapBintr.h src/DslMessageBroker.h src/DslSourceBintr.h src/DslGeosTypes.h src/DslApi.h src/DslServices.h src/DslOsdBintr.h src/DslSourceMeter.h src/Dsl.h src/DslOdeAccumulator.h src/DslServicesValidate.h src/DslSegVisualBintr.h src/DslOdeBase.h src/DslRecordMgr.h src/DslInferBintr.h src/DslPipelineBintr.h src/DslMultiComponentsBintr.h src/DslPlayerBintr.h src/DslOfvBintr.h src/DslPreprocBintr.h src/DslSinkBintr.h src/DslSurfaceTransform.h src/DslPipelineXWinMgr.h src/DslDewarperBintr.h src/DslMailer.h src/DslDisplayTypes.h src/DslBase.h src/DslNodetr.h src/DslOdeTrigger.h src/DslPipelineStateMgr.h src/DslOdeTrackedObject.h src/thirdparty/randomcolor.h test/catch.hpp Makefile
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'src/DslGeosTypes'
+#  Last modified 2022-07-18 09:07:46.939027727
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/33=0%
+#  recipe to execute (from 'Makefile', line 170):
+	$(CXX) -c -o $@ $(CFLAGS) $<
+
+lib:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 177):
+	@echo ----------------------------------------------------------------------
+	@echo -- NOTICE: '"make lib"' has been replaced with '"sudo make install"'
+	@echo ----------------------------------------------------------------------
+	
+
+src/Dsl.h.gch: src/Dsl.h Makefile
+#  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
+#  Last modified 2022-07-18 09:07:45.223039857
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := src/Dsl.h.gch
+# automatic
+# % := 
+# automatic
+# * := 
+# automatic
+# + := src/Dsl.h Makefile
+# automatic
+# | := 
+# automatic
+# < := src/Dsl.h
+# automatic
+# ^ := src/Dsl.h Makefile
+# automatic
+# ? := src/Dsl.h Makefile
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=9/43=21%
+#  recipe to execute (from 'Makefile', line 167):
+	$(CXX) -c -o $@ $(CFLAGS) $<
+
+# Not a target:
+test/api/DslOdeActionApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslTilerBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+dsl-test-app.exe: src/DslGeosTypes.o src/DslServicesInfo.o src/DslServicesOdeTrigger.o src/DslServicesTracker.o src/DslApi.o src/DslTilerBintr.o src/DslServicesOdeAction.o src/DslRecordMgr.o src/DslOdeHeatMapper.o src/DslPreprocBintr.o src/DslInferBintr.o src/DslServicesTee.o src/DslServicesOdeHeatMapper.o src/DslServicesOdeArea.o src/DslPadProbeHandler.o src/DslOsdBintr.o src/DslServicesSource.o src/DslSegVisualBintr.o src/DslServicesMessageBroker.o src/DslPipelineBintr.o src/DslOdeArea.o src/DslMultiComponentsBintr.o src/DslServicesBranch.o src/DslOfvBintr.o src/DslServicesMailer.o src/DslOdeAccumulator.o src/DslServicesSink.o src/DslSinkBintr.o src/DslServicesPipeline.o src/DslPipelineXWinMgr.o src/DslDewarperBintr.o src/DslPipelineSourcesBintr.o src/DslMailer.o src/DslServicesPlayer.o src/DslServicesOdeAccumulator.o src/DslPipelineSInfersBintr.o src/DslMessageBroker.o src/DslServicesDisplayType.o src/DslServicesInfer.o src/DslDisplayTypes.o src/DslPipelineStateMgr.o src/DslOdeTrackedObject.o src/DslServicesTiler.o src/DslOdeAction.o src/DslPlayerBintr.o src/DslOdeTrigger.o src/DslTrackerBintr.o src/DslServicesPph.o src/DslBranchBintr.o src/DslServicesOsd.o src/DslServicesComponent.o src/DslSourceBintr.o src/DslServices.o src/DslTapBintr.o src/DslServicesPreproc.o src/thirdparty/randomcolor.o test/DslCatch.o test/api/DslBranchMgtApiTest.o test/api/DslImageSourceBehaviorTest.o test/api/DslOdeTriggerApiTest.o test/api/DslOsdApiTest.o test/api/DslPipelineSourcesApiTest.o test/api/DslPipelineMgtApiTest.o test/api/DslDisplayTypesApiTest.o test/api/DslPipelineXWindowApiTest.o test/api/DslPipelinePlayTrackerTest.o test/api/DslPreprocApiText.o test/api/DslOdeBehaviorTest.o test/api/DslPipelineTilerApiTest.o test/api/DslPlayerApiTest.o test/api/DslMessageSinkBehaviorTest.o test/api/DslTrackerApiTest.o test/api/DslOdeActionApiTest.o test/api/DslSinkMessageApiTest.o test/api/DslPipelineCbApiTest.o test/api/DslSourceApiTest.o test/api/DslPipelineMainLoopTest.o test/api/DslOdeHeatMapperApiTest.o test/api/DslPipelineDbgApiTest.o test/api/DslOdeAccumulatorApiTest.o test/api/DslInferApiTest.o test/api/DslSinkApiTest.o test/api/DslTilerApiTest.o test/api/DslComponentMgt.o test/api/DslPipelineStateMgt.o test/api/DslDisplayTypesBehaviorTest.o test/api/DslTeeApiTest.o test/api/DslTapApiTest.o test/api/DslImageSourceApiTest.o test/api/DslPipelinePlayComponentsTest.o test/api/DslSegVisualApiTest.o test/api/DslMessageBrokerApiTest.o test/api/DslMailerApiTest.o test/api/DslCrossTriggerExampleTest.o test/api/DslPphApiTest.o test/api/DslOdeAreaApiTest.o test/api/DslPipelineStreamMuxerApiTest.o test/unit/DslOdeTrackedObjectUnitTest.o test/unit/DslGeosTypesUnitTest.o test/unit/DslPipelineSInfersUnitTest.o test/unit/DslPadProbeHandlerUnitTest.o test/unit/DslNodetrUnitTest.o test/unit/DslDewarperUnitTest.o test/unit/DslMailerUnitTest.o test/unit/DslPipelineSourcesUnitTest.o test/unit/DslOdeAreaUnitTest.o test/unit/DslSourceUnitTest.o test/unit/DslDisplayTypesUnitTest.o test/unit/DslSecondaryGieUnitTest.o test/unit/DslMessageBrokerAzureDeviceClientUnitTest.o test/unit/DslPrimaryGieUnitTest.o test/unit/DslTapUnitTest.o test/unit/DslOdeTriggerUnitTest.o test/unit/DslSinkUnitTest.o test/unit/DslOdeAccumulatorUnitTest.o test/unit/DslPlayerUnitTest.o test/unit/DslPipelineUnitTest.o test/unit/DslOdeActionUnitTest.o test/unit/DslTrackerUnitTest.o test/unit/DslOsdUnitTest.o test/unit/DslPipelineMainLoopUnitTest.o test/unit/DslMsgSinkUnitTest.o test/unit/DslPreprocUnitTest.o test/unit/DslMultiSinksUnitTest.o test/unit/DslTilerUnitTest.o test/unit/DslSegVisualUnitTest.o test/unit/DslElementrUnitTest.o test/unit/DslOfvUnitTest.o test/unit/DslDemuxerAndTeeUnitTest.o test/unit/DslOdeHeatMapperUnitTest.o Makefile
+#  Implicit rule search has not been done.
+ 
+#  Last modified 2022-07-18 09:08:06.886886944
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/33=0%
+#  recipe to execute (from 'Makefile', line 173):
+	@echo $(SRCS)
+	$(CXX) -o $(APP) $(OBJS) $(LIBS)
+
+# Not a target:
+src/DslServicesPipeline.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSourceBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslOdeBehaviorTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeHeatMapper.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslDisplayTypesApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineSourcesApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslTrackerBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslImageSourceBehaviorTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesPph.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesComponent.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslDisplayTypesUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPipelineSourcesUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeTrigger.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineStateMgt.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineSInfersBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPlayerUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslMailer.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineXWinMgr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslSourceApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslTrackerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSinkBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslTrackerUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPreprocBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOfvBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPipelineUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+clean:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+ 
+#  recipe to execute (from 'Makefile', line 200):
+	rm -rf $(OBJS) $(APP) $(LIB).a $(LIB).so $(PCH_OUT)
+
+# Not a target:
+src/DslOsdBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslCrossTriggerExampleTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeAccumulator.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+debug_lib:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 196):
+	$(CXX) -shared $(OBJS) -o $(LIB).so $(LIBS) 
+	cp $(LIB).so examples/python/
+
+# Not a target:
+src/DslRecordMgr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslOdeHeatMapperApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/DslCatch.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPipelineSInfersUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslGeosTypesUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+install:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 182):
+	if [ ! -d "/tmp/.dsl" ]; then \
+		mkdir -p /tmp/.dsl; \
+		chmod -R a+rwX /tmp/.dsl; \
+	fi
+	ar rcs $(LIB).a $(OBJS)
+	ar dv $(LIB).a DslCatch.o $(TEST_OBJS)
+	$(CXX) -shared $(OBJS) -o $(LIB).so $(LIBS)
+	cp -f $(LIB).so /usr/local/lib
+	if [ ! -d $(USER_SITE) ]; then \
+		mkdir -p $(USER_SITE); \
+	fi
+	cp -rf ./dsl.py $(USER_SITE)
+	
+
+# Not a target:
+src/DslServicesInfo.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/thirdparty/randomcolor.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPipelineMainLoopUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/catch.hpp:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesPreproc.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslMessageBroker.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPadProbeHandler.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesSink.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeArea.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslTilerBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesMailer.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+ 
+
+# Not a target:
+test/unit/DslOdeTriggerUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPreprocApiText.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslBranchBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslTapUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslMessageBrokerAzureDeviceClientUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslNodetrUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPlayerBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeAction.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineStateMgr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslPreprocUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslBranchMgtApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeTrackedObject.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelinePlayComponentsTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslTapApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslDisplayTypesBehaviorTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServices.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesOdeAccumulator.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslSegVisualUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslDewarperBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSurfaceTransform.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+ 
+
+# Not a target:
+test/api/DslSinkMessageApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslOsdUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPlayerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslSecondaryGieUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslMultiComponentsBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesBranch.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslPipelineMainLoopTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesTiler.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSegVisualBintr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesOdeArea.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesTee.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslOdeAreaUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/api/DslMessageBrokerApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslSourceMeter.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslPipelineSourcesBintr.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslDewarperUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/unit/DslMsgSinkUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslServicesOdeAction.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslApi.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslGeosTypes.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# files hash-table stats:
+# Load=190/1024=19%, Rehash=0, Collisions=49/443=11%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 2 (1) / strings = 539 / storage = 11871 B / avg = 22 B
+# current buf: size = 8162 B / used = 3726 B / count = 134 / avg = 27 B
+# other used: total = 3709 B / count = 405 / avg = 9 B
+# other free: total = 17 B / max = 17 B / min = 17 B / avg = 17 B
+
+ 
+# strcache performance: lookups = 677 / hit rate = 20%
+# hash-table stats:
+# Load=539/8192=7%, Rehash=0, Collisions=27/677=4%
+# Finished Make data base on Mon Jul 18 22:52:41 2022
+
+ 
