@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include <gstnvdsmeta.h>
 #include <algorithm>
 #include <numeric>
+// https://github.com/dpilger26/NumCpp/blob/master/docs/markdown/Installation.md
 #include <NumCpp.hpp>
 #include <cstdint>
 
@@ -56,8 +57,8 @@ uint PGIE_CLASS_ID_PERSON = 2;
 uint PGIE_CLASS_ID_ROADSIGN = 3;
 uint VECTOR_RESERVE_SIZE = 1000;
 uint NMS_CLASS_AGNOSTIC = true;
-std::wstring MATCH_METRIC = L"IOU"; // IOS 
-float MATCH_THRESHOLD = 0.5f;
+std::wstring MATCH_METRIC = L"IOS"; // IOU, IOS 
+float MATCH_THRESHOLD = 0.5;
 
 uint WINDOW_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
 uint WINDOW_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
@@ -251,6 +252,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                 {
 					obj_array.emplace_back(pObjectMeta);
 					// https://github.com/obss/sahi/blob/91a0becb0d86f0943c57f966a86a845a70c0eb77/sahi/postprocess/combine.py#L17-L40
+
 					if (NMS_CLASS_AGNOSTIC) {
 						predictions.emplace_back(std::vector<float>{
 									pObjectMeta->rect_params.left,
@@ -295,7 +297,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 
     		// areas = (x2 - x1) * (y2 - y1)
 			auto areas = (x2 - x1) * (y2 - y1);
-			
+
 			// std::vector<size_t> order = argsort(obj_array);
 			// https://dpilger26.github.io/NumCpp/doxygen/html/classnc_1_1_nd_array.html#a1fb3a21ab9c10a2684098df919b5b440
 			
@@ -303,27 +305,26 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
     		// # according to their confidence scores
 		    // order = scores.argsort()
 			std::vector<uint32_t> order = argsort(scores.toStlVector());
-
+			
 			nc::NdArray<nc::uint32> nd_order{order};
 			// std::sort(obj_array.begin(), obj_array.end(), confidence_compare);
 			
 			// # initialise an empty list for
     		// # filtered prediction boxes
     		// keep = []
+
 			std::vector<unsigned int> keep, remove;
 			
 			// return DSL_PAD_PROBE_OK;
-			
+
 			//while (order.size() > 0) {
 			while (nc::shape(nd_order).size() > 0) {
 				// auto idx = order.back();
+
 				auto idx = nd_order[-1];
-
-				keep.emplace_back(idx);
-
-				// order.pop_back();
-			    nd_order = nd_order(nd_order.rSlice(), nc::Slice(0,-1));
 				
+				// order.pop_back();
+			    nd_order = nd_order(0, nc::Slice(0,-1));
 				if (nc::shape(nd_order).size() == 0) 
 					break;	
 				
@@ -340,7 +341,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 				auto xx1 = x1[index_other];
 				auto xx2 = x2[index_other];
 				auto yy1 = y1[index_other];
-				auto yy2 = x2[index_other];
+				auto yy2 = y2[index_other];
 
 //				# find the coordinates of the intersection boxes
 //				xx1 = torch.max(xx1, x1[idx])
@@ -351,7 +352,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 				for(auto it = xx1.begin(); it != xx1.end(); ++it) 
 					if (*it < x1[index].item()) 
 						*it = x1[index].item();
-					
+
 				for(auto it = yy1.begin(); it != yy1.end(); ++it) 
 					if (*it < y1[index].item()) 
 						*it = y1[index].item();
@@ -370,7 +371,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 				
 				auto w = xx2 - xx1;
 				auto h = yy2 - yy1;
-
+				
 //				# take max with 0.0 to avoid negative w and h
 //				# due to non-overlapping boxes
 //				w = torch.clamp(w, min=0.0)
@@ -378,20 +379,30 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 				
 				w = nc::clip(w, 0.0f, float(1e9));
 			    h = nc::clip(h, 0.0f, float(1e9));
-
+				
 //				# find the intersection area
 //		        inter = w * h
 				
 				auto inter = w * h;
-
+				
 //				# find the areas of BBoxes according the indices in order
 //        		rem_areas = torch.index_select(areas, dim=0, index=order)i
 				
 				auto rem_areas = areas[index_other];
-
+				
 				if (MATCH_METRIC == L"IOU") {
+//					if match_metric == "IOU":
+//					# find the union of every prediction T in P
+//					# with the prediction S
+//					# Note that areas[idx] represents area of S
+//					union = (rem_areas - inter) + areas[idx]
+//					# find the IoU of every prediction in P with S
+//					match_metric_value = inter / union
+					
 					auto _union = (rem_areas - inter) + areas[index].item();
 					auto match_metric_value = inter / _union;
+
+					// mask = match_metric_value < match_threshold
 					auto mask = match_metric_value < MATCH_THRESHOLD;					
 					
 					auto rm_idx = 0;
@@ -399,16 +410,38 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 						if (*it == 0)
 							remove.emplace_back(index_other[rm_idx]);
 					}
+
 					nd_order = nd_order[mask];
 				}
 				else if (MATCH_METRIC == L"IOS") {
+//					# find the smaller area of every prediction T in P
+//					# with the prediction S
+//					# Note that areas[idx] represents area of S
+//					smaller = torch.min(rem_areas, areas[idx])
+//					# find the IoU of every prediction in P with S
+//					match_metric_value = inter / smaller
+					
+					auto smaller = rem_areas;
+					for(auto it = smaller.begin(); it != smaller.end(); ++it)
+						if (*it > areas[index].item())
+							*it = areas[index].item();					
+					auto match_metric_value = inter / smaller;
 
+					auto mask = match_metric_value < MATCH_THRESHOLD;					
+					
+					auto rm_idx = 0;
+					for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
+						if (*it == 0)
+							remove.emplace_back(index_other[rm_idx]);
+					}
+
+					nd_order = nd_order[mask];
 				}
 				else {
 					return -1; // Change assert
 				}			
 			}
-			
+
 			for (auto &x: remove) {
 				nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[x]);
 			}
