@@ -59,7 +59,7 @@ uint PGIE_CLASS_ID_PERSON = 2;
 uint PGIE_CLASS_ID_ROADSIGN = 3;
 uint VECTOR_RESERVE_SIZE = 1000;
 uint CLASS_AGNOSTIC = false;
-std::wstring MATCH_METRIC = L"IOU"; // IOU, IOS 
+std::wstring MATCH_METRIC = L"IOS"; // IOU, IOS 
 float MATCH_THRESHOLD = 0.5;
 int num_labels;
 
