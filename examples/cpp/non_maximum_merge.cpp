@@ -37,6 +37,7 @@ THE SOFTWARE.
 // https://github.com/dpilger26/NumCpp/blob/master/docs/markdown/Installation.md
 #include <NumCpp.hpp>
 #include <cstdint>
+#include <unordered_map>
 
 #include "DslApi.h"
 
@@ -67,7 +68,6 @@ uint WINDOW_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
 
 // output file path for the MOT Challenge File Action. 
 std::wstring file_path(L"./mot-challenge-data.txt");
-
 
 class ReportData {
 public:
@@ -216,6 +216,14 @@ std::vector<uint32_t> argsort(const std::vector<T> &array) {
     return indices;
 }
 
+std::vector<float> calculate_box_union(const std::vector<float> &box1, const std::vector<float> &box2) {
+    float x1 = std::min(box1[0], box2[0]);
+    float y1 = std::min(box1[1], box2[1]);
+    float x2 = std::max(box1[2], box2[2]);
+    float y2 = std::max(box1[3], box2[3]);
+    return std::vector<float>{x1, y1, x2, y2, box1[4]};
+}
+
 //
 // Custom Pad Probe Handler (PPH) to process the batch-meta for every frame
 //
@@ -292,13 +300,17 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                 if (predictions[lb].size() == 0)
                     continue;
 
+                // keep_to_merge_list = {}
+                std::unordered_map<int, std::vector<int>> keep_to_merge_list;
+
                 nc::NdArray<float> nd_predictions{predictions[lb]};
-    //			# we extract coordinates for every
-    //			# prediction box present in P
-    //    		x1 = predictions[:, 0]
-    //			y1 = predictions[:, 1]
-    //			x2 = predictions[:, 2]
-    //			y2 = predictions[:, 3]
+
+    			// # we extract coordinates for every
+    			// # prediction box present in P
+       		    // x1 = predictions[:, 0]
+    			// y1 = predictions[:, 1]
+    			// x2 = predictions[:, 2]
+    			// y2 = predictions[:, 3]
                 
                 auto x1 = nd_predictions(nd_predictions.rSlice(), 0);
                 auto y1 = nd_predictions(nd_predictions.rSlice(), 1);
@@ -333,7 +345,6 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                 //while (order.size() > 0) {
                 while (nc::shape(nd_order).size() > 0) {
                     // auto idx = order.back();
-
                     auto idx = nd_order[-1];
                     
                     // order.pop_back();
@@ -420,19 +431,21 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                         
                         auto rm_idx = 0;
                         for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
-                            if (*it == 0)
+                            if (*it == 0) {
+                                keep_to_merge_list[idx].emplace_back(index_other[rm_idx]);
                                 remove.emplace_back(index_other[rm_idx]);
+                            }
                         }
 
                         nd_order = nd_order[mask];
                     }
                     else if (MATCH_METRIC == L"IOS") {
-    //					# find the smaller area of every prediction T in P
-    //					# with the prediction S
-    //					# Note that areas[idx] represents area of S
-    //					smaller = torch.min(rem_areas, areas[idx])
-    //					# find the IoU of every prediction in P with S
-    //					match_metric_value = inter / smaller
+    					// # find the smaller area of every prediction T in P
+    					// # with the prediction S
+    					// # Note that areas[idx] represents area of S
+    					// smaller = torch.min(rem_areas, areas[idx])
+    					// # find the IoU of every prediction in P with S
+    					// match_metric_value = inter / smaller
                         
                         auto smaller = rem_areas;
                         for(auto it = smaller.begin(); it != smaller.end(); ++it)
@@ -444,8 +457,12 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                         
                         auto rm_idx = 0;
                         for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
-                            if (*it == 0)
+                            if (*it == 0) {
+                                // for matched_box_ind in matched_box_indices.tolist():
+                                //     keep_to_merge_list[idx.tolist()].append(matched_box_ind)
+                                keep_to_merge_list[idx].emplace_back(index_other[rm_idx]);
                                 remove.emplace_back(index_other[rm_idx]);
+                            }
                         }
 
                         nd_order = nd_order[mask];
@@ -453,6 +470,36 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                     else {
                         return -1; // Change assert
                     }			
+                }
+
+                // selected_object_predictions = []
+                // for keep_ind, merge_ind_list in keep_to_merge_list.items():
+                //     for merge_ind in merge_ind_list:
+                //         if has_match(
+                //             object_prediction_list[keep_ind].tolist(),
+                //             object_prediction_list[merge_ind].tolist(),
+                //             self.match_metric,
+                //             self.match_threshold,
+                //         ):
+                //             object_prediction_list[keep_ind] = merge_object_prediction_pair(
+                //                 object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
+                //             )
+                //     selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
+
+                for (auto it = keep_to_merge_list.begin(); it != keep_to_merge_list.end(); ++it) {
+                    // std::cout << it->first    // string (key)
+                    //         << ": [ ";
+                    // for (auto &x : it->second) {
+                    //     std::cout << x << ' ';
+                    // }
+                    // std::cout << "]\n";
+                    for (auto &merge_ind : it->second)
+                        predictions[lb][it->first] = calculate_box_union(predictions[lb][it->first], predictions[lb][merge_ind]);
+
+                    obj_array[lb][it->first]->rect_params.left = predictions[lb][it->first][0];
+                    obj_array[lb][it->first]->rect_params.top = predictions[lb][it->first][1];
+                    obj_array[lb][it->first]->rect_params.width = predictions[lb][it->first][2] - predictions[lb][it->first][0];
+                    obj_array[lb][it->first]->rect_params.height = predictions[lb][it->first][3] - predictions[lb][it->first][1]; 
                 }
 
                 for (auto &x: remove) {
