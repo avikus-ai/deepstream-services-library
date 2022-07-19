@@ -44,6 +44,7 @@ std::wstring uri_h265(
     L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h265.mp4");
 
 // Filespecs for the Primary GIE
+// The file below is simply a file that changed cluster-mode=4 (which means that post-process sets None) from "/opt/nvidia/deepstream/samples/config/deepstream-app/config_infer_primary_nano.txt"
 std::wstring primary_infer_config_file(
     L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_infer_nms_test.txt");
 std::wstring primary_model_engine_file(
@@ -56,9 +57,10 @@ uint PGIE_CLASS_ID_BICYCLE = 1;
 uint PGIE_CLASS_ID_PERSON = 2;
 uint PGIE_CLASS_ID_ROADSIGN = 3;
 uint VECTOR_RESERVE_SIZE = 1000;
-uint NMS_CLASS_AGNOSTIC = true;
-std::wstring MATCH_METRIC = L"IOS"; // IOU, IOS 
+uint NMS_CLASS_AGNOSTIC = false;
+std::wstring MATCH_METRIC = L"IOU"; // IOU, IOS 
 float MATCH_THRESHOLD = 0.5;
+int num_labels;
 
 uint WINDOW_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
 uint WINDOW_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
@@ -234,10 +236,13 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
         if (pFrameMeta != NULL)
         {
             NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-			std::vector<NvDsObjectMeta*> obj_array;
-			std::vector<std::vector<float>> predictions;
+			std::vector<std::vector<NvDsObjectMeta*>> obj_array;
+			std::vector<std::vector<std::vector<float>>> predictions;
 
-			obj_array.reserve(VECTOR_RESERVE_SIZE);
+			// [fix] parse the label file			
+			num_labels = NMS_CLASS_AGNOSTIC ? 1 : 4;
+			predictions.resize(num_labels);
+            obj_array.resize(num_labels);
 
             // For each detected object in the frame.
             while (pObjectMetaList)
@@ -250,11 +255,10 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 
                 if (pObjectMeta != NULL)
                 {
-					obj_array.emplace_back(pObjectMeta);
 					// https://github.com/obss/sahi/blob/91a0becb0d86f0943c57f966a86a845a70c0eb77/sahi/postprocess/combine.py#L17-L40
-
 					if (NMS_CLASS_AGNOSTIC) {
-						predictions.emplace_back(std::vector<float>{
+                        obj_array[0].emplace_back(pObjectMeta);
+						predictions[0].emplace_back(std::vector<float>{
 									pObjectMeta->rect_params.left,
 									pObjectMeta->rect_params.top,
 									pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
@@ -263,188 +267,194 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 									});
 					}
 					else {
-						predictions.emplace_back(std::vector<float>{
-									pObjectMeta->rect_params.left,
-									pObjectMeta->rect_params.top,
-									pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
-									pObjectMeta->rect_params.top + pObjectMeta->rect_params.height, 
-									pObjectMeta->confidence,
-									float(pObjectMeta->class_id)
-									});
+                        obj_array[pObjectMeta->class_id].emplace_back(pObjectMeta);
+						predictions[pObjectMeta->class_id].emplace_back(std::vector<float>{
+                                     pObjectMeta->rect_params.left,
+                                     pObjectMeta->rect_params.top,
+                                     pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
+                                     pObjectMeta->rect_params.top + pObjectMeta->rect_params.height, 
+                                     pObjectMeta->confidence,
+                                     });
+
 					}
                     // nvds_remove_obj_meta_from_frame(pFrameMeta, pObjectMeta);
                 }
             }
-
-			// print_2dVector(predictions);							
-			// https://dpilger26.github.io/NumCpp/doxygen/html/classnc_1_1_nd_array.html#a9d7045ecdff86bac3306a8bfd9a787eb
-			nc::NdArray<float> nd_predictions{predictions};
-
-//			# we extract coordinates for every
-//			# prediction box present in P
-//    		x1 = predictions[:, 0]
-//			y1 = predictions[:, 1]
-//			x2 = predictions[:, 2]
-//			y2 = predictions[:, 3]
 			
-			auto x1 = nd_predictions(nd_predictions.rSlice(), 0);
-			auto y1 = nd_predictions(nd_predictions.rSlice(), 1);
-			auto x2 = nd_predictions(nd_predictions.rSlice(), 2);
-			auto y2 = nd_predictions(nd_predictions.rSlice(), 3);
+			for (int lb=0; lb<num_labels; lb++) {
+                // print_2dVector(predictions);							
+                // https://dpilger26.github.io/NumCpp/doxygen/html/classnc_1_1_nd_array.html#a9d7045ecdff86bac3306a8bfd9a787eb
+                if (predictions[lb].size() == 0)
+                    continue;
 
-			// scores = predictions[:, 4]
-			auto scores = nd_predictions(nd_predictions.rSlice(), 4);
+                nc::NdArray<float> nd_predictions{predictions[lb]};
+    //			# we extract coordinates for every
+    //			# prediction box present in P
+    //    		x1 = predictions[:, 0]
+    //			y1 = predictions[:, 1]
+    //			x2 = predictions[:, 2]
+    //			y2 = predictions[:, 3]
+                
+                auto x1 = nd_predictions(nd_predictions.rSlice(), 0);
+                auto y1 = nd_predictions(nd_predictions.rSlice(), 1);
+                auto x2 = nd_predictions(nd_predictions.rSlice(), 2);
+                auto y2 = nd_predictions(nd_predictions.rSlice(), 3);
+                
+                // scores = predictions[:, 4]
+                auto scores = nd_predictions(nd_predictions.rSlice(), 4);
 
-    		// areas = (x2 - x1) * (y2 - y1)
-			auto areas = (x2 - x1) * (y2 - y1);
+                // areas = (x2 - x1) * (y2 - y1)
+                auto areas = (x2 - x1) * (y2 - y1);
 
-			// std::vector<size_t> order = argsort(obj_array);
-			// https://dpilger26.github.io/NumCpp/doxygen/html/classnc_1_1_nd_array.html#a1fb3a21ab9c10a2684098df919b5b440
-			
-			// # sort the prediction boxes in P
-    		// # according to their confidence scores
-		    // order = scores.argsort()
-			std::vector<uint32_t> order = argsort(scores.toStlVector());
-			
-			nc::NdArray<nc::uint32> nd_order{order};
-			// std::sort(obj_array.begin(), obj_array.end(), confidence_compare);
-			
-			// # initialise an empty list for
-    		// # filtered prediction boxes
-    		// keep = []
+                // std::vector<size_t> order = argsort(obj_array);
+                // https://dpilger26.github.io/NumCpp/doxygen/html/classnc_1_1_nd_array.html#a1fb3a21ab9c10a2684098df919b5b440
+                
+                // # sort the prediction boxes in P
+                // # according to their confidence scores
+                // order = scores.argsort()
+                std::vector<uint32_t> order = argsort(scores.toStlVector());
+                
+                nc::NdArray<nc::uint32> nd_order{order};
+                // std::sort(obj_array.begin(), obj_array.end(), confidence_compare);
+                
+                // # initialise an empty list for
+                // # filtered prediction boxes
+                // keep = []
 
-			std::vector<unsigned int> keep, remove;
-			
-			// return DSL_PAD_PROBE_OK;
+                std::vector<unsigned int> keep, remove;
+                
+                // return DSL_PAD_PROBE_OK;
 
-			//while (order.size() > 0) {
-			while (nc::shape(nd_order).size() > 0) {
-				// auto idx = order.back();
+                //while (order.size() > 0) {
+                while (nc::shape(nd_order).size() > 0) {
+                    // auto idx = order.back();
 
-				auto idx = nd_order[-1];
-				
-				// order.pop_back();
-			    nd_order = nd_order(0, nc::Slice(0,-1));
-				if (nc::shape(nd_order).size() == 0) 
-					break;	
-				
-//				# select coordinates of BBoxes according to
-//		        # the indices in order
-//        		xx1 = torch.index_select(x1, dim=0, index=order)
-//        		xx2 = torch.index_select(x2, dim=0, index=order)
-//        		yy1 = torch.index_select(y1, dim=0, index=order)
-//        		yy2 = torch.index_select(y2, dim=0, index=order)
-				
-				nc::NdArray<nc::uint32> index_other = nd_order;
-				nc::NdArray<nc::uint32> index{idx};
-				
-				auto xx1 = x1[index_other];
-				auto xx2 = x2[index_other];
-				auto yy1 = y1[index_other];
-				auto yy2 = y2[index_other];
+                    auto idx = nd_order[-1];
+                    
+                    // order.pop_back();
+                    nd_order = nd_order(0, nc::Slice(0,-1));
+                    if (nc::shape(nd_order).size() == 0) 
+                        break;	
+                    
+    //				# select coordinates of BBoxes according to
+    //		        # the indices in order
+    //        		xx1 = torch.index_select(x1, dim=0, index=order)
+    //        		xx2 = torch.index_select(x2, dim=0, index=order)
+    //        		yy1 = torch.index_select(y1, dim=0, index=order)
+    //        		yy2 = torch.index_select(y2, dim=0, index=order)
+                    
+                    nc::NdArray<nc::uint32> index_other = nd_order;
+                    nc::NdArray<nc::uint32> index{idx};
+                    
+                    auto xx1 = x1[index_other];
+                    auto xx2 = x2[index_other];
+                    auto yy1 = y1[index_other];
+                    auto yy2 = y2[index_other];
 
-//				# find the coordinates of the intersection boxes
-//				xx1 = torch.max(xx1, x1[idx])
-//				yy1 = torch.max(yy1, y1[idx])
-//				xx2 = torch.min(xx2, x2[idx])
-//				yy2 = torch.min(yy2, y2[idx])
-				
-				for(auto it = xx1.begin(); it != xx1.end(); ++it) 
-					if (*it < x1[index].item()) 
-						*it = x1[index].item();
+    //				# find the coordinates of the intersection boxes
+    //				xx1 = torch.max(xx1, x1[idx])
+    //				yy1 = torch.max(yy1, y1[idx])
+    //				xx2 = torch.min(xx2, x2[idx])
+    //				yy2 = torch.min(yy2, y2[idx])
 
-				for(auto it = yy1.begin(); it != yy1.end(); ++it) 
-					if (*it < y1[index].item()) 
-						*it = y1[index].item();
-								
-				for(auto it = xx2.begin(); it != xx2.end(); ++it) 
-					if (*it > x2[index].item()) 
-						*it = x2[index].item();
+                    for(auto it = xx1.begin(); it != xx1.end(); ++it) 
+                        if (*it < x1[index].item()) 
+                            *it = x1[index].item();
 
-				for(auto it = yy2.begin(); it != yy2.end(); ++it) 
-					if (*it > y2[index].item()) 
-						*it = y2[index].item();
+                    for(auto it = yy1.begin(); it != yy1.end(); ++it) 
+                        if (*it < y1[index].item()) 
+                            *it = y1[index].item();
+                                    
+                    for(auto it = xx2.begin(); it != xx2.end(); ++it) 
+                        if (*it > x2[index].item()) 
+                            *it = x2[index].item();
 
-//				# find height and width of the intersection boxes
-//				w = xx2 - xx1
-//				h = yy2 - yy1
-				
-				auto w = xx2 - xx1;
-				auto h = yy2 - yy1;
-				
-//				# take max with 0.0 to avoid negative w and h
-//				# due to non-overlapping boxes
-//				w = torch.clamp(w, min=0.0)
-//				h = torch.clamp(h, min=0.0)
-				
-				w = nc::clip(w, 0.0f, float(1e9));
-			    h = nc::clip(h, 0.0f, float(1e9));
-				
-//				# find the intersection area
-//		        inter = w * h
-				
-				auto inter = w * h;
-				
-//				# find the areas of BBoxes according the indices in order
-//        		rem_areas = torch.index_select(areas, dim=0, index=order)i
-				
-				auto rem_areas = areas[index_other];
-				
-				if (MATCH_METRIC == L"IOU") {
-//					if match_metric == "IOU":
-//					# find the union of every prediction T in P
-//					# with the prediction S
-//					# Note that areas[idx] represents area of S
-//					union = (rem_areas - inter) + areas[idx]
-//					# find the IoU of every prediction in P with S
-//					match_metric_value = inter / union
-					
-					auto _union = (rem_areas - inter) + areas[index].item();
-					auto match_metric_value = inter / _union;
+                    for(auto it = yy2.begin(); it != yy2.end(); ++it) 
+                        if (*it > y2[index].item()) 
+                            *it = y2[index].item();
 
-					// mask = match_metric_value < match_threshold
-					auto mask = match_metric_value < MATCH_THRESHOLD;					
-					
-					auto rm_idx = 0;
-					for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
-						if (*it == 0)
-							remove.emplace_back(index_other[rm_idx]);
-					}
+    //				# find height and width of the intersection boxes
+    //				w = xx2 - xx1
+    //				h = yy2 - yy1
+                    
+                    auto w = xx2 - xx1;
+                    auto h = yy2 - yy1;
+                    
+    //				# take max with 0.0 to avoid negative w and h
+    //				# due to non-overlapping boxes
+    //				w = torch.clamp(w, min=0.0)
+    //				h = torch.clamp(h, min=0.0)
+                    
+                    w = nc::clip(w, 0.0f, float(1e9));
+                    h = nc::clip(h, 0.0f, float(1e9));
+                    
+    //				# find the intersection area
+    //		        inter = w * h
+                    
+                    auto inter = w * h;
+                    
+    //				# find the areas of BBoxes according the indices in order
+    //        		rem_areas = torch.index_select(areas, dim=0, index=order)i
+                    
+                    auto rem_areas = areas[index_other];
+                    
+                    if (MATCH_METRIC == L"IOU") {
+    //					if match_metric == "IOU":
+    //					# find the union of every prediction T in P
+    //					# with the prediction S
+    //					# Note that areas[idx] represents area of S
+    //					union = (rem_areas - inter) + areas[idx]
+    //					# find the IoU of every prediction in P with S
+    //					match_metric_value = inter / union
+                        
+                        auto _union = (rem_areas - inter) + areas[index].item();
+                        auto match_metric_value = inter / _union;
 
-					nd_order = nd_order[mask];
-				}
-				else if (MATCH_METRIC == L"IOS") {
-//					# find the smaller area of every prediction T in P
-//					# with the prediction S
-//					# Note that areas[idx] represents area of S
-//					smaller = torch.min(rem_areas, areas[idx])
-//					# find the IoU of every prediction in P with S
-//					match_metric_value = inter / smaller
-					
-					auto smaller = rem_areas;
-					for(auto it = smaller.begin(); it != smaller.end(); ++it)
-						if (*it > areas[index].item())
-							*it = areas[index].item();					
-					auto match_metric_value = inter / smaller;
+                        // mask = match_metric_value < match_threshold
+                        auto mask = match_metric_value < MATCH_THRESHOLD;					
+                        
+                        auto rm_idx = 0;
+                        for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
+                            if (*it == 0)
+                                remove.emplace_back(index_other[rm_idx]);
+                        }
 
-					auto mask = match_metric_value < MATCH_THRESHOLD;					
-					
-					auto rm_idx = 0;
-					for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
-						if (*it == 0)
-							remove.emplace_back(index_other[rm_idx]);
-					}
+                        nd_order = nd_order[mask];
+                    }
+                    else if (MATCH_METRIC == L"IOS") {
+    //					# find the smaller area of every prediction T in P
+    //					# with the prediction S
+    //					# Note that areas[idx] represents area of S
+    //					smaller = torch.min(rem_areas, areas[idx])
+    //					# find the IoU of every prediction in P with S
+    //					match_metric_value = inter / smaller
+                        
+                        auto smaller = rem_areas;
+                        for(auto it = smaller.begin(); it != smaller.end(); ++it)
+                            if (*it > areas[index].item())
+                                *it = areas[index].item();					
+                        auto match_metric_value = inter / smaller;
 
-					nd_order = nd_order[mask];
-				}
-				else {
-					return -1; // Change assert
-				}			
+                        auto mask = match_metric_value < MATCH_THRESHOLD;					
+                        
+                        auto rm_idx = 0;
+                        for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
+                            if (*it == 0)
+                                remove.emplace_back(index_other[rm_idx]);
+                        }
+
+                        nd_order = nd_order[mask];
+                    }
+                    else {
+                        return -1; // Change assert
+                    }			
+                }
+
+                for (auto &x: remove) {
+                    nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[lb][x]);
+                }
 			}
-
-			for (auto &x: remove) {
-				nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[x]);
-			}
+		
         }
     }
     return DSL_PAD_PROBE_OK;
