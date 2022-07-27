@@ -37,9 +37,10 @@ THE SOFTWARE.
 
 #include "DslApi.h"
 
-std::wstring uri_h265(
+std::wstring file_path1(
 //    L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4");
     L"/opt/dsl/dvcData/videos/wangsan-test1.mp4");
+std::wstring file_path2(L"/opt/dsl/dvcData/videos/wangsan-test1.mp4");
 
 // Config file used with the Preprocessor
 // roi-params-src-0=0;0;1920;1080;0;300;896;504;716;300;896;504;1024;300;896;504
@@ -65,6 +66,10 @@ std::wstring MATCH_METRIC = L"IOS"; // IOU, IOS
 float MATCH_THRESHOLD = 0.6;
 int num_labels=7;
 
+uint TRACKER_WIDTH = 640;
+uint TRACKER_HEIGHT = 384;
+uint TILER_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
+uint TILER_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
 uint WINDOW_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
 uint WINDOW_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
 
@@ -490,7 +495,6 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                     nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[lb][x]);
                 }
 			}
-		
         }
     }
 
@@ -527,7 +531,11 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New File Source
-        retval = dsl_source_file_new(L"uri-source-1", uri_h265.c_str(), true);
+        retval = dsl_source_file_new(L"uri-source-1", file_path1.c_str(), true);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // New File Source
+        retval = dsl_source_file_new(L"uri-source-2", file_path2.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New Preprocessor component using the config filespec defined above.
@@ -541,7 +549,7 @@ int main(int argc, char** argv)
         
         // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
         // to the number of ROI's defined in the Preprocessor configuraton file.
-        retval = dsl_infer_batch_size_set(L"primary-gie", 4);
+        retval = dsl_infer_batch_size_set(L"primary-gie", 8);
         if (retval != DSL_RESULT_SUCCESS) break;
         
         // **** IMPORTANT! we must set the input-meta-tensor setting to true when
@@ -552,10 +560,10 @@ int main(int argc, char** argv)
 
         // New IOU Tracker, setting max width and height of input frame
         retval = dsl_tracker_iou_new(L"iou-tracker", 
-            tracker_config_file.c_str(), 640, 384);
+            tracker_config_file.c_str(), TRACKER_WIDTH, TRACKER_HEIGHT);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_tracker_ktl_new(L"ktl-tracker", 640, 384);
+        retval = dsl_tracker_ktl_new(L"ktl-tracker", TRACKER_WIDTH, TRACKER_HEIGHT);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // Add the custom PPH to the source pad of the Tracker
@@ -563,6 +571,10 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
 
         retval = dsl_tracker_pph_add(L"ktl-tracker", L"custom_pph", DSL_PAD_SINK);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // New Tiler, setting width and height, use default cols/rows set by source count
+        retval = dsl_tiler_new(L"tiler", TILER_WIDTH, TILER_HEIGHT);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New OSD with text, clock and bbox display all enabled. 
@@ -577,8 +589,8 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
     
         // Create a list of Pipeline Components to add to the new Pipeline.
-        const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
-            L"iou-tracker", L"on-screen-display", L"window-sink", NULL};
+        const wchar_t* components[] = {L"uri-source-1", L"uri-source-2", L"preprocessor", L"primary-gie", 
+            L"iou-tracker", L"tiler", L"on-screen-display", L"window-sink", NULL};
         
         // Add all the components to our pipeline
         retval = dsl_pipeline_new_component_add_many(L"pipeline", components);

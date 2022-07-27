@@ -37,6 +37,11 @@ THE SOFTWARE.
 
 #include "DslApi.h"
 
+#include "xtensor/xarray.hpp"
+#include "xtensor/xio.hpp"
+#include "xtensor/xview.hpp"
+#include "xtensor/xadapt.hpp"
+
 std::wstring uri_h265(
 //    L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4");
     L"/opt/dsl/dvcData/videos/wangsan-test1.mp4");
