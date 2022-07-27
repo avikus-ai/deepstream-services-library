@@ -59,8 +59,8 @@ std::wstring primary_model_engine_file(
 std::wstring tracker_config_file(
     L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml");
 
-uint VECTOR_RESERVE_SIZE = 1000;
-uint CLASS_AGNOSTIC = false;
+uint VECTOR_RESERVE_SIZE = 500;
+uint CLASS_AGNOSTIC = true;
 std::wstring MATCH_METRIC = L"IOS"; // IOU, IOS 
 float MATCH_THRESHOLD = 0.6;
 int num_labels=7;
@@ -211,7 +211,7 @@ std::vector<float> calculate_box_union(const std::vector<float> &box1, const std
 //
 // Custom Pad Probe Handler (PPH) to process the batch-meta for every frame
 //
-uint custom_batch_meta_handler(void* buffer, void* client_data)
+uint nmm_with_numcpp(void* buffer, void* client_data)
 {
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     
@@ -286,6 +286,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 
                 // keep_to_merge_list = {}
                 std::unordered_map<int, std::vector<int>> keep_to_merge_list;
+                keep_to_merge_list.reserve(VECTOR_RESERVE_SIZE);
 
                 nc::NdArray<float> nd_predictions{predictions[lb]};
 
@@ -323,8 +324,8 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                 // keep = []
 
                 std::vector<unsigned int> keep, remove;
-                
-                // return DSL_PAD_PROBE_OK;
+                keep.reserve(VECTOR_RESERVE_SIZE);
+                remove.reserve(VECTOR_RESERVE_SIZE);
 
                 //while (order.size() > 0) {
                 while (nc::shape(nd_order).size() > 0) {
@@ -523,7 +524,7 @@ int main(int argc, char** argv)
         //```````````````````````````````````````````````````````````````````````````````````
         // Create a new Custom Pad Probe Handler. 
         retval = dsl_pph_custom_new(L"custom_pph",
-            custom_batch_meta_handler, &postprocess_time);
+            nmm_with_numcpp, &postprocess_time);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New File Source

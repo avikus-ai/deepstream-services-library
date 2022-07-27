@@ -47,6 +47,9 @@ std::wstring primary_model_engine_file(
 std::wstring tracker_config_file(
     L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml");
 
+std::wstring dcf_tracker_config_file(
+    L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_max_perf.yml");
+
 
 uint PGIE_CLASS_ID_VEHICLE = 0;
 uint PGIE_CLASS_ID_BICYCLE = 1;
@@ -105,13 +108,91 @@ void state_change_listener(uint old_state, uint new_state, void* client_data)
         << ", new state = " << dsl_state_value_to_string(new_state) << std::endl;
 }
 
+// 
+// Callback function for the ODE Monitor Action - illustrates how to
+// dereference the ODE "info_ptr" and access the data fields.
+// Note: you would normally use the ODE Print Action to print the info
+// to the console window if that is the only purpose of the Action.
+// 
+void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data)
+{
+    std::wcout << "Trigger Name        : " << pInfo->trigger_name << "\n";
+    std::cout << "  Unique Id         : " << pInfo->unique_ode_id << "\n";
+    std::cout << "  NTP Timestamp     : " << pInfo->ntp_timestamp << "\n";
+    std::cout << "  Source Data       : ------------------------" << "\n";
+    std::cout << "    Id              : " << pInfo->source_info.source_id << "\n";
+    std::cout << "    Batch Id        : " << pInfo->source_info.batch_id << "\n";
+    std::cout << "    Pad Index       : " << pInfo->source_info.pad_index << "\n";
+    std::cout << "    Frame           : " << pInfo->source_info.frame_num << "\n";
+    std::cout << "    Width           : " << pInfo->source_info.frame_width << "\n";
+    std::cout << "    Height          : " << pInfo->source_info.frame_height << "\n";
+    std::cout << "    Infer Done      : " << pInfo->source_info.inference_done << "\n";
+
+    if (pInfo->is_object_occurrence)
+    {
+        std::cout << "  Object Data       : ------------------------" << "\n";
+        std::cout << "    Class Id        : " << pInfo->object_info.class_id << "\n";
+        std::cout << "    Infer Comp Id   : " << pInfo->object_info.inference_component_id << "\n";
+        std::cout << "    Tracking Id     : " << pInfo->object_info.tracking_id << "\n";
+        std::cout << "    Label           : " << pInfo->object_info.label << "\n";
+        std::cout << "    Persistence     : " << pInfo->object_info.persistence << "\n";
+        std::cout << "    Direction       : " << pInfo->object_info.direction << "\n";
+        std::cout << "    Infer Conf      : " << pInfo->object_info.inference_confidence << "\n";
+        std::cout << "    Track Conf      : " << pInfo->object_info.tracker_confidence << "\n";
+        std::cout << "    Left            : " << pInfo->object_info.left << "\n";
+        std::cout << "    Top             : " << pInfo->object_info.top << "\n";
+        std::cout << "    Width           : " << pInfo->object_info.width << "\n";
+        std::cout << "    Height          : " << pInfo->object_info.height << "\n";
+    }
+    else
+    {
+        std::cout << "  Accumulative Data : ------------------------" << "\n";
+        std::cout << "    Occurrences     : " << pInfo->accumulative_info.occurrences_total << "\n";
+        std::cout << "    Occurrences In  : " << pInfo->accumulative_info.occurrences_total << "\n";
+        std::cout << "    Occurrences Out : " << pInfo->accumulative_info.occurrences_total << "\n";
+    }
+    std::cout << "  Trigger Criteria  : ------------------------" << "\n";
+    std::cout << "    Class Id        : " << pInfo->criteria_info.class_id << "\n";
+    std::cout << "    Infer Comp Id   : " << pInfo->criteria_info.inference_component_id << "\n";
+    std::cout << "    Min Infer Conf  : " << pInfo->criteria_info.min_inference_confidence << "\n";
+    std::cout << "    Min Track Conf  : " << pInfo->criteria_info.min_tracker_confidence << "\n";
+    std::cout << "    Infer Done Only : " << pInfo->criteria_info.inference_done_only << "\n";
+    std::cout << "    Min Width       : " << pInfo->criteria_info.min_width << "\n";
+    std::cout << "    Min Height      : " << pInfo->criteria_info.min_height << "\n";
+    std::cout << "    Max Width       : " << pInfo->criteria_info.max_width << "\n";
+    std::cout << "    Max Height      : " << pInfo->criteria_info.max_height << "\n";
+    std::cout << "    Interval        : " << pInfo->criteria_info.interval << "\n";
+}
+
 int main(int argc, char** argv)
 {
     DslReturnType retval = DSL_RESULT_FAILURE;
 
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
-    {    
+    {   
+        // New Occurrence Trigger, filtering on PERSON class_id,
+        retval = dsl_ode_trigger_occurrence_new(L"occurrence-trigger", 
+            DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        retval = dsl_ode_action_monitor_new(L"occurrence-monitor",
+            ode_occurrence_monitor, NULL);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // Add the ODE Heat-Mapper to the Person Occurrence Trigger.
+        retval = dsl_ode_trigger_action_add(L"occurrence-trigger", 
+            L"occurrence-monitor");
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // New ODE Handler to handle all ODE Triggers with their Areas and Actions
+        retval = dsl_pph_ode_new(L"ode-handler");
+        if (retval != DSL_RESULT_SUCCESS) break;
+        
+        // Add the two Triggers to the ODE PPH to be invoked on every frame. 
+        retval = dsl_pph_ode_trigger_add(L"ode-handler", L"occurrence-trigger");
+        if (retval != DSL_RESULT_SUCCESS) break;
+
         // New File Source
         retval = dsl_source_file_new(L"uri-source-1", uri_h265.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -122,7 +203,7 @@ int main(int argc, char** argv)
 
         // New Primary GIE using the filespecs defined above, with interval and Id
         retval = dsl_infer_gie_primary_new(L"primary-gie", 
-            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), 0);
+            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), 3);
         if (retval != DSL_RESULT_SUCCESS) break;
         
         // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
@@ -141,16 +222,24 @@ int main(int argc, char** argv)
             tracker_config_file.c_str(), 480, 272);
         if (retval != DSL_RESULT_SUCCESS) break;
 
+        retval = dsl_tracker_dcf_new(L"dcf-tracker", 
+            dcf_tracker_config_file.c_str(), 480, 320, true, false);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
         // New OSD with text, clock and bbox display all enabled. 
         retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // Add the ODE Pad Probe Handler to the Sink pad of the Tiler
+        retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
         retval = dsl_sink_window_new(L"window-sink", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         if (retval != DSL_RESULT_SUCCESS) break;
-    
+
         // Create a list of Pipeline Components to add to the new Pipeline.
-        const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
+        const wchar_t* components[] = {L"uri-source-1", L"preprocessor", L"primary-gie", 
             L"iou-tracker", L"on-screen-display", L"window-sink", NULL};
         
         // Add all the components to our pipeline

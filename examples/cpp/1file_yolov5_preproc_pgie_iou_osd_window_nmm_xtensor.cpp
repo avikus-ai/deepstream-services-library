@@ -41,6 +41,10 @@ THE SOFTWARE.
 #include "xtensor/xio.hpp"
 #include "xtensor/xview.hpp"
 #include "xtensor/xadapt.hpp"
+#include "pph/nmm.cpp"
+
+using namespace xt;
+typedef xarray<double> xarr;
 
 std::wstring uri_h265(
 //    L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4");
@@ -89,6 +93,194 @@ public:
 
     MeasureTime(int print_interval, int count, double culsum) : m_print_interval(print_interval), m_count(count), m_culsum(culsum) {}
 };
+
+std::vector<int> calc_union(const vector<int>& a, const std::unordered_map<int, std::vector<std::vector<int>>>::const_iterator& b)
+{
+    // cout << "start calc_union func" << endl;
+
+    std::vector<std::vector<int>> bb = b->second;
+
+    int cur_x1 = a[0];
+    int cur_y1 = a[1];
+    int cur_x2 = a[2];
+    int cur_y2 = a[3];
+
+    // cout << "initial bboxes" << cur_x1 << ' ' << cur_y1 << ' ' << cur_x2 << ' ' << cur_y2 << endl;
+
+    for (size_t i = 0; i < bb.size(); ++i)
+    {
+        cur_x1 = std::min(cur_x1, bb[i][0]);
+        cur_y1 = std::min(cur_y1, bb[i][1]);
+        cur_x2 = std::max(cur_x2, bb[i][2]);
+        cur_y2 = std::max(cur_y2, bb[i][3]);
+
+        // cout << "new bboxes" << bb[i][0] << ' ' << bb[i][1] << ' ' << bb[i][2] << ' ' << bb[i][3] << endl;
+        // cout << "updated bboxes" << cur_x1 << ' ' << cur_y1 << ' ' << cur_x2 << ' ' << cur_y2 << endl;
+    }
+
+    // cout << "end calc_union func" << endl;
+    return std::vector<int> {cur_x1, cur_y1, cur_x2, cur_y2};
+}
+
+
+uint custom_pph(void* buffer, void* client_data)
+{
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+
+    NvDsFrameMeta* frame_meta = NULL;
+    NvDsObjectMeta* obj_meta = NULL;
+    NvDsDisplayMeta* disp_meta = NULL;
+    NvDsMetaList* l_frame = NULL;
+    NvDsMetaList* l_obj = NULL;
+    NvDsMetaList* l_disp = NULL;
+
+    NvDsBatchMeta* batch_meta = gst_buffer_get_nvds_batch_meta((GstBuffer*)buffer);
+    MeasureTime *postprocess_time = static_cast<MeasureTime*>(client_data);
+
+    l_frame = batch_meta->frame_meta_list;
+
+    for (l_frame; l_frame != NULL; l_frame = l_frame->next)
+    {
+        frame_meta = (NvDsFrameMeta*)(l_frame->data);  
+        l_obj = frame_meta->obj_meta_list;
+
+        std::vector<std::vector<double>> detected_object_per_frame;
+
+        int cnt_first = 0;
+        for (l_obj; l_obj != NULL; l_obj = l_obj->next, cnt_first++)
+        {
+            obj_meta = (NvDsObjectMeta*)(l_obj->data);
+
+            gint cls_id = obj_meta->class_id;
+            gfloat conf = obj_meta->confidence;
+
+            NvDsComp_BboxInfo detector_bbox_info = obj_meta->detector_bbox_info;
+            NvBbox_Coords nvbbox_coords = detector_bbox_info.org_bbox_coords;
+
+            double x1 = nvbbox_coords.left;
+            double y1 = nvbbox_coords.top;
+            double w = nvbbox_coords.width;
+            double h = nvbbox_coords.height;
+
+            detected_object_per_frame.push_back({x1, y1, x1+w, y1+h, conf});
+        }
+
+        std::unordered_map<int, std::vector<std::vector<int>>> keep_to_merge_list;
+        std::vector<int> objects_to_keep_idxs;
+        std::vector<int> keys;
+        
+        if (!detected_object_per_frame.empty())
+        {
+            xt::xarray<double> object_predictions = xt::zeros<double>({(int)(detected_object_per_frame.size()), 5});
+
+            for (size_t i = 0; i < detected_object_per_frame.size(); ++i)
+            {
+                xt::view(object_predictions, i, xt::all()) = xt::adapt(detected_object_per_frame[i]);
+            }
+            
+            keep_to_merge_list = greedy_nmm(object_predictions, 0.8f);
+
+            // for (auto elem : keep_to_merge_list)
+            // {
+            //     cout << "keep to merge list key" << elem.first << endl;
+            //     vector<vector<int>> values = elem.second;
+
+            //     for (size_t i = 0; i < values.size(); ++i)
+            //     {
+            //         for (size_t j = 0; j < values[i].size(); ++j)
+            //         {
+            //             cout << values[i][j] << ' ';
+            //         }
+            //         cout << endl;
+            //         cout << endl;
+            //     }
+            // }
+
+            // cout << endl;
+            // cout << endl;
+
+            keys.reserve(keep_to_merge_list.size());
+
+            for (auto elem : keep_to_merge_list)
+            {
+                keys.push_back(elem.first);
+            }
+
+            // cout << "priting keys" << endl;
+            // for (size_t i = 0; i < keys.size(); ++i)
+            // {
+            //     cout << keys[i] << endl;
+            // }
+        }
+
+        if (!keep_to_merge_list.empty())
+        {
+            l_obj = frame_meta->obj_meta_list; // l_obj == pObjectMetaList
+            int idx = 0;
+
+            for (l_obj; l_obj != NULL; ++idx)
+            {
+                obj_meta = (NvDsObjectMeta*)(l_obj->data);
+
+                if (std::find(keys.begin(), keys.end(), idx) != keys.end())
+                {
+                    gint cls_id = obj_meta->class_id;
+                    gfloat conf = obj_meta->confidence;
+
+                    NvDsComp_BboxInfo detector_bbox_info = obj_meta->detector_bbox_info;
+                    NvBbox_Coords nvbbox_coords = detector_bbox_info.org_bbox_coords;
+
+                    int x1 = (int)nvbbox_coords.left;
+                    int y1 = (int)nvbbox_coords.top;
+                    int w = (int)nvbbox_coords.width;
+                    int h = (int)nvbbox_coords.height;
+
+                    // for (auto elem : keep_to_merge_list)
+                    //  {
+                    //      cout << "first idx is " << elem.first;
+
+                    //      vector<vector<int>> tmp = elem.second;
+                    //  }
+
+                    // cout << "before merging" << x1 << y1 << x1+w << y1+h << endl;
+
+                    std::vector<int> merged_bbox = calc_union(std::vector<int> {x1, y1, x1+w, y1+h}, keep_to_merge_list.find(idx));
+                    
+                    // cout << "after merging" << merged_bbox[0] << merged_bbox[1] << merged_bbox[2] << merged_bbox[3] << endl;
+
+                    obj_meta->rect_params.left = merged_bbox[0];
+                    obj_meta->rect_params.top = merged_bbox[1];
+                    obj_meta->rect_params.width = merged_bbox[2] - merged_bbox[0];
+                    obj_meta->rect_params.height = merged_bbox[3] - merged_bbox[1];
+
+                    l_obj = l_obj->next;
+                } 
+                else
+                {
+                    auto l_obj_next = l_obj->next;
+                    nvds_remove_obj_meta_from_frame(frame_meta, obj_meta);
+                    l_obj = l_obj_next;
+                }
+            }
+        }
+        // cout << endl;
+        // cout << endl;
+        // cout << endl;
+    }
+
+    std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+    postprocess_time->m_culsum += sec.count();
+    postprocess_time->m_count += 1;
+
+    if (postprocess_time->m_count % postprocess_time->m_print_interval == 0) {
+        std::wcout << "NMM Running time: " << std::setprecision(4) << (postprocess_time->m_culsum / postprocess_time->m_print_interval) * 1000  << "ms" << '\n';
+        postprocess_time->m_count = 0;
+        postprocess_time->m_culsum = 0.0;
+    }
+
+    return DSL_PAD_PROBE_OK;
+}
+
 
 boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
     uint source_count, void* client_data)
@@ -495,7 +687,6 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                     nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[lb][x]);
                 }
 			}
-		
         }
     }
 
@@ -528,7 +719,7 @@ int main(int argc, char** argv)
         //```````````````````````````````````````````````````````````````````````````````````
         // Create a new Custom Pad Probe Handler. 
         retval = dsl_pph_custom_new(L"custom_pph",
-            custom_batch_meta_handler, &postprocess_time);
+            custom_pph, &postprocess_time);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New File Source
