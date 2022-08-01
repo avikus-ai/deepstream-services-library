@@ -45,8 +45,8 @@ JSON_GLIB_VERSION:=1.0
 
 # To enable the Non Maximum Suppression (NMS) Pad Probe Handler (PPH)
 # - set BUILD_NMS_PPH:=true and NUM_CPP_PATH:=<path-to-numcpp-include-folder>
-BUILD_NMS_PPH:=false
-NUM_CPP_PATH:=
+BUILD_NMS_PPH:=true
+NUM_CPP_PATH:=../NumCpp/include
 
 SRC_INSTALL_DIR?=/opt/nvidia/deepstream/deepstream/sources
 INC_INSTALL_DIR?=/opt/nvidia/deepstream/deepstream/sources/includes

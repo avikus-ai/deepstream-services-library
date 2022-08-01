@@ -46,6 +46,9 @@ OBJS:= $(SRCS:.c=.o)
 OBJS:= $(OBJS:.cpp=.o)
 APP:= $(patsubst %.cpp,%,$(SRCS))
 
+INCLUDE_NUM_CPP:=true
+NUM_CPP_PATH:=../../../NumCpp/include
+
 CXXFLAGS+= -I$(DS_INC_INSTALL_DIR) \
 	-std=$(CXX_VERSION) \
 	-I$(INC_INSTALL_DIR) \
@@ -53,7 +56,12 @@ CXXFLAGS+= -I$(DS_INC_INSTALL_DIR) \
 	-I/usr/include/gstreamer-$(GSTREAMER_VERSION) \
 	-I/usr/include/glib-$(GLIB_VERSION) \
 	-I/usr/include/glib-$(GLIB_VERSION)/glib
-	
+
+ifeq ($(INCLUDE_NUM_CPP),true)
+CXXFLAGS+= -I$(NUM_CPP_PATH) \
+           -DNUMCPP_NO_USE_BOOST
+endif 
+
 LIBS+= -L$(DS_LIB_INSTALL_DIR) \
 	-ldsl \
 	-lnvdsgst_meta \
