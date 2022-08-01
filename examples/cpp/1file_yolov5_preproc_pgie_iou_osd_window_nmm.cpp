@@ -89,9 +89,11 @@ public:
 class SendDataStruct {
 public:
     std::vector<float> m_rect_params;
+    int m_class_id;
     std::string m_obj_label;
 
-    SendDataStruct(const std::vector<float> &rect_params, const std::string &obj_label) : m_rect_params(rect_params), m_obj_label(obj_label) {}
+    SendDataStruct(const std::vector<float> &rect_params, const int class_id, const std::string &obj_label) : 
+                                                m_rect_params(rect_params), m_class_id(class_id) m_obj_label(obj_label) {}
     friend std::ostream& operator<<(std::ostream& os, const SendDataStruct& data);
 };
 
@@ -100,7 +102,7 @@ std::ostream& operator<<(std::ostream& os, const SendDataStruct& data)
 	for (auto &x: data.m_rect_params) {
 		os << x << ' ';
 	}
-	os << data.m_obj_label << "\n";
+	os << data.m_class_id << ' ' << data.m_obj_label << "\n";
 	return os;
 }
 
@@ -559,6 +561,7 @@ uint send_data(void* buffer, void* client_data)
                                         pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
                                         pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
                                     },
+                    .class_id = pObjectMeta->class_id,
                     // tracking_id
                     .obj_label = std::string(pObjectMeta->obj_label)
                 };
