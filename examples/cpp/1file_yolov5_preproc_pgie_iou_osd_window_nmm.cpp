@@ -85,6 +85,14 @@ public:
     MeasureTime(int print_interval, int count, double culsum) : m_print_interval(print_interval), m_count(count), m_culsum(culsum) {}
 };
 
+class SendDataStruct {
+public:
+    std::vector<float> m_rect_params;
+    std::string m_obj_label;
+
+    SendDataStruct(const std::vector<float> &rect_params, const std::string &obj_label) : m_rect_params(rect_params), m_obj_label(obj_label) {}
+}
+
 boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
     uint source_count, void* client_data)
 {
@@ -507,6 +515,55 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
 
     return DSL_PAD_PROBE_OK;
 }
+
+
+uint send_data(void* buffer, void* client_data)
+{
+    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
+
+    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+
+    // For each frame in the batched meta data
+    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+    {
+        // Check for valid frame data
+        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+        if (pFrameMeta != NULL)
+        {
+            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+            std::vector<std::vector<SendDataStruct>> outputs;
+            outputs.reserve(VECTOR_RESERVE_SIZE)
+
+            // For each detected object in the frame.
+            while (pObjectMetaList)
+            {
+                // Check for valid object data
+                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
+                
+                SendDataStruct output = {
+                    .rect_params = std::vector<float>{
+                                        pObjectMeta->rect_params.left,
+                                        pObjectMeta->rect_params.top,
+                                        pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
+                                        pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
+                                    },
+                    // tracking_id
+                    .obj_label = std::string(pObjectMeta->obj_label)
+                    }
+                }
+
+                outputs.emplace_back(output)
+                pObjectMetaList = pObjectMetaList->next;
+
+            }
+
+            // write to shared memory
+        }
+    }
+    return DSL_PAD_PROBE_OK;
+}
+
 
 int main(int argc, char** argv)
 {
