@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <nvdspreprocess_meta.h>
 #include <algorithm>
 #include <numeric>
+#include <iomanip>
 // https://github.com/dpilger26/NumCpp/blob/master/docs/markdown/Installation.md
 #include <NumCpp.hpp>
 #include <cstdint>
@@ -91,6 +92,16 @@ public:
     std::string m_obj_label;
 
     SendDataStruct(const std::vector<float> &rect_params, const std::string &obj_label) : m_rect_params(rect_params), m_obj_label(obj_label) {}
+    friend std::ostream& operator<<(std::ostream& os, const SendDataStruct& data);
+};
+
+std::ostream& operator<<(std::ostream& os, const SendDataStruct& data)
+{
+	for (auto &x: data.m_rect_params) {
+		os << x << ' ';
+	}
+	os << data.m_obj_label << "\n";
+	return os;
 }
 
 boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
@@ -533,7 +544,7 @@ uint send_data(void* buffer, void* client_data)
         {
             NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
             std::vector<std::vector<SendDataStruct>> outputs;
-            outputs.reserve(VECTOR_RESERVE_SIZE)
+            outputs.reserve(VECTOR_RESERVE_SIZE);
 
             // For each detected object in the frame.
             while (pObjectMetaList)
@@ -550,12 +561,12 @@ uint send_data(void* buffer, void* client_data)
                                     },
                     // tracking_id
                     .obj_label = std::string(pObjectMeta->obj_label)
-                    }
-                }
+                };
 
-                outputs.emplace_back(output)
+                // Activate << overloading
+                // std::cout << output;
+                outputs.emplace_back(output);
                 pObjectMetaList = pObjectMetaList->next;
-
             }
 
             // write to shared memory
