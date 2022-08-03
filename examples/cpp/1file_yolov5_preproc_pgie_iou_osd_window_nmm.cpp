@@ -35,39 +35,18 @@ THE SOFTWARE.
 #include <cstdint>
 #include <unordered_map>
 #include <chrono>
+#include "yaml.hpp"
 
 #include "DslApi.h"
 
-std::wstring uri_h265(
-//    L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4");
-    L"/opt/dsl/dvcData/videos/wangsan-test1.mp4");
-
-// Config file used with the Preprocessor
-// roi-params-src-0=0;0;1920;1080;0;300;896;504;716;300;896;504;1024;300;896;504
-// network-input-shape= 4;3;368;640
-// Important - comment property [Group 1],[Group 2]
-std::wstring preproc_config(
-    L"/opt/dsl/dvcData/cuda114/yolov5s/config_preprocess_v5s.txt");
-
-// Config and model-engine files 
-std::wstring primary_infer_config_file(
-    L"/opt/dsl/dvcData/cuda114/yolov5s/config_infer_primary_yoloV5s.txt");
-std::wstring primary_model_engine_file(
-    L"/opt/dsl/dvcData/cuda114/yolov5s/model_b4_gpu0_fp16.engine");
-    // L"/opt/dsl/dvcData/cuda114/model_b4_gpu0_fp16.engine");
-    
-// Config file used by the IOU Tracker    
-std::wstring tracker_config_file(
-    L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml");
-
-uint VECTOR_RESERVE_SIZE = 500;
-uint CLASS_AGNOSTIC = true;
-std::wstring MATCH_METRIC = L"IOS"; // IOU, IOS 
-float MATCH_THRESHOLD = 0.6;
-int num_labels=7;
-
-uint WINDOW_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
-uint WINDOW_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
+uint vector_reserve_size;
+uint class_agnostic;
+std::wstring match_metric; // IOU, IOS 
+float match_threshold;
+int num_labels;
+int interval;
+uint window_width;
+uint window_height;
 
 class ReportData {
 public:
@@ -89,22 +68,10 @@ public:
 class SendDataStruct {
 public:
     std::vector<float> m_rect_params;
-    int m_class_id;
     std::string m_obj_label;
 
-    SendDataStruct(const std::vector<float> &rect_params, const int class_id, const std::string &obj_label) : 
-                                                m_rect_params(rect_params), m_class_id(class_id) m_obj_label(obj_label) {}
-    friend std::ostream& operator<<(std::ostream& os, const SendDataStruct& data);
+    SendDataStruct(const std::vector<float> &rect_params, const std::string &obj_label) : m_rect_params(rect_params), m_obj_label(obj_label) {}
 };
-
-std::ostream& operator<<(std::ostream& os, const SendDataStruct& data)
-{
-	for (auto &x: data.m_rect_params) {
-		os << x << ' ';
-	}
-	os << data.m_class_id << ' ' << data.m_obj_label << "\n";
-	return os;
-}
 
 boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
     uint source_count, void* client_data)
@@ -253,13 +220,13 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
 			std::vector<std::vector<std::vector<float>>> predictions;
 
 			// [fix] parse the label file			
-			num_labels = CLASS_AGNOSTIC ? 1 : num_labels;
+			num_labels = class_agnostic ? 1 : num_labels;
 			predictions.resize(num_labels);
             obj_array.resize(num_labels);
 
             for (int lb=0; lb<num_labels; lb++) {
-                predictions[lb].reserve(VECTOR_RESERVE_SIZE);
-                obj_array[lb].reserve(VECTOR_RESERVE_SIZE);
+                predictions[lb].reserve(vector_reserve_size);
+                obj_array[lb].reserve(vector_reserve_size);
             }
 
             // For each detected object in the frame.
@@ -274,7 +241,7 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
                 if (pObjectMeta != NULL)
                 {
 					// https://github.com/obss/sahi/blob/91a0becb0d86f0943c57f966a86a845a70c0eb77/sahi/postprocess/combine.py#L17-L40
-					if (CLASS_AGNOSTIC) {
+					if (class_agnostic) {
                         obj_array[0].emplace_back(pObjectMeta);
 						predictions[0].emplace_back(std::vector<float>{
 									pObjectMeta->rect_params.left,
@@ -307,7 +274,7 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
 
                 // keep_to_merge_list = {}
                 std::unordered_map<int, std::vector<int>> keep_to_merge_list;
-                keep_to_merge_list.reserve(VECTOR_RESERVE_SIZE);
+                keep_to_merge_list.reserve(vector_reserve_size);
 
                 nc::NdArray<float> nd_predictions{predictions[lb]};
 
@@ -345,8 +312,8 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
                 // keep = []
 
                 std::vector<unsigned int> keep, remove;
-                keep.reserve(VECTOR_RESERVE_SIZE);
-                remove.reserve(VECTOR_RESERVE_SIZE);
+                keep.reserve(vector_reserve_size);
+                remove.reserve(vector_reserve_size);
 
                 //while (order.size() > 0) {
                 while (nc::shape(nd_order).size() > 0) {
@@ -420,7 +387,7 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
                     
                     auto rem_areas = areas[index_other];
                     
-                    if (MATCH_METRIC == L"IOU") {
+                    if (match_metric == L"IOU") {
     //					if match_metric == "IOU":
     //					# find the union of every prediction T in P
     //					# with the prediction S
@@ -433,7 +400,7 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
                         auto match_metric_value = inter / _union;
 
                         // mask = match_metric_value < match_threshold
-                        auto mask = match_metric_value < MATCH_THRESHOLD;					
+                        auto mask = match_metric_value < match_threshold;					
                         
                         auto rm_idx = 0;
                         for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
@@ -445,7 +412,7 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
 
                         nd_order = nd_order[mask];
                     }
-                    else if (MATCH_METRIC == L"IOS") {
+                    else if (match_metric == L"IOS") {
     					// # find the smaller area of every prediction T in P
     					// # with the prediction S
     					// # Note that areas[idx] represents area of S
@@ -459,7 +426,7 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
                                 *it = areas[index].item();					
                         auto match_metric_value = inter / smaller;
 
-                        auto mask = match_metric_value < MATCH_THRESHOLD;					
+                        auto mask = match_metric_value < match_threshold;					
                         
                         auto rm_idx = 0;
                         for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
@@ -530,58 +497,104 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
 }
 
 
-uint send_data(void* buffer, void* client_data)
-{
-    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
-
-    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
-
-    // For each frame in the batched meta data
-    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
-        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
-    {
-        // Check for valid frame data
-        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-        if (pFrameMeta != NULL)
-        {
-            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-            std::vector<std::vector<SendDataStruct>> outputs;
-            outputs.reserve(VECTOR_RESERVE_SIZE);
-
-            // For each detected object in the frame.
-            while (pObjectMetaList)
-            {
-                // Check for valid object data
-                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
-                
-                SendDataStruct output = {
-                    .rect_params = std::vector<float>{
-                                        pObjectMeta->rect_params.left,
-                                        pObjectMeta->rect_params.top,
-                                        pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
-                                        pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
-                                    },
-                    .class_id = pObjectMeta->class_id,
-                    // tracking_id
-                    .obj_label = std::string(pObjectMeta->obj_label)
-                };
-
-                // Activate << overloading
-                // std::cout << output;
-                outputs.emplace_back(output);
-                pObjectMetaList = pObjectMetaList->next;
-            }
-
-            // write to shared memory
-        }
-    }
-    return DSL_PAD_PROBE_OK;
-}
-
+//uint send_data(void* buffer, void* client_data)
+//{
+//    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
+//
+//    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+//
+//    // For each frame in the batched meta data
+//    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+//        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+//    {
+//        // Check for valid frame data
+//        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+//        if (pFrameMeta != NULL)
+//        {
+//            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+//            std::vector<std::vector<SendDataStruct>> outputs;
+//            outputs.reserve(vector_reserve_size);
+//
+//            // For each detected object in the frame.
+//            while (pObjectMetaList)
+//            {
+//                // Check for valid object data
+//                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
+//                
+//                SendDataStruct output = {
+//                    .rect_params = std::vector<float>{
+//                                        pObjectMeta->rect_params.left,
+//                                        pObjectMeta->rect_params.top,
+//                                        pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
+//                                        pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
+//                                    },
+//                    // tracking_id
+//                    .obj_label = std::string(pObjectMeta->obj_label)
+//                };
+//                
+//
+//                outputs.emplace_back(output);
+//                pObjectMetaList = pObjectMetaList->next;
+//
+//            }
+//
+//            // write to shared memory
+//        }
+//    }
+//    return DSL_PAD_PROBE_OK;
+//}
+//
 
 int main(int argc, char** argv)
 {
     DslReturnType retval = DSL_RESULT_FAILURE;
+
+    // std::string set_file("1file_yolov5_preproc_pgie_iou_osd_window_nmm_config.txt");
+    // std::ifstream ifs(set_file);
+
+    // if (!ifs.is_open()) {
+    //     std::cout << "Could not open set file: " << set_file << "\n";
+    //     return retval;
+    // }
+    
+    // std::wstring uri;
+
+    // int ci = 0;
+    // while (ifs.good() && !ifs.eof()) {
+    //     std::string line;
+    //     std::getline(ifs, line);
+    //     switch(ci) {
+    //         case 0:
+    //             uri.assign(line.begin(), line.end());
+    //             break;
+    //     }
+    //     ci++;
+    // }
+
+    // std::wcout << uri;
+
+    Yaml::Node root;
+    Yaml::Parse(root, "1file_yolov5_preproc_pgie_iou_osd_window_nmm_config.yml");
+
+    auto str2wstr = [&root](const std::string &key){
+        auto suri = root[key].As<std::string>();
+        return std::wstring(suri.begin(), suri.end());
+    };
+
+    std::wstring uri = str2wstr("uri");
+    std::wstring preproc_config = str2wstr("preprocess");
+    std::wstring primary_infer_config_file = str2wstr("infer");
+    std::wstring primary_model_engine_file = str2wstr("model");
+    std::wstring tracker_config_file = str2wstr("trk_cfg");
+
+    vector_reserve_size = root["vector_reserve_size"].As<int>();
+    class_agnostic = root["class_agnostic"].As<bool>();
+    match_metric = str2wstr("match_metric");
+    match_threshold = root["match_threshold"].As<float>();
+    num_labels = root["num_labels"].As<int>();
+    interval = root["interval"].As<int>();
+    window_width = root["window_width"].As<int>();
+    window_height = root["window_height"].As<int>();
 
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
@@ -599,7 +612,7 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New File Source
-        retval = dsl_source_file_new(L"uri-source-1", uri_h265.c_str(), true);
+        retval = dsl_source_file_new(L"uri-source-1", uri.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New Preprocessor component using the config filespec defined above.
@@ -608,7 +621,7 @@ int main(int argc, char** argv)
 
         // New Primary GIE using the filespecs defined above, with interval and Id
         retval = dsl_infer_gie_primary_new(L"primary-gie", 
-            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), 3);
+            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), interval);
         if (retval != DSL_RESULT_SUCCESS) break;
         
         // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
@@ -645,7 +658,7 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
-        retval = dsl_sink_window_new(L"window-sink", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+        retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
         if (retval != DSL_RESULT_SUCCESS) break;
     
         // Create a list of Pipeline Components to add to the new Pipeline.

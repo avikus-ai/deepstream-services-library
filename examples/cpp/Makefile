@@ -62,6 +62,8 @@ CXXFLAGS+= -I$(NUM_CPP_PATH) \
            -DNUMCPP_NO_USE_BOOST
 endif 
 
+CXXFLAGS += -Iyaml
+
 LIBS+= -L$(DS_LIB_INSTALL_DIR) \
 	-ldsl \
 	-lnvdsgst_meta \
@@ -78,12 +80,15 @@ CXXFLAGS+= `pkg-config --cflags $(PKGS)`
 LIBS+= `pkg-config --libs $(PKGS)`
 
 all: $(APP)
-	
+
+./yaml.o: ./yaml/yaml.cpp
+	$(CXX) -std=$(CXX_VERSION) -I./yaml -c ./yaml/yaml.cpp -o ./yaml.o
+
 debug: CXXFLAGS += -DDEBUG -g
 debug: $(APP)
 
-% : %.cpp $(INCS)
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
+% : %.cpp $(INCS) ./yaml.o
+	$(CXX) $(CXXFLAGS) -o $@ ./yaml.o $< $(LIBS)
 
 clean:
 	rm -rf $(APP)
