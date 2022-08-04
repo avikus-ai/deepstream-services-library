@@ -35,44 +35,22 @@ THE SOFTWARE.
 #include <cstdint>
 #include <unordered_map>
 #include <chrono>
+#include "yaml.hpp"
 
 #include "DslApi.h"
 
-std::wstring file_path1(
-//    L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4");
-    L"/opt/dsl/dvcData/videos/wangsan-test1.mp4");
-std::wstring file_path2(L"/opt/dsl/dvcData/videos/wangsan-test1.mp4");
-
-// Config file used with the Preprocessor
-// roi-params-src-0=0;0;1920;1080;0;300;896;504;716;300;896;504;1024;300;896;504
-// network-input-shape= 4;3;368;640
-// Important - comment property [Group 1],[Group 2]
-std::wstring preproc_config(
-    L"/opt/dsl/dvcData/cuda114/yolov5s/config_preprocess_v5s.txt");
-
-// Config and model-engine files 
-std::wstring primary_infer_config_file(
-    L"/opt/dsl/dvcData/cuda114/yolov5s/config_infer_primary_yoloV5s.txt");
-std::wstring primary_model_engine_file(
-    L"/opt/dsl/dvcData/cuda114/yolov5s/model_b4_gpu0_fp16.engine");
-    // L"/opt/dsl/dvcData/cuda114/model_b4_gpu0_fp16.engine");
-    
-// Config file used by the IOU Tracker    
-std::wstring tracker_config_file(
-    L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml");
-
-uint VECTOR_RESERVE_SIZE = 1000;
-uint CLASS_AGNOSTIC = false;
-std::wstring MATCH_METRIC = L"IOS"; // IOU, IOS 
-float MATCH_THRESHOLD = 0.6;
-int num_labels=7;
-
-uint TRACKER_WIDTH = 640;
-uint TRACKER_HEIGHT = 384;
-uint TILER_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
-uint TILER_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
-uint WINDOW_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
-uint WINDOW_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
+uint vector_reserve_size;
+uint class_agnostic;
+std::wstring match_metric; // IOU, IOS 
+float match_threshold;
+int num_labels;
+int interval;
+int trk_width;
+int trk_height;
+uint window_width;
+uint window_height;
+int TILER_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
+int TILER_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
 
 class ReportData {
 public:
@@ -89,6 +67,14 @@ public:
     double m_culsum;
 
     MeasureTime(int print_interval, int count, double culsum) : m_print_interval(print_interval), m_count(count), m_culsum(culsum) {}
+};
+
+class SendDataStruct {
+public:
+    std::vector<float> m_rect_params;
+    std::string m_obj_label;
+
+    SendDataStruct(const std::vector<float> &rect_params, const std::string &obj_label) : m_rect_params(rect_params), m_obj_label(obj_label) {}
 };
 
 boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
@@ -217,7 +203,7 @@ std::vector<float> calculate_box_union(const std::vector<float> &box1, const std
 //
 // Custom Pad Probe Handler (PPH) to process the batch-meta for every frame
 //
-uint custom_batch_meta_handler(void* buffer, void* client_data)
+uint nmm_with_numcpp(void* buffer, void* client_data)
 {
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     
@@ -238,13 +224,13 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 			std::vector<std::vector<std::vector<float>>> predictions;
 
 			// [fix] parse the label file			
-			num_labels = CLASS_AGNOSTIC ? 1 : num_labels;
+			num_labels = class_agnostic ? 1 : num_labels;
 			predictions.resize(num_labels);
             obj_array.resize(num_labels);
 
             for (int lb=0; lb<num_labels; lb++) {
-                predictions[lb].reserve(VECTOR_RESERVE_SIZE);
-                obj_array[lb].reserve(VECTOR_RESERVE_SIZE);
+                predictions[lb].reserve(vector_reserve_size);
+                obj_array[lb].reserve(vector_reserve_size);
             }
 
             // For each detected object in the frame.
@@ -259,7 +245,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                 if (pObjectMeta != NULL)
                 {
 					// https://github.com/obss/sahi/blob/91a0becb0d86f0943c57f966a86a845a70c0eb77/sahi/postprocess/combine.py#L17-L40
-					if (CLASS_AGNOSTIC) {
+					if (class_agnostic) {
                         obj_array[0].emplace_back(pObjectMeta);
 						predictions[0].emplace_back(std::vector<float>{
 									pObjectMeta->rect_params.left,
@@ -292,6 +278,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 
                 // keep_to_merge_list = {}
                 std::unordered_map<int, std::vector<int>> keep_to_merge_list;
+                keep_to_merge_list.reserve(vector_reserve_size);
 
                 nc::NdArray<float> nd_predictions{predictions[lb]};
 
@@ -329,8 +316,8 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                 // keep = []
 
                 std::vector<unsigned int> keep, remove;
-                
-                // return DSL_PAD_PROBE_OK;
+                keep.reserve(vector_reserve_size);
+                remove.reserve(vector_reserve_size);
 
                 //while (order.size() > 0) {
                 while (nc::shape(nd_order).size() > 0) {
@@ -404,7 +391,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                     
                     auto rem_areas = areas[index_other];
                     
-                    if (MATCH_METRIC == L"IOU") {
+                    if (match_metric == L"IOU") {
     //					if match_metric == "IOU":
     //					# find the union of every prediction T in P
     //					# with the prediction S
@@ -417,7 +404,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                         auto match_metric_value = inter / _union;
 
                         // mask = match_metric_value < match_threshold
-                        auto mask = match_metric_value < MATCH_THRESHOLD;					
+                        auto mask = match_metric_value < match_threshold;					
                         
                         auto rm_idx = 0;
                         for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
@@ -429,7 +416,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
 
                         nd_order = nd_order[mask];
                     }
-                    else if (MATCH_METRIC == L"IOS") {
+                    else if (match_metric == L"IOS") {
     					// # find the smaller area of every prediction T in P
     					// # with the prediction S
     					// # Note that areas[idx] represents area of S
@@ -443,7 +430,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                                 *it = areas[index].item();					
                         auto match_metric_value = inter / smaller;
 
-                        auto mask = match_metric_value < MATCH_THRESHOLD;					
+                        auto mask = match_metric_value < match_threshold;					
                         
                         auto rm_idx = 0;
                         for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
@@ -496,6 +483,7 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
                     nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[lb][x]);
                 }
 			}
+		
         }
     }
 
@@ -512,9 +500,111 @@ uint custom_batch_meta_handler(void* buffer, void* client_data)
     return DSL_PAD_PROBE_OK;
 }
 
+
+//uint send_data(void* buffer, void* client_data)
+//{
+//    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
+//
+//    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+//
+//    // For each frame in the batched meta data
+//    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+//        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+//    {
+//        // Check for valid frame data
+//        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+//        if (pFrameMeta != NULL)
+//        {
+//            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+//            std::vector<std::vector<SendDataStruct>> outputs;
+//            outputs.reserve(vector_reserve_size);
+//
+//            // For each detected object in the frame.
+//            while (pObjectMetaList)
+//            {
+//                // Check for valid object data
+//                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
+//                
+//                SendDataStruct output = {
+//                    .rect_params = std::vector<float>{
+//                                        pObjectMeta->rect_params.left,
+//                                        pObjectMeta->rect_params.top,
+//                                        pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
+//                                        pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
+//                                    },
+//                    // tracking_id
+//                    .obj_label = std::string(pObjectMeta->obj_label)
+//                };
+//                
+//
+//                outputs.emplace_back(output);
+//                pObjectMetaList = pObjectMetaList->next;
+//
+//            }
+//
+//            // write to shared memory
+//        }
+//    }
+//    return DSL_PAD_PROBE_OK;
+//}
+//
+
 int main(int argc, char** argv)
 {
     DslReturnType retval = DSL_RESULT_FAILURE;
+
+    // std::string set_file("1file_yolov5_preproc_pgie_iou_osd_window_nmm_config.txt");
+    // std::ifstream ifs(set_file);
+
+    // if (!ifs.is_open()) {
+    //     std::cout << "Could not open set file: " << set_file << "\n";
+    //     return retval;
+    // }
+    
+    // std::wstring uri;
+
+    // int ci = 0;
+    // while (ifs.good() && !ifs.eof()) {
+    //     std::string line;
+    //     std::getline(ifs, line);
+    //     switch(ci) {
+    //         case 0:
+    //             uri.assign(line.begin(), line.end());
+    //             break;
+    //     }
+    //     ci++;
+    // }
+
+    // std::wcout << uri;
+
+    Yaml::Node root;
+    Yaml::Parse(root, "run.yml");
+
+    auto str2wstr = [&root](const std::string &key){
+        auto suri = root[key].As<std::string>();
+        return std::wstring(suri.begin(), suri.end());
+    };
+
+    std::wstring uri = str2wstr("uri");
+    std::wstring uri2 = str2wstr("uri2");
+    std::wstring uri3 = str2wstr("uri3");
+    std::wstring uri4 = str2wstr("uri4");
+
+    std::wstring preproc_config = str2wstr("preprocess");
+    std::wstring primary_infer_config_file = str2wstr("infer");
+    std::wstring primary_model_engine_file = str2wstr("model");
+    std::wstring tracker_config_file = str2wstr("trk_cfg");
+
+    vector_reserve_size = root["vector_reserve_size"].As<int>();
+    class_agnostic = root["class_agnostic"].As<bool>();
+    match_metric = str2wstr("match_metric");
+    match_threshold = root["match_threshold"].As<float>();
+    num_labels = root["num_labels"].As<int>();
+    interval = root["interval"].As<int>();
+    trk_width = root["trk_width"].As<int>();
+    trk_height = root["trk_height"].As<int>();
+    window_width = root["window_width"].As<int>();
+    window_height = root["window_height"].As<int>();
 
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
@@ -528,15 +618,17 @@ int main(int argc, char** argv)
         //```````````````````````````````````````````````````````````````````````````````````
         // Create a new Custom Pad Probe Handler. 
         retval = dsl_pph_custom_new(L"custom_pph",
-            custom_batch_meta_handler, &postprocess_time);
+            nmm_with_numcpp, &postprocess_time);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New File Source
-        retval = dsl_source_file_new(L"uri-source-1", file_path1.c_str(), true);
+        retval = dsl_source_file_new(L"uri-source-1", uri.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
-
-        // New File Source
-        retval = dsl_source_file_new(L"uri-source-2", file_path2.c_str(), true);
+        retval = dsl_source_file_new(L"uri-source-2", uri2.c_str(), true);
+        if (retval != DSL_RESULT_SUCCESS) break;
+        retval = dsl_source_file_new(L"uri-source-3", uri3.c_str(), true);
+        if (retval != DSL_RESULT_SUCCESS) break;
+        retval = dsl_source_file_new(L"uri-source-4", uri4.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New Preprocessor component using the config filespec defined above.
@@ -545,12 +637,12 @@ int main(int argc, char** argv)
 
         // New Primary GIE using the filespecs defined above, with interval and Id
         retval = dsl_infer_gie_primary_new(L"primary-gie", 
-            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), 3);
+            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), interval);
         if (retval != DSL_RESULT_SUCCESS) break;
         
         // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
         // to the number of ROI's defined in the Preprocessor configuraton file.
-        retval = dsl_infer_batch_size_set(L"primary-gie", 8);
+        retval = dsl_infer_batch_size_set(L"primary-gie", 4);
         if (retval != DSL_RESULT_SUCCESS) break;
         
         // **** IMPORTANT! we must set the input-meta-tensor setting to true when
@@ -561,10 +653,10 @@ int main(int argc, char** argv)
 
         // New IOU Tracker, setting max width and height of input frame
         retval = dsl_tracker_iou_new(L"iou-tracker", 
-            tracker_config_file.c_str(), TRACKER_WIDTH, TRACKER_HEIGHT);
+            tracker_config_file.c_str(), trk_width, trk_height);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_tracker_ktl_new(L"ktl-tracker", TRACKER_WIDTH, TRACKER_HEIGHT);
+        retval = dsl_tracker_ktl_new(L"ktl-tracker", trk_width, trk_height);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // Add the custom PPH to the source pad of the Tracker
@@ -586,11 +678,14 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
-        retval = dsl_sink_window_new(L"window-sink", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+        retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
         if (retval != DSL_RESULT_SUCCESS) break;
-    
+
+        retval = dsl_sink_file_new(L"file-sink", L"out4.mp4", DSL_CODEC_H264, DSL_CONTAINER_MP4, 400000, 0);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
         // Create a list of Pipeline Components to add to the new Pipeline.
-        const wchar_t* components[] = {L"uri-source-1", L"uri-source-2", L"preprocessor", L"primary-gie", 
+        const wchar_t* components[] = {L"uri-source-1", L"uri-source-2", L"uri-source-3", L"uri-source-4", L"preprocessor", L"primary-gie", 
             L"iou-tracker", L"tiler", L"on-screen-display", L"window-sink", NULL};
         
         // Add all the components to our pipeline
