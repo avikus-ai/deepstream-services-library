@@ -39,14 +39,14 @@ THE SOFTWARE.
 
 #include "DslApi.h"
 
-
-
 uint vector_reserve_size;
 uint class_agnostic;
 std::wstring match_metric; // IOU, IOS 
 float match_threshold;
 int num_labels;
 int interval;
+int trk_width;
+int trk_height;
 uint window_width;
 uint window_height;
 
@@ -542,9 +542,9 @@ uint send_data(void* buffer, void* client_data)
 
        }
    }
+
    return DSL_PAD_PROBE_OK;
 }
-
 
 int main(int argc, char** argv)
 {
@@ -594,6 +594,8 @@ int main(int argc, char** argv)
     match_threshold = root["match_threshold"].As<float>();
     num_labels = root["num_labels"].As<int>();
     interval = root["interval"].As<int>();
+    trk_width = root["trk_width"].As<int>();
+    trk_height = root["trk_height"].As<int>();
     window_width = root["window_width"].As<int>();
     window_height = root["window_height"].As<int>();
 

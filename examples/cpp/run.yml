@@ -3,7 +3,7 @@
 # uri3: ../../../dvcData/videos/busan-test2.mp4
 # uri4: ../../../dvcData/videos/wangsan-test1.mp4
 uri: ../../../dvcData/videos/AVIKUS/BUSAN_drive0_buoy_0.mp4
-uri2: ../../../dvcData/videos/AVIKUS/BUSAN_drivemedium_noobject_bridge_car_0.mp4
+uri2: ../../../dvcData/videos/AVIKUS/out2.mp4
 uri3: ../../../dvcData/videos/wangsan-test1.mp4
 uri4: ../../../dvcData/videos/hinas-test1.mp4
 preprocess: ../../../dvcData/cuda114/yolov5s/config_preprocess_v5s.txt
