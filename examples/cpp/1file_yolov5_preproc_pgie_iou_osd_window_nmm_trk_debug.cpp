@@ -39,19 +39,21 @@ THE SOFTWARE.
 
 #include "DslApi.h"
 
-uint vector_reserve_size;
-uint class_agnostic;
-std::wstring match_metric; // IOU, IOS 
-float match_threshold;
-int num_labels;
-int interval;
-std::wstring trk;
-int trk_width;
-int trk_height;
-uint window_width;
-uint window_height;
-int font_size;
-int bbox_border_size;
+namespace YML_VARIABLE {
+    uint vector_reserve_size;
+    uint class_agnostic;
+    std::wstring match_metric; // IOU, IOS 
+    float match_threshold;
+    int num_labels;
+    int interval;
+    std::wstring trk;
+    int trk_width;
+    int trk_height;
+    uint window_width;
+    uint window_height;
+    int font_size;
+    int bbox_border_size;
+}
 
 class ReportData {
 public:
@@ -262,6 +264,7 @@ void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data)
 //
 uint nmm_with_numcpp(void* buffer, void* client_data)
 {
+    using namespace YML_VARIABLE;
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     
     GstBuffer* pGstBuffer = (GstBuffer*)buffer;
@@ -560,26 +563,27 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
 
 uint send_data(void* buffer, void* client_data)
 {
-   GstBuffer* pGstBuffer = (GstBuffer*)buffer;
+    using namespace YML_VARIABLE;
+    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
 
-   NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
 
-   // For each frame in the batched meta data
-   for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
-       pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
-   {
-       // Check for valid frame data
-       NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-       if (pFrameMeta != NULL)
-       {
-           NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-           std::vector<SendDataStruct> outputs;
-           outputs.reserve(vector_reserve_size);
+    // For each frame in the batched meta data
+    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+    {
+        // Check for valid frame data
+        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+        if (pFrameMeta != NULL)
+        {
+            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+            std::vector<SendDataStruct> outputs;
+            outputs.reserve(vector_reserve_size);
 
-           // For each detected object in the frame.
-           while (pObjectMetaList)
-           {
-               // Check for valid object data
+            // For each detected object in the frame.
+            while (pObjectMetaList)
+            {
+                // Check for valid object data
                 NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
                 
                 if (pObjectMeta->text_params.y_offset - 30 < 0) {
@@ -601,9 +605,9 @@ uint send_data(void* buffer, void* client_data)
                 
                 outputs.emplace_back(std::move(output));
                 pObjectMetaList = pObjectMetaList->next;
-           }
+            }
 
-           // write to shared memory
+            // write to shared memory
 
        }
    }
@@ -638,6 +642,7 @@ int main(int argc, char** argv)
     // }
 
     // std::wcout << uri;
+    using namespace YML_VARIABLE;
 
     Yaml::Node root;
     Yaml::Parse(root, "run.yml");
