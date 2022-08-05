@@ -1,0 +1,19 @@
+
+## LIB Thirdparty All Source Files
+FILE(GLOB SOURCES_FILES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+)
+
+
+### make SHARED library (.so) / STATIC(.a) ###
+ADD_LIBRARY(randomcolor SHARED ${SOURCES_FILES})
+
+
+### INCLUDE DIRECTORY ###
+TARGET_INCLUDE_DIRECTORIES(randomcolor PUBLIC .)
+
+
+### INSTALL TARGETS ###
+INSTALL(TARGETS randomcolor 
+    DESTINATION ${CMAKE_LIB_PATH}
+)

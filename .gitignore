@@ -49,4 +49,5 @@
 *.csv
 *.txt
 
+!CMakeLists.txt
 # Directories

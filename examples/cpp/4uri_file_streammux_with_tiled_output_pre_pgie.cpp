@@ -63,7 +63,6 @@ static const std::wstring dot_file = L"state-playing";
 int TILER_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
 int TILER_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
 
-
 // Window Sink Dimensions - used to create the sink, however, in this
 // example the Pipeline XWindow service is called to enabled full-sreen
 int WINDOW_WIDTH = 1280;
