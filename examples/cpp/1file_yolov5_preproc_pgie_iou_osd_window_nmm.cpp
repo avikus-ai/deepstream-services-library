@@ -39,8 +39,6 @@ THE SOFTWARE.
 
 #include "DslApi.h"
 
-
-
 uint vector_reserve_size;
 uint class_agnostic;
 std::wstring match_metric; // IOU, IOS 

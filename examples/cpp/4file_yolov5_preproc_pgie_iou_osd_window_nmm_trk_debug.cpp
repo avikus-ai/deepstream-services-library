@@ -53,6 +53,9 @@ uint window_height;
 int font_size;
 int bbox_border_size;
 
+int TILER_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
+int TILER_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
+
 class ReportData {
 public:
     int m_report_count;
@@ -560,26 +563,26 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
 
 uint send_data(void* buffer, void* client_data)
 {
-   GstBuffer* pGstBuffer = (GstBuffer*)buffer;
+    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
 
-   NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+    
+    // For each frame in the batched meta data
+    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+    {
+        // Check for valid frame data
+        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+        if (pFrameMeta != NULL)
+        {
+            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+            std::vector<SendDataStruct> outputs;
+            outputs.reserve(vector_reserve_size);
 
-   // For each frame in the batched meta data
-   for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
-       pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
-   {
-       // Check for valid frame data
-       NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-       if (pFrameMeta != NULL)
-       {
-           NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-           std::vector<SendDataStruct> outputs;
-           outputs.reserve(vector_reserve_size);
-
-           // For each detected object in the frame.
-           while (pObjectMetaList)
-           {
-               // Check for valid object data
+            // For each detected object in the frame.
+            while (pObjectMetaList)
+            {
+                // Check for valid object data
                 NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
                 
                 if (pObjectMeta->text_params.y_offset - 30 < 0) {
@@ -588,6 +591,7 @@ uint send_data(void* buffer, void* client_data)
                 else {
                     pObjectMeta->text_params.y_offset -= 30;
                 }
+
                 SendDataStruct output = {
                     .rect_params = std::vector<float>{
                                         pObjectMeta->rect_params.left,
@@ -601,12 +605,12 @@ uint send_data(void* buffer, void* client_data)
                 
                 outputs.emplace_back(std::move(output));
                 pObjectMetaList = pObjectMetaList->next;
-           }
+            }
 
-           // write to shared memory
+            // write to shared memory
 
-       }
-   }
+        }
+    }
 
    return DSL_PAD_PROBE_OK;
 }
@@ -648,6 +652,10 @@ int main(int argc, char** argv)
     };
 
     std::wstring uri = str2wstr("uri");
+    std::wstring uri2 = str2wstr("uri2");
+    std::wstring uri3 = str2wstr("uri3");
+    std::wstring uri4 = str2wstr("uri4");
+    
     std::wstring preproc_config = str2wstr("preprocess");
     std::wstring primary_infer_config_file = str2wstr("infer");
     std::wstring primary_model_engine_file = str2wstr("model");
@@ -685,6 +693,7 @@ int main(int argc, char** argv)
         retval = dsl_pph_custom_new(L"send-to-medula", 
             send_data, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
+
         // Create an Any-Class Occurrence Trigger for our remove Actions
         retval = dsl_ode_trigger_occurrence_new(L"every-occurrence-trigger", DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -734,6 +743,12 @@ int main(int argc, char** argv)
         // New File Source
         retval = dsl_source_file_new(L"uri-source-1", uri.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
+        retval = dsl_source_file_new(L"uri-source-2", uri2.c_str(), true);
+        if (retval != DSL_RESULT_SUCCESS) break;
+        retval = dsl_source_file_new(L"uri-source-3", uri3.c_str(), true);
+        if (retval != DSL_RESULT_SUCCESS) break;
+        retval = dsl_source_file_new(L"uri-source-4", uri4.c_str(), true);
+        if (retval != DSL_RESULT_SUCCESS) break;
 
         // New Preprocessor component using the config filespec defined above.
         retval = dsl_preproc_new(L"preprocessor", preproc_config.c_str());
@@ -778,6 +793,10 @@ int main(int argc, char** argv)
         retval = dsl_tracker_pph_add(L"tracker", L"custom_pph", DSL_PAD_SINK);
         if (retval != DSL_RESULT_SUCCESS) break;
 
+        // New Tiler, setting width and height, use default cols/rows set by source count
+        retval = dsl_tiler_new(L"tiler", TILER_WIDTH, TILER_HEIGHT);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
         // New OSD with text, clock and bbox display all enabled. 
         retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -790,13 +809,14 @@ int main(int argc, char** argv)
 
         retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
         if (retval != DSL_RESULT_SUCCESS) break;
+
         // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
         retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
         if (retval != DSL_RESULT_SUCCESS) break;
     
         // Create a list of Pipeline Components to add to the new Pipeline.
-        const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
-            L"tracker", L"on-screen-display", L"window-sink", NULL};
+        const wchar_t* components[] = {L"uri-source-1", L"uri-source-2", L"uri-source-3", L"uri-source-4", L"preprocessor", L"primary-gie", 
+            L"tracker", L"tiler", L"on-screen-display", L"window-sink", NULL};
         
         // Add all the components to our pipeline
         retval = dsl_pipeline_new_component_add_many(L"pipeline", components);

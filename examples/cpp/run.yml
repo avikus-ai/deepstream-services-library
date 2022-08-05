@@ -1,25 +1,23 @@
-# uri: ../../../dvcData/videos/hinas-test1.mp4
-# uri2: ../../../dvcData/videos/EO_0509_panama_raw.mp4
-# uri3: ../../../dvcData/videos/busan-test2.mp4
-# uri4: ../../../dvcData/videos/wangsan-test1.mp4
-uri: ../../../dvcData/videos/AVIKUS/BUSAN_drive0_buoy_0.mp4
+CUDA_VER: cuda114
+uri: ../../../dvcData/videos/wangsan-test1.mp4
 uri2: ../../../dvcData/videos/AVIKUS/out2.mp4
-uri3: ../../../dvcData/videos/wangsan-test1.mp4
+uri3: ../../../dvcData/videos/AVIKUS/BUSAN_drive0_buoy_0.mp4
 uri4: ../../../dvcData/videos/hinas-test1.mp4
 preprocess: ../../../dvcData/cuda114/yolov5s/config_preprocess_v5s.txt
 infer: ../../../dvcData/cuda114/yolov5s/config_infer_primary_yoloV5s.txt
 model: ../../../dvcData/cuda114/yolov5s/model_b16_gpu0_fp16.engine
-trk: IOU
-trk_cfg: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml
-trk_width: 640
-trk_height: 380
+trk: DCF
+trk_cfg: ../../../dvcData/cuda114/yolov5s/config_tracker_NvDCF_max_perf.yml
+trk_width: 1280
+trk_height: 768
 vector_reserve_size: 500
 class_agnostic: true
 match_metric: IOS
 match_threshold: 0.6
 num_labels: 7
-interval: 0
+interval: 2
 window_width: 1920
 window_height: 1080
-batch_size
-
+font_size: 16
+bbox_border_size: 3
+batch_size: 4
