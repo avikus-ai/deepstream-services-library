@@ -771,7 +771,6 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New IOU Tracker, setting max width and height of input frame
-
         if (trk == L"IOU") {
             retval = dsl_tracker_iou_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height);
             if (retval != DSL_RESULT_SUCCESS) break;

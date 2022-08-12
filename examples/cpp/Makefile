@@ -44,10 +44,11 @@ INCS+= $(wildcard ../../src/*.h)
 
 OBJS:= $(SRCS:.c=.o)
 OBJS:= $(OBJS:.cpp=.o)
-APP:= $(patsubst %.cpp,%,$(SRCS))
 
-INCLUDE_NUM_CPP:=true
-NUM_CPP_PATH:=../../../NumCpp/include
+#INCLUDE_NUM_CPP:=true
+#NUM_CPP_PATH:=../../../NumCpp/include
+
+APP:= $(patsubst %.cpp,%.out,$(SRCS))
 
 CXXFLAGS+= -I$(DS_INC_INSTALL_DIR) \
 	-std=$(CXX_VERSION) \
@@ -57,10 +58,10 @@ CXXFLAGS+= -I$(DS_INC_INSTALL_DIR) \
 	-I/usr/include/glib-$(GLIB_VERSION) \
 	-I/usr/include/glib-$(GLIB_VERSION)/glib
 
-ifeq ($(INCLUDE_NUM_CPP),true)
-CXXFLAGS+= -I$(NUM_CPP_PATH) \
-           -DNUMCPP_NO_USE_BOOST
-endif 
+#ifeq ($(INCLUDE_NUM_CPP),true)
+#CXXFLAGS+= -I$(NUM_CPP_PATH) \
+#           -DNUMCPP_NO_USE_BOOST
+#endif 
 
 CXXFLAGS += -Iyaml
 
@@ -87,7 +88,7 @@ all: $(APP)
 debug: CXXFLAGS += -DDEBUG -g
 debug: $(APP)
 
-% : %.cpp $(INCS) ./yaml.o
+%.out: %.cpp $(INCS)
 	$(CXX) $(CXXFLAGS) -o $@ ./yaml.o $< $(LIBS)
 
 clean:

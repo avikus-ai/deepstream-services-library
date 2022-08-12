@@ -74,7 +74,7 @@ TARGET_LINK_LIBRARIES(dsl
 	nvbufsurftransform
 	gstvideo-1.0
 	randomcolor
-    nms
+	nmp
 	${NVDSGST}
 	${NVDSMSGBRK}
 	${NVDSGST_META}

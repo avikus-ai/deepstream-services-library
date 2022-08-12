@@ -1,3 +1,14 @@
+# Cpp Executable file
+*.out
+
+# Vscode 
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/c_cpp_properties.json
+
 # Prerequisites
 *.d
 
@@ -47,7 +58,6 @@
 
 # files created running test
 *.csv
-*.txt
-
-!CMakeLists.txt
+# *.txt
+ 
 # Directories

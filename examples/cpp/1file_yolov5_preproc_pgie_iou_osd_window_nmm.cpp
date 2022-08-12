@@ -45,8 +45,16 @@ std::wstring match_metric; // IOU, IOS
 float match_threshold;
 int num_labels;
 int interval;
+std::wstring trk;
+int trk_width;
+int trk_height;
 uint window_width;
 uint window_height;
+int font_size;
+int bbox_border_size;
+
+int TILER_WIDTH = DSL_DEFAULT_STREAMMUX_WIDTH;
+int TILER_HEIGHT = DSL_DEFAULT_STREAMMUX_HEIGHT;
 
 class ReportData {
 public:
@@ -196,6 +204,26 @@ std::vector<float> calculate_box_union(const std::vector<float> &box1, const std
     return std::vector<float>{x1, y1, x2, y2, box1[4]};
 }
 
+static gpointer user_meta_copy(gpointer data, gpointer user_data)
+{
+    NvDsUserMeta* pUserMeta = (NvDsUserMeta*)data;
+    double* pSrcMeta = (double*)pUserMeta->user_meta_data;
+    double* pDstMeta = NULL;
+
+    pDstMeta = (double*)g_memdup(pSrcMeta, sizeof(double)*4);
+    return pDstMeta;
+}
+
+static void user_meta_free(gpointer data, gpointer user_data)
+{
+    NvDsUserMeta *pUserMeta = (NvDsUserMeta *)data;
+    double* meta = (double*)pUserMeta->user_meta_data;
+    
+    g_free(pUserMeta->user_meta_data);
+    
+    pUserMeta->user_meta_data = NULL;
+}
+
 //
 // Custom Pad Probe Handler (PPH) to process the batch-meta for every frame
 //
@@ -260,8 +288,28 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
                                      pObjectMeta->rect_params.top + pObjectMeta->rect_params.height, 
                                      pObjectMeta->confidence,
                                      });
-
 					}
+
+                    NvDsUserMeta* pUserMeta = nvds_acquire_user_meta_from_pool(pBatchMeta);
+                    // std::vector<double> userData{10,20,30,40};
+
+                    double* userData = 
+                        (double*)g_malloc0(sizeof(double)*4);
+
+                    userData[0] = 10;
+                    userData[1] = 20;
+                    userData[2] = 30;
+                    userData[3] = 40;
+                    
+                    // double userData[]{10,20,30,40};
+                    // float userData[]{10,20,30};
+                    pUserMeta->user_meta_data = (void*)userData; // reinterpret_cast<void*>(&userData);
+                    // pUserMeta->base_meta.meta_type = (NvDsMetaType)NVDS_USER_META;
+                    pUserMeta->base_meta.copy_func = 
+                        (NvDsMetaCopyFunc)user_meta_copy;
+                    pUserMeta->base_meta.release_func = 
+                        (NvDsMetaReleaseFunc)user_meta_free;
+                    nvds_add_user_meta_to_obj(pObjectMeta, pUserMeta);
                     // nvds_remove_obj_meta_from_frame(pFrameMeta, pObjectMeta);
                 }
             }
@@ -479,7 +527,6 @@ uint nmm_with_numcpp(void* buffer, void* client_data)
                     nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[lb][x]);
                 }
 			}
-		
         }
     }
 
@@ -520,19 +567,44 @@ uint send_data(void* buffer, void* client_data)
            {
                // Check for valid object data
                 NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
-
-                SendDataStruct output = {
-                    .rect_params = std::vector<float>{
-                                        pObjectMeta->rect_params.left,
-                                        pObjectMeta->rect_params.top,
-                                        pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
-                                        pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
-                                    },
-                    // tracking_id
-                    .obj_label = std::string(pObjectMeta->obj_label)
-                };
                 
-                outputs.emplace_back(std::move(output));
+                if (pObjectMeta) {
+                    NvDsUserMetaList* pUserMetaList = pObjectMeta->obj_user_meta_list;
+
+                    while(pUserMetaList) {
+                        NvDsUserMeta* pUserMeta = (NvDsUserMeta*)(pUserMetaList->data);
+
+                        if(pUserMeta) {
+                            
+                            double *b = static_cast<double *>(pUserMeta->user_meta_data);
+                            std::cout << b[0] << ' ' << b[1] << ' ' << b[2] << ' ' << b[3] << "\n";
+                        }
+
+                        pUserMetaList = pUserMetaList->next;
+                    }
+                
+                    if (pObjectMeta->text_params.y_offset - 30 < 0) {
+                        pObjectMeta->text_params.y_offset = 0;
+                    }
+                    else {
+                        pObjectMeta->text_params.y_offset -= 30;
+                    }
+
+                    SendDataStruct output = {
+                        .rect_params = std::vector<float>{
+                                            pObjectMeta->rect_params.left,
+                                            pObjectMeta->rect_params.top,
+                                            pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
+                                            pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
+                                        },
+                        // tracking_id
+                        .obj_label = std::string(pObjectMeta->obj_label)
+                    };
+                    
+                    outputs.emplace_back(std::move(output));
+                }
+                
+    
                 pObjectMetaList = pObjectMetaList->next;
            }
 
@@ -592,8 +664,13 @@ int main(int argc, char** argv)
     match_threshold = root["match_threshold"].As<float>();
     num_labels = root["num_labels"].As<int>();
     interval = root["interval"].As<int>();
+    trk = str2wstr("trk");
+    trk_width = root["trk_width"].As<int>();
+    trk_height = root["trk_height"].As<int>();
     window_width = root["window_width"].As<int>();
     window_height = root["window_height"].As<int>();
+    font_size = root["font_size"].As<int>();
+    bbox_border_size = root["bbox_border_size"].As<int>();
 
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
@@ -608,6 +685,54 @@ int main(int argc, char** argv)
         // Create a new Custom Pad Probe Handler. 
         retval = dsl_pph_custom_new(L"custom_pph",
             nmm_with_numcpp, &postprocess_time);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        retval = dsl_pph_custom_new(L"send-to-medula", 
+            send_data, nullptr);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // Create an Any-Class Occurrence Trigger for our remove Actions
+        retval = dsl_ode_trigger_occurrence_new(L"every-occurrence-trigger", DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        retval = dsl_display_type_rgba_color_custom_new(L"full-white", 1.0, 1.0, 1.0, 1.0);
+        if (retval != DSL_RESULT_SUCCESS) break;
+        
+        retval = dsl_display_type_rgba_color_custom_new(L"opaque-black", 0.0, 0.0, 0.0, 0.8);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        retval = dsl_display_type_rgba_font_new(L"verdana-bold-16-white", L"verdana bold", font_size, L"full-white");
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        retval = dsl_ode_action_format_label_new(L"format-label", 
+            L"verdana-bold-16-white", 
+            true, 
+            L"opaque-black");
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        retval = dsl_display_type_rgba_color_palette_random_new(L"random-color", num_labels, DSL_COLOR_HUE_RANDOM, DSL_COLOR_LUMINOSITY_RANDOM, 1.0, 1000);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        retval = dsl_ode_action_format_bbox_new(L"format-bbox", bbox_border_size, L"random-color", false, nullptr);
+        if (retval != DSL_RESULT_SUCCESS) break;
+        
+        uint content_types[] = {DSL_METRIC_OBJECT_TRACKING_ID, DSL_METRIC_OBJECT_CLASS};
+        retval = dsl_ode_action_customize_label_new(L"customize-label-action", content_types, sizeof(content_types)/sizeof(uint));
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+
+        const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", nullptr};
+        retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // `````````````````````````````````````````````````````````````````````````````
+        // New ODE Handler to handle all ODE Triggers with their Areas and Actions
+        retval = dsl_pph_ode_new(L"ode-handler");
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        // Add the two Triggers to the ODE PPH to be invoked on every frame. 
+        const wchar_t* triggers[] = {L"every-occurrence-trigger", nullptr};
+        retval = dsl_pph_ode_trigger_add_many(L"ode-handler", triggers);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New File Source
@@ -633,20 +758,25 @@ int main(int argc, char** argv)
         retval = dsl_infer_gie_tensor_meta_settings_set(L"primary-gie",
             true, false);
         if (retval != DSL_RESULT_SUCCESS) break;
-
         // New IOU Tracker, setting max width and height of input frame
-        retval = dsl_tracker_iou_new(L"iou-tracker", 
-            tracker_config_file.c_str(), 640, 384);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
-        retval = dsl_tracker_ktl_new(L"ktl-tracker", 640, 384);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
+        if (trk == L"IOU") {
+            retval = dsl_tracker_iou_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        else if (trk == L"KLT") {
+            retval = dsl_tracker_ktl_new(L"tracker", trk_width, trk_height);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        else if (trk == L"DCF") {
+            retval = dsl_tracker_dcf_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height, true, true);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        else {
+            retval = DSL_RESULT_FAILURE;
+            break;
+        }
         // Add the custom PPH to the source pad of the Tracker
-        retval = dsl_tracker_pph_add(L"iou-tracker", L"custom_pph", DSL_PAD_SINK);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
-        retval = dsl_tracker_pph_add(L"ktl-tracker", L"custom_pph", DSL_PAD_SINK);
+        retval = dsl_tracker_pph_add(L"tracker", L"custom_pph", DSL_PAD_SINK);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New OSD with text, clock and bbox display all enabled. 
@@ -655,14 +785,18 @@ int main(int argc, char** argv)
 
         retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
         if (retval != DSL_RESULT_SUCCESS) break;
+        retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
+        if (retval != DSL_RESULT_SUCCESS) break;
 
+        retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
+        if (retval != DSL_RESULT_SUCCESS) break;
         // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
         retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
         if (retval != DSL_RESULT_SUCCESS) break;
     
         // Create a list of Pipeline Components to add to the new Pipeline.
         const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
-            L"iou-tracker", L"on-screen-display", L"window-sink", NULL};
+            L"tracker", L"on-screen-display", L"window-sink", NULL};
         
         // Add all the components to our pipeline
         retval = dsl_pipeline_new_component_add_many(L"pipeline", components);

@@ -42,6 +42,7 @@ THE SOFTWARE.
 namespace YML_VARIABLE {
     uint vector_reserve_size;
     uint class_agnostic;
+    std::wstring postprocess;
     std::wstring match_metric; // IOU, IOS 
     float match_threshold;
     int num_labels;
@@ -165,44 +166,6 @@ void state_change_listener(uint old_state, uint new_state, void* client_data)
         << ", new state = " << dsl_state_value_to_string(new_state) << std::endl;
 }
 
-template<typename T>
-void print_1dVector(const std::vector<T> &arr) {
-	for( auto &row : arr) {
-		std::cout << row << ' ';
-	}
-	std::cout << '\n';
-}
-
-template<typename T>
-void print_2dVector(const std::vector<T> &arr) {
-	for( auto &row : arr) {
-		for(auto &col : row)
-			 std::cout << col << ' ';
-		std::cout << '\n';
-	}
-}
-
-template<typename T>
-std::vector<uint32_t> argsort(const std::vector<T> &array) {
-    std::vector<uint32_t> indices(array.size());
-    std::iota(indices.begin(), indices.end(), 0);
-    std::sort(indices.begin(), indices.end(),
-              [&array](int left, int right) -> bool {
-                  // sort indices according to corresponding array element
-                  return array[left] < array[right];
-              });
-
-    return indices;
-}
-
-std::vector<float> calculate_box_union(const std::vector<float> &box1, const std::vector<float> &box2) {
-    float x1 = std::min(box1[0], box2[0]);
-    float y1 = std::min(box1[1], box2[1]);
-    float x2 = std::max(box1[2], box2[2]);
-    float y2 = std::max(box1[3], box2[3]);
-    return std::vector<float>{x1, y1, x2, y2, box1[4]};
-}
-
 // 
 // Callback function for the ODE Monitor Action - illustrates how to
 // dereference the ODE "info_ptr" and access the data fields.
@@ -259,308 +222,6 @@ void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data)
     std::cout << "    Interval        : " << pInfo->criteria_info.interval << "\n";
 }
 
-//
-// Custom Pad Probe Handler (PPH) to process the batch-meta for every frame
-//
-uint nmm_with_numcpp(void* buffer, void* client_data)
-{
-    using namespace YML_VARIABLE;
-    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-    
-    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
-    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
-    MeasureTime *postprocess_time = static_cast<MeasureTime*>(client_data);
-    
-    // For each frame in the batched meta data
-    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
-        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
-    {
-        // Check for valid frame data
-        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-        if (pFrameMeta != NULL)
-        {
-            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-			std::vector<std::vector<NvDsObjectMeta*>> obj_array;
-			std::vector<std::vector<std::vector<float>>> predictions;
-
-			// [fix] parse the label file			
-			num_labels = class_agnostic ? 1 : num_labels;
-			predictions.resize(num_labels);
-            obj_array.resize(num_labels);
-
-            for (int lb=0; lb<num_labels; lb++) {
-                predictions[lb].reserve(vector_reserve_size);
-                obj_array[lb].reserve(vector_reserve_size);
-            }
-
-            // For each detected object in the frame.
-            while (pObjectMetaList)
-            {
-                // Check for valid object data
-                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
-
-                // Important - we need to advance the list pointer before removing.
-                pObjectMetaList = pObjectMetaList->next;
-
-                if (pObjectMeta != NULL)
-                {
-					// https://github.com/obss/sahi/blob/91a0becb0d86f0943c57f966a86a845a70c0eb77/sahi/postprocess/combine.py#L17-L40
-					if (class_agnostic) {
-                        obj_array[0].emplace_back(pObjectMeta);
-						predictions[0].emplace_back(std::vector<float>{
-									pObjectMeta->rect_params.left,
-									pObjectMeta->rect_params.top,
-									pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
-									pObjectMeta->rect_params.top + pObjectMeta->rect_params.height, 
-									pObjectMeta->confidence,
-									});
-					}
-					else {
-                        obj_array[pObjectMeta->class_id].emplace_back(pObjectMeta);
-						predictions[pObjectMeta->class_id].emplace_back(std::vector<float>{
-                                     pObjectMeta->rect_params.left,
-                                     pObjectMeta->rect_params.top,
-                                     pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
-                                     pObjectMeta->rect_params.top + pObjectMeta->rect_params.height, 
-                                     pObjectMeta->confidence,
-                                     });
-
-					}
-                    // nvds_remove_obj_meta_from_frame(pFrameMeta, pObjectMeta);
-                }
-            }
-			
-			for (int lb=0; lb<num_labels; lb++) {
-                // print_2dVector(predictions);							
-                // https://dpilger26.github.io/NumCpp/doxygen/html/classnc_1_1_nd_array.html#a9d7045ecdff86bac3306a8bfd9a787eb
-                if (predictions[lb].size() == 0)
-                    continue;
-
-                // keep_to_merge_list = {}
-                std::unordered_map<int, std::vector<int>> keep_to_merge_list;
-                keep_to_merge_list.reserve(vector_reserve_size);
-
-                nc::NdArray<float> nd_predictions{predictions[lb]};
-
-    			// # we extract coordinates for every
-    			// # prediction box present in P
-       		    // x1 = predictions[:, 0]
-    			// y1 = predictions[:, 1]
-    			// x2 = predictions[:, 2]
-    			// y2 = predictions[:, 3]
-                
-                auto x1 = nd_predictions(nd_predictions.rSlice(), 0);
-                auto y1 = nd_predictions(nd_predictions.rSlice(), 1);
-                auto x2 = nd_predictions(nd_predictions.rSlice(), 2);
-                auto y2 = nd_predictions(nd_predictions.rSlice(), 3);
-                
-                // scores = predictions[:, 4]
-                auto scores = nd_predictions(nd_predictions.rSlice(), 4);
-
-                // areas = (x2 - x1) * (y2 - y1)
-                auto areas = (x2 - x1) * (y2 - y1);
-
-                // std::vector<size_t> order = argsort(obj_array);
-                // https://dpilger26.github.io/NumCpp/doxygen/html/classnc_1_1_nd_array.html#a1fb3a21ab9c10a2684098df919b5b440
-                
-                // # sort the prediction boxes in P
-                // # according to their confidence scores
-                // order = scores.argsort()
-                std::vector<uint32_t> order = argsort(scores.toStlVector());
-                
-                nc::NdArray<nc::uint32> nd_order{order};
-                // std::sort(obj_array.begin(), obj_array.end(), confidence_compare);
-                
-                // # initialise an empty list for
-                // # filtered prediction boxes
-                // keep = []
-
-                std::vector<unsigned int> keep, remove;
-                keep.reserve(vector_reserve_size);
-                remove.reserve(vector_reserve_size);
-
-                //while (order.size() > 0) {
-                while (nc::shape(nd_order).size() > 0) {
-                    // auto idx = order.back();
-                    auto idx = nd_order[-1];
-                    
-                    // order.pop_back();
-                    nd_order = nd_order(0, nc::Slice(0,-1));
-                    if (nc::shape(nd_order).size() == 0) 
-                        break;	
-                    
-    //				# select coordinates of BBoxes according to
-    //		        # the indices in order
-    //        		xx1 = torch.index_select(x1, dim=0, index=order)
-    //        		xx2 = torch.index_select(x2, dim=0, index=order)
-    //        		yy1 = torch.index_select(y1, dim=0, index=order)
-    //        		yy2 = torch.index_select(y2, dim=0, index=order)
-                    
-                    nc::NdArray<nc::uint32> index_other = nd_order;
-                    nc::NdArray<nc::uint32> index{idx};
-                    
-                    auto xx1 = x1[index_other];
-                    auto xx2 = x2[index_other];
-                    auto yy1 = y1[index_other];
-                    auto yy2 = y2[index_other];
-
-    //				# find the coordinates of the intersection boxes
-    //				xx1 = torch.max(xx1, x1[idx])
-    //				yy1 = torch.max(yy1, y1[idx])
-    //				xx2 = torch.min(xx2, x2[idx])
-    //				yy2 = torch.min(yy2, y2[idx])
-
-                    for(auto it = xx1.begin(); it != xx1.end(); ++it) 
-                        if (*it < x1[index].item()) 
-                            *it = x1[index].item();
-
-                    for(auto it = yy1.begin(); it != yy1.end(); ++it) 
-                        if (*it < y1[index].item()) 
-                            *it = y1[index].item();
-                                    
-                    for(auto it = xx2.begin(); it != xx2.end(); ++it) 
-                        if (*it > x2[index].item()) 
-                            *it = x2[index].item();
-
-                    for(auto it = yy2.begin(); it != yy2.end(); ++it) 
-                        if (*it > y2[index].item()) 
-                            *it = y2[index].item();
-
-    //				# find height and width of the intersection boxes
-    //				w = xx2 - xx1
-    //				h = yy2 - yy1
-                    
-                    auto w = xx2 - xx1;
-                    auto h = yy2 - yy1;
-                    
-    //				# take max with 0.0 to avoid negative w and h
-    //				# due to non-overlapping boxes
-    //				w = torch.clamp(w, min=0.0)
-    //				h = torch.clamp(h, min=0.0)
-                    
-                    w = nc::clip(w, 0.0f, float(1e9));
-                    h = nc::clip(h, 0.0f, float(1e9));
-                    
-    //				# find the intersection area
-    //		        inter = w * h
-                    
-                    auto inter = w * h;
-                    
-    //				# find the areas of BBoxes according the indices in order
-    //        		rem_areas = torch.index_select(areas, dim=0, index=order)i
-                    
-                    auto rem_areas = areas[index_other];
-                    
-                    if (match_metric == L"IOU") {
-    //					if match_metric == "IOU":
-    //					# find the union of every prediction T in P
-    //					# with the prediction S
-    //					# Note that areas[idx] represents area of S
-    //					union = (rem_areas - inter) + areas[idx]
-    //					# find the IoU of every prediction in P with S
-    //					match_metric_value = inter / union
-                        
-                        auto _union = (rem_areas - inter) + areas[index].item();
-                        auto match_metric_value = inter / _union;
-
-                        // mask = match_metric_value < match_threshold
-                        auto mask = match_metric_value < match_threshold;					
-                        
-                        auto rm_idx = 0;
-                        for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
-                            if (*it == 0) {
-                                keep_to_merge_list[idx].emplace_back(index_other[rm_idx]);
-                                remove.emplace_back(index_other[rm_idx]);
-                            }
-                        }
-
-                        nd_order = nd_order[mask];
-                    }
-                    else if (match_metric == L"IOS") {
-    					// # find the smaller area of every prediction T in P
-    					// # with the prediction S
-    					// # Note that areas[idx] represents area of S
-    					// smaller = torch.min(rem_areas, areas[idx])
-    					// # find the IoU of every prediction in P with S
-    					// match_metric_value = inter / smaller
-                        
-                        auto smaller = rem_areas;
-                        for(auto it = smaller.begin(); it != smaller.end(); ++it)
-                            if (*it > areas[index].item())
-                                *it = areas[index].item();					
-                        auto match_metric_value = inter / smaller;
-
-                        auto mask = match_metric_value < match_threshold;					
-                        
-                        auto rm_idx = 0;
-                        for(auto it = mask.begin(); it != mask.end(); ++it, ++rm_idx) {
-                            if (*it == 0) {
-                                // for matched_box_ind in matched_box_indices.tolist():
-                                //     keep_to_merge_list[idx.tolist()].append(matched_box_ind)
-                                keep_to_merge_list[idx].emplace_back(index_other[rm_idx]);
-                                remove.emplace_back(index_other[rm_idx]);
-                            }
-                        }
-
-                        nd_order = nd_order[mask];
-                    }
-                    else {
-                        return -1; // Change assert
-                    }			
-                }
-
-                // selected_object_predictions = []
-                // for keep_ind, merge_ind_list in keep_to_merge_list.items():
-                //     for merge_ind in merge_ind_list:
-                //         if has_match(
-                //             object_prediction_list[keep_ind].tolist(),
-                //             object_prediction_list[merge_ind].tolist(),
-                //             self.match_metric,
-                //             self.match_threshold,
-                //         ):
-                //             object_prediction_list[keep_ind] = merge_object_prediction_pair(
-                //                 object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
-                //             )
-                //     selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
-
-                for (auto it = keep_to_merge_list.begin(); it != keep_to_merge_list.end(); ++it) {
-                    // std::cout << it->first    // string (key)
-                    //         << ": [ ";
-                    // for (auto &x : it->second) {
-                    //     std::cout << x << ' ';
-                    // }
-                    // std::cout << "]\n";
-                    for (auto &merge_ind : it->second)
-                        predictions[lb][it->first] = calculate_box_union(predictions[lb][it->first], predictions[lb][merge_ind]);
-
-                    obj_array[lb][it->first]->rect_params.left = predictions[lb][it->first][0];
-                    obj_array[lb][it->first]->rect_params.top = predictions[lb][it->first][1];
-                    obj_array[lb][it->first]->rect_params.width = predictions[lb][it->first][2] - predictions[lb][it->first][0];
-                    obj_array[lb][it->first]->rect_params.height = predictions[lb][it->first][3] - predictions[lb][it->first][1]; 
-                }
-
-                for (auto &x: remove) {
-                    nvds_remove_obj_meta_from_frame(pFrameMeta, obj_array[lb][x]);
-                }
-			}
-		
-        }
-    }
-
-    std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
-    postprocess_time->m_culsum += sec.count();
-    postprocess_time->m_count += 1;
-
-    if (postprocess_time->m_count % postprocess_time->m_print_interval == 0) {
-        std::wcout << "NMM Running time: " << std::setprecision(4) << (postprocess_time->m_culsum / postprocess_time->m_print_interval) * 1000  << "ms" << '\n';
-        postprocess_time->m_count = 0;
-        postprocess_time->m_culsum = 0.0;
-    }
-
-    return DSL_PAD_PROBE_OK;
-}
-
-
 uint send_data(void* buffer, void* client_data)
 {
     using namespace YML_VARIABLE;
@@ -574,7 +235,7 @@ uint send_data(void* buffer, void* client_data)
     {
         // Check for valid frame data
         NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-        if (pFrameMeta != NULL)
+        if (pFrameMeta != nullptr)
         {
             NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
             std::vector<SendDataStruct> outputs;
@@ -660,6 +321,7 @@ int main(int argc, char** argv)
 
     vector_reserve_size = root["vector_reserve_size"].As<int>();
     class_agnostic = root["class_agnostic"].As<bool>();
+    postprocess = str2wstr("postprocess");
     match_metric = str2wstr("match_metric");
     match_threshold = root["match_threshold"].As<float>();
     num_labels = root["num_labels"].As<int>();
@@ -672,21 +334,25 @@ int main(int argc, char** argv)
     font_size = root["font_size"].As<int>();
     bbox_border_size = root["bbox_border_size"].As<int>();
 
+    auto DSL_NMP_PROCESS_METHOD = (postprocess == L"NMM") ? 
+                                    DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
+    auto DSL_NMP_MATCH_METHOD = (match_metric == L"IOS") ? 
+                                    DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
+
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
     {    
         ReportData report_data(0, 12);
-        MeasureTime postprocess_time(30, 0, 0.0);
         
         retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         //```````````````````````````````````````````````````````````````````````````````````
-        // Create a new Custom Pad Probe Handler. 
-        retval = dsl_pph_custom_new(L"custom_pph",
-            nmm_with_numcpp, &postprocess_time);
+        // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH). 
+        retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
+            DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, match_threshold);
         if (retval != DSL_RESULT_SUCCESS) break;
-        
+
         retval = dsl_pph_custom_new(L"send-to-medula", 
             send_data, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -760,8 +426,6 @@ int main(int argc, char** argv)
             true, false);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        // New IOU Tracker, setting max width and height of input frame
-
         if (trk == L"IOU") {
             retval = dsl_tracker_iou_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height);
             if (retval != DSL_RESULT_SUCCESS) break;
@@ -778,9 +442,9 @@ int main(int argc, char** argv)
             retval = DSL_RESULT_FAILURE;
             break;
         }
-        
-        // Add the custom PPH to the source pad of the Tracker
-        retval = dsl_tracker_pph_add(L"tracker", L"custom_pph", DSL_PAD_SINK);
+
+        // Add the NMP PPH to the source pad of the Tracker
+        retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // New OSD with text, clock and bbox display all enabled. 
@@ -801,22 +465,22 @@ int main(int argc, char** argv)
     
         // Create a list of Pipeline Components to add to the new Pipeline.
         const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
-            L"tracker", L"on-screen-display", L"window-sink", NULL};
+            L"tracker", L"on-screen-display", L"window-sink", nullptr};
         
         // Add all the components to our pipeline
         retval = dsl_pipeline_new_component_add_many(L"pipeline", components);
         if (retval != DSL_RESULT_SUCCESS) break;
             
         // Add the EOS listener and XWindow event handler functions defined above
-        retval = dsl_pipeline_eos_listener_add(L"pipeline", eos_event_listener, NULL);
+        retval = dsl_pipeline_eos_listener_add(L"pipeline", eos_event_listener, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         retval = dsl_pipeline_xwindow_key_event_handler_add(L"pipeline", 
-            xwindow_key_event_handler, NULL);
+            xwindow_key_event_handler, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         retval = dsl_pipeline_xwindow_delete_event_handler_add(L"pipeline", 
-            xwindow_delete_event_handler, NULL);
+            xwindow_delete_event_handler, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // Play the pipeline
@@ -826,7 +490,6 @@ int main(int argc, char** argv)
         // Start and join the main-loop
         dsl_main_loop_run();
         break;
-
     }
     
     // Print out the final result

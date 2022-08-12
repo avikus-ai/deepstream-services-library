@@ -5,8 +5,9 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
+ 
 
-# Make data base, printed on Mon Aug  1 16:37:54 2022
+# Make data base, printed on Fri Aug 12 14:18:25 2022
 
 # Variables
 
@@ -22,14 +23,18 @@ PKGS := gstreamer-1.0 gstreamer-video-1.0 gstreamer-rtsp-server-1.0 x11 opencv4
 DESKTOP_SESSION = ubuntu
 # default
 .SHELLFLAGS := -c
-# makefile (from 'Makefile', line 52)
-INC_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/sources/includes
+# environment
+OECORE_TARGET_OS = linux
+# environment
+OECORE_SDK_VERSION = NVIDIA1.1-r4
 # environment
 XDG_SESSION_TYPE = x11
-# automatic
-?D = $(patsubst %/,%,$(dir $?))
 # environment
-IM_CONFIG_PHASE = 2
+CUDACXXARCHFLAGS = -Xcompiler -march=armv8-a+crc,-fstack-protector-strong,-D_FORTIFY_SOURCE=2,-Wformat,-Wformat-security,-Werror=format-security
+# environment
+OBJCOPY = aarch64-poky-linux-objcopy
+# environment
+CPPFLAGS = 
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
 # environment
@@ -43,16 +48,21 @@ CURDIR := /home/yyj-avikus/contrib/deepstream-services-library
 # makefile
 SHELL = /bin/sh
 # environment
-VTE_VERSION = 5202
+CONFIG_SITE = /opt/poky/NVIDIA1.1-r4/site-config-aarch64-poky-linux
 # environment
- 
+VTE_VERSION = 5202
+# makefile (from 'Makefile', line 52)
+INC_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/sources/includes
+# environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-_ = /usr/bin/code
+_ = /usr/bin/make
 # makefile (from 'Makefile', line 180)
-CFLAGS = -I$(INC_INSTALL_DIR) -std=$(CXX_VERSION) -I$(SRC_INSTALL_DIR)/apps/apps-common/includes -I/opt/include -I/usr/include -I/usr/include/gstreamer-$(GSTREAMER_VERSION) -I/usr/include/glib-$(GLIB_VERSION) -I/usr/include/glib-$(GLIB_VERSION)/glib -I/usr/lib/$(TARGET_DEVICE)-linux-gnu/glib-$(GLIB_VERSION)/include -I/usr/local/cuda/targets/$(TARGET_DEVICE)-linux/include -I./src -I./src/thirdparty -I./test -I./test/api -DDSL_VERSION=$(DSL_VERSION) -DDSL_LOGGER_IMP='"DslLogGst.h"' -DGSTREAMER_SUB_VERSION=$(GSTREAMER_SUB_VERSION) -DBUILD_NMS_PPH=$(BUILD_NMS_PPH) -DBUILD_MESSAGE_SINK=$(BUILD_MESSAGE_SINK) -DNVDS_DCF_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvdcf.so"' -DNVDS_KLT_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_klt.so"' -DNVDS_IOU_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_iou.so"' -DNVDS_MOT_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvmultiobjecttracker.so"' -DNVDS_AMQP_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_amqp_proto.so"' -DNVDS_AZURE_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_azure_proto.so"' -DNVDS_AZURE_EDGE_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_azure_edge_proto"' -DNVDS_KAFKA_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_kafka_proto.so"' -DNVDS_REDIS_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_redis_proto.so"' -fPIC  -I./src/nms -I$(NUM_CPP_PATH) -DNUMCPP_NO_USE_BOOST `geos-config --cflags`	 `pkg-config --cflags $(PKGS)`
+CFLAGS =  -O2 -pipe -g -feliminate-unused-debug-types  -I$(INC_INSTALL_DIR) -std=$(CXX_VERSION) -I$(SRC_INSTALL_DIR)/apps/apps-common/includes -I/opt/include -I/usr/include -I/usr/include/gstreamer-$(GSTREAMER_VERSION) -I/usr/include/glib-$(GLIB_VERSION) -I/usr/include/glib-$(GLIB_VERSION)/glib -I/usr/lib/$(TARGET_DEVICE)-linux-gnu/glib-$(GLIB_VERSION)/include -I/usr/local/cuda/targets/$(TARGET_DEVICE)-linux/include -I./src -I./src/thirdparty -I./test -I./test/api -DDSL_VERSION=$(DSL_VERSION) -DDSL_LOGGER_IMP='"DslLogGst.h"' -DGSTREAMER_SUB_VERSION=$(GSTREAMER_SUB_VERSION) -DBUILD_NMP_PPH=$(BUILD_NMP_PPH) -DBUILD_MESSAGE_SINK=$(BUILD_MESSAGE_SINK) -DNVDS_DCF_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvdcf.so"' -DNVDS_KLT_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_klt.so"' -DNVDS_IOU_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_iou.so"' -DNVDS_MOT_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvmultiobjecttracker.so"' -DNVDS_AMQP_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_amqp_proto.so"' -DNVDS_AZURE_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_azure_proto.so"' -DNVDS_AZURE_EDGE_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_azure_edge_proto"' -DNVDS_KAFKA_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_kafka_proto.so"' -DNVDS_REDIS_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_redis_proto.so"' -fPIC  -I./src/nmp -I$(NUM_CPP_PATH) -DNUMCPP_NO_USE_BOOST `geos-config --cflags`	 `pkg-config --cflags $(PKGS)`
 # makefile (from 'Makefile', line 40)
 GSTREAMER_SUB_VERSION := 14
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # makefile (from 'Makefile', line 1)
@@ -60,9 +70,11 @@ MAKEFILE_LIST :=  Makefile
 # automatic
 @F = $(notdir $@)
 # environment
-GIO_LAUNCHED_DESKTOP_FILE = /etc/xdg/autostart/org.gnome.SettingsDaemon.MediaKeys.desktop
+IM_CONFIG_PHASE = 2
 # environment
 USERNAME = yyj-avikus
+# environment
+CXXFLAGS =  -O2 -pipe -g -feliminate-unused-debug-types 
 # environment
 MAKELEVEL := 0
 # environment
@@ -73,40 +85,60 @@ XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/d
 DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # makefile (from 'Makefile', line 43)
 LIBSOUP_VERSION := 2.4
-# makefile (from 'Makefile', line 87)
-OBJS := ./src/nms/DslPadProbeHandlerNms.o ./src/nms/DslServicesPphNms.o ./test/nms/DslPphNmsUnitTest.o ./src/DslGeosTypes.o ./src/DslServicesInfo.o ./src/DslServicesOdeTrigger.o ./src/DslServicesTracker.o ./src/DslApi.o ./src/DslTilerBintr.o ./src/DslServicesOdeAction.o ./src/DslRecordMgr.o ./src/DslOdeHeatMapper.o ./src/DslPreprocBintr.o ./src/DslInferBintr.o ./src/DslServicesTee.o ./src/DslServicesOdeHeatMapper.o ./src/DslServicesOdeArea.o ./src/DslPadProbeHandler.o ./src/DslOsdBintr.o ./src/DslServicesSource.o ./src/DslSegVisualBintr.o ./src/DslServicesMessageBroker.o ./src/DslPipelineBintr.o ./src/DslOdeArea.o ./src/DslMultiComponentsBintr.o ./src/DslServicesBranch.o ./src/DslOfvBintr.o ./src/DslServicesMailer.o ./src/DslOdeAccumulator.o ./src/DslServicesSink.o ./src/DslSinkBintr.o ./src/DslServicesPipeline.o ./src/DslPipelineXWinMgr.o ./src/DslDewarperBintr.o ./src/DslPipelineSourcesBintr.o ./src/DslMailer.o ./src/DslServicesPlayer.o ./src/DslServicesOdeAccumulator.o ./src/DslPipelineSInfersBintr.o ./src/DslMessageBroker.o ./src/DslServicesDisplayType.o ./src/DslServicesInfer.o ./src/DslDisplayTypes.o ./src/DslPipelineStateMgr.o ./src/DslOdeTrackedObject.o ./src/DslServicesTiler.o ./src/DslOdeAction.o ./src/DslPlayerBintr.o ./src/DslOdeTrigger.o ./src/DslTrackerBintr.o ./src/DslServicesPph.o ./src/DslBranchBintr.o ./src/DslServicesOsd.o ./src/DslServicesComponent.o ./src/DslSourceBintr.o ./src/DslServices.o ./src/DslTapBintr.o ./src/DslServicesPreproc.o ./src/thirdparty/randomcolor.o ./test/DslCatch.o ./test/api/DslBranchMgtApiTest.o ./test/api/DslImageSourceBehaviorTest.o ./test/api/DslOdeTriggerApiTest.o ./test/api/DslOsdApiTest.o ./test/api/DslPipelineSourcesApiTest.o ./test/api/DslPipelineMgtApiTest.o ./test/api/DslDisplayTypesApiTest.o ./test/api/DslPipelineXWindowApiTest.o ./test/api/DslPipelinePlayTrackerTest.o ./test/api/DslPreprocApiText.o ./test/api/DslOdeBehaviorTest.o ./test/api/DslPipelineTilerApiTest.o ./test/api/DslPlayerApiTest.o ./test/api/DslMessageSinkBehaviorTest.o ./test/api/DslTrackerApiTest.o ./test/api/DslOdeActionApiTest.o ./test/api/DslSinkMessageApiTest.o ./test/api/DslPipelineCbApiTest.o ./test/api/DslSourceApiTest.o ./test/api/DslPipelineMainLoopTest.o ./test/api/DslOdeHeatMapperApiTest.o ./test/api/DslPipelineDbgApiTest.o ./test/api/DslOdeAccumulatorApiTest.o ./test/api/DslInferApiTest.o ./test/api/DslSinkApiTest.o ./test/api/DslTilerApiTest.o ./test/api/DslComponentMgt.o ./test/api/DslPipelineStateMgt.o ./test/api/DslDisplayTypesBehaviorTest.o ./test/api/DslTeeApiTest.o ./test/api/DslTapApiTest.o ./test/api/DslImageSourceApiTest.o ./test/api/DslPipelinePlayComponentsTest.o ./test/api/DslSegVisualApiTest.o ./test/api/DslMessageBrokerApiTest.o ./test/api/DslMailerApiTest.o ./test/api/DslCrossTriggerExampleTest.o ./test/api/DslPphApiTest.o ./test/api/DslOdeAreaApiTest.o ./test/api/DslPipelineStreamMuxerApiTest.o ./test/unit/DslOdeTrackedObjectUnitTest.o ./test/unit/DslGeosTypesUnitTest.o ./test/unit/DslPipelineSInfersUnitTest.o ./test/unit/DslPadProbeHandlerUnitTest.o ./test/unit/DslNodetrUnitTest.o ./test/unit/DslDewarperUnitTest.o ./test/unit/DslMailerUnitTest.o ./test/unit/DslPipelineSourcesUnitTest.o ./test/unit/DslOdeAreaUnitTest.o ./test/unit/DslSourceUnitTest.o ./test/unit/DslDisplayTypesUnitTest.o ./test/unit/DslSecondaryGieUnitTest.o ./test/unit/DslMessageBrokerAzureDeviceClientUnitTest.o ./test/unit/DslPrimaryGieUnitTest.o ./test/unit/DslTapUnitTest.o ./test/unit/DslOdeTriggerUnitTest.o ./test/unit/DslSinkUnitTest.o ./test/unit/DslOdeAccumulatorUnitTest.o ./test/unit/DslPlayerUnitTest.o ./test/unit/DslPipelineUnitTest.o ./test/unit/DslOdeActionUnitTest.o ./test/unit/DslTrackerUnitTest.o ./test/unit/DslOsdUnitTest.o ./test/unit/DslPipelineMainLoopUnitTest.o ./test/unit/DslMsgSinkUnitTest.o ./test/unit/DslPreprocUnitTest.o ./test/unit/DslMultiSinksUnitTest.o ./test/unit/DslTilerUnitTest.o ./test/unit/DslSegVisualUnitTest.o ./test/unit/DslElementrUnitTest.o ./test/unit/DslOfvUnitTest.o ./test/unit/DslDemuxerAndTeeUnitTest.o ./test/unit/DslOdeHeatMapperUnitTest.o
 # environment
-TERMINATOR_UUID = urn:uuid:10827bea-afe5-4fba-b393-0023c2bb215b
+AS = aarch64-poky-linux-as 
+# makefile (from 'Makefile', line 87)
+OBJS := ./src/nmp/DslServicesPphNmp.o ./src/nmp/DslPadProbeHandlerNmp.o ./test/nmp/DslPphNmpUnitTest.o ./test/nmp/DslPphNmpApiTest.o ./src/DslGeosTypes.o ./src/DslServicesInfo.o ./src/DslServicesOdeTrigger.o ./src/DslServicesTracker.o ./src/DslApi.o ./src/DslTilerBintr.o ./src/DslServicesOdeAction.o ./src/DslRecordMgr.o ./src/DslOdeHeatMapper.o ./src/DslPreprocBintr.o ./src/DslInferBintr.o ./src/DslServicesTee.o ./src/DslServicesOdeHeatMapper.o ./src/DslServicesOdeArea.o ./src/DslPadProbeHandler.o ./src/DslOsdBintr.o ./src/DslServicesSource.o ./src/DslSegVisualBintr.o ./src/DslServicesMessageBroker.o ./src/DslPipelineBintr.o ./src/DslOdeArea.o ./src/DslMultiComponentsBintr.o ./src/DslServicesBranch.o ./src/DslOfvBintr.o ./src/DslServicesMailer.o ./src/DslOdeAccumulator.o ./src/DslServicesSink.o ./src/DslSinkBintr.o ./src/DslServicesPipeline.o ./src/DslPipelineXWinMgr.o ./src/DslDewarperBintr.o ./src/DslPipelineSourcesBintr.o ./src/DslMailer.o ./src/DslServicesPlayer.o ./src/DslServicesOdeAccumulator.o ./src/DslPipelineSInfersBintr.o ./src/DslMessageBroker.o ./src/DslServicesDisplayType.o ./src/DslServicesInfer.o ./src/DslDisplayTypes.o ./src/DslPipelineStateMgr.o ./src/DslOdeTrackedObject.o ./src/DslServicesTiler.o ./src/DslOdeAction.o ./src/DslPlayerBintr.o ./src/DslOdeTrigger.o ./src/DslTrackerBintr.o ./src/DslServicesPph.o ./src/DslBranchBintr.o ./src/DslServicesOsd.o ./src/DslServicesComponent.o ./src/DslSourceBintr.o ./src/DslServices.o ./src/DslTapBintr.o ./src/DslServicesPreproc.o ./src/thirdparty/randomcolor.o ./test/DslCatch.o ./test/api/DslBranchMgtApiTest.o ./test/api/DslImageSourceBehaviorTest.o ./test/api/DslOdeTriggerApiTest.o ./test/api/DslOsdApiTest.o ./test/api/DslPipelineSourcesApiTest.o ./test/api/DslPipelineMgtApiTest.o ./test/api/DslDisplayTypesApiTest.o ./test/api/DslPipelineXWindowApiTest.o ./test/api/DslPipelinePlayTrackerTest.o ./test/api/DslPreprocApiText.o ./test/api/DslOdeBehaviorTest.o ./test/api/DslPipelineTilerApiTest.o ./test/api/DslPlayerApiTest.o ./test/api/DslMessageSinkBehaviorTest.o ./test/api/DslTrackerApiTest.o ./test/api/DslOdeActionApiTest.o ./test/api/DslSinkMessageApiTest.o ./test/api/DslPipelineCbApiTest.o ./test/api/DslSourceApiTest.o ./test/api/DslPipelineMainLoopTest.o ./test/api/DslOdeHeatMapperApiTest.o ./test/api/DslPipelineDbgApiTest.o ./test/api/DslOdeAccumulatorApiTest.o ./test/api/DslInferApiTest.o ./test/api/DslSinkApiTest.o ./test/api/DslTilerApiTest.o ./test/api/DslComponentMgt.o ./test/api/DslPipelineStateMgt.o ./test/api/DslDisplayTypesBehaviorTest.o ./test/api/DslTeeApiTest.o ./test/api/DslTapApiTest.o ./test/api/DslImageSourceApiTest.o ./test/api/DslPipelinePlayComponentsTest.o ./test/api/DslSegVisualApiTest.o ./test/api/DslMessageBrokerApiTest.o ./test/api/DslMailerApiTest.o ./test/api/DslCrossTriggerExampleTest.o ./test/api/DslPphApiTest.o ./test/api/DslOdeAreaApiTest.o ./test/api/DslPipelineStreamMuxerApiTest.o ./test/unit/DslOdeTrackedObjectUnitTest.o ./test/unit/DslGeosTypesUnitTest.o ./test/unit/DslPipelineSInfersUnitTest.o ./test/unit/DslPadProbeHandlerUnitTest.o ./test/unit/DslNodetrUnitTest.o ./test/unit/DslDewarperUnitTest.o ./test/unit/DslMailerUnitTest.o ./test/unit/DslPipelineSourcesUnitTest.o ./test/unit/DslOdeAreaUnitTest.o ./test/unit/DslSourceUnitTest.o ./test/unit/DslDisplayTypesUnitTest.o ./test/unit/DslSecondaryGieUnitTest.o ./test/unit/DslMessageBrokerAzureDeviceClientUnitTest.o ./test/unit/DslPrimaryGieUnitTest.o ./test/unit/DslTapUnitTest.o ./test/unit/DslOdeTriggerUnitTest.o ./test/unit/DslSinkUnitTest.o ./test/unit/DslOdeAccumulatorUnitTest.o ./test/unit/DslPlayerUnitTest.o ./test/unit/DslPipelineUnitTest.o ./test/unit/DslOdeActionUnitTest.o ./test/unit/DslTrackerUnitTest.o ./test/unit/DslOsdUnitTest.o ./test/unit/DslPipelineMainLoopUnitTest.o ./test/unit/DslMsgSinkUnitTest.o ./test/unit/DslPreprocUnitTest.o ./test/unit/DslMultiSinksUnitTest.o ./test/unit/DslTilerUnitTest.o ./test/unit/DslSegVisualUnitTest.o ./test/unit/DslElementrUnitTest.o ./test/unit/DslOfvUnitTest.o ./test/unit/DslDemuxerAndTeeUnitTest.o ./test/unit/DslOdeHeatMapperUnitTest.o
+# environment
+TERMINATOR_UUID = urn:uuid:3743c388-73f3-4bfa-9515-5b3c2569e313
+# environment
+CUDAHOSTCXX = aarch64-poky-linux-g++
 # environment
 CLUTTER_IM_MODULE = xim
 # makefile (from 'Makefile', line 69)
-INCS = $(wildcard ./src/nms/*.h) $(wildcard ./src/*.h) $(wildcard ./src/thirdparty/*.h) $(wildcard ./test/*.hpp)
+INCS = $(wildcard ./src/nmp/*.h) $(wildcard ./src/*.h) $(wildcard ./src/thirdparty/*.h) $(wildcard ./test/*.hpp)
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
 LC_NAME = ko_KR.UTF-8
 # environment
+CPP = aarch64-poky-linux-gcc -E  -march=armv8-a+crc -fstack-protector-strong  -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security -Werror=format-security --sysroot=/opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
+# environment
 VSCODE_CWD = /home/yyj-avikus/contrib/deepstream-services-library
+# environment
+OECORE_TARGET_ARCH = aarch64
+# makefile (from 'Makefile', line 51)
+SRC_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/sources
 # default
 MAKE_HOST := x86_64-pc-linux-gnu
 # environment
-PATH = /home/yyj-avikus/anaconda3/bin:/home/yyj-avikus/anaconda3/condabin:/usr/local/cuda/bin:/home/yyj-avikus/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
-# makefile (from 'Makefile', line 190)
-PCH_OUT = ./src/Dsl.h.gch
+PATH = /opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/sbin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/sbin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/../x86_64-pokysdk-linux/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux-musl:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/sbin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/sbin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/../x86_64-pokysdk-linux/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux-musl:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/sbin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/sbin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/../x86_64-pokysdk-linux/bin:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux:/opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/bin/aarch64-poky-linux-musl:/home/yyj-avikus/anaconda3/bin:/home/yyj-avikus/anaconda3/condabin:/home/yyj-avikus/.bin:/usr/local/cuda/bin:/home/yyj-avikus/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+# environment
+M4 = m4
+# environment
+OE_CMAKE_FIND_LIBRARY_CUSTOM_LIB_SUFFIX = 
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/yyj-avikus:@/tmp/.ICE-unix/2715,unix/yyj-avikus:/tmp/.ICE-unix/2715
+SESSION_MANAGER = local/yyj-avikus:@/tmp/.ICE-unix/2310,unix/yyj-avikus:/tmp/.ICE-unix/2310
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
 TEXTDOMAIN = im-config
 # environment
+CUDA_NVCC_ARCH_FLAGS = --gpu-architecture=compute_72 --gpu-code=sm_72
+# environment
 CONDA_PREFIX = /home/yyj-avikus/anaconda3
+# environment
+AR = aarch64-poky-linux-ar
 # environment
 XDG_MENU_PREFIX = gnome-
 # environment
-ELECTRON_RUN_AS_NODE = 1
+LC_NUMERIC = ko_KR.UTF-8
+# environment
+LDFLAGS = -Wl,-O1 -Wl,--hash-style=gnu -Wl,--as-needed -fstack-protector-strong -Wl,-z,relro,-z,now
+# environment
+TERMINATOR_DBUS_PATH = /net/tenshu/Terminator2
 # makefile (from 'Makefile', line 29)
 LIB := libdsl
 # default
@@ -118,11 +150,11 @@ XDG_SESSION_DESKTOP = ubuntu
 # environment
 SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 3031
+GIO_LAUNCHED_DESKTOP_FILE_PID = 2612
 # automatic
 %F = $(notdir $%)
-# makefile (from 'Makefile', line 51)
-SRC_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/sources
+# environment
+OECORE_ACLOCAL_OPTS = -I /opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/share/aclocal
 # environment
 DISPLAY = :1
 # environment
@@ -134,15 +166,19 @@ GTK_IM_MODULE = ibus
 # environment
 PWD = /home/yyj-avikus/contrib/deepstream-services-library
 # makefile (from 'Makefile', line 83)
-TEST_OBJS = $(wildcard ./test/api/*.o) $(wildcard ./test/unit/*.o) $(wildcard ./test/nms/*.o)
-# makefile (from 'Makefile', line 28)
-APP := dsl-test-app.exe
+TEST_OBJS = $(wildcard ./test/api/*.o) $(wildcard ./test/unit/*.o) $(wildcard ./test/nmp/*.o)
+# environment
+GDB = aarch64-poky-linux-gdb
 # environment
 XDG_SEAT = seat0
 # environment
-SSH_AGENT_PID = 2794
+SSH_AGENT_PID = 2388
+# environment
+PKG_CONFIG_PATH = /opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux/usr/lib/pkgconfig:/opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux/usr/share/pkgconfig
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
+# environment
+PKG_CONFIG_SYSROOT_DIR = /opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
 # environment
 GTK_MODULES = gail:atk-bridge
 # environment
@@ -150,21 +186,24 @@ VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
 # environment
 HOME = /home/yyj-avikus
 # environment
-LD_LIBRARY_PATH = /usr/local/cuda/lib64:
-# environment
 LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 VSCODE_CLI = 1
 # environment
-VSCODE_CODE_CACHE_PATH = /home/yyj-avikus/.config/Code/CachedData/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a
+ 
+VSCODE_CODE_CACHE_PATH = /home/yyj-avikus/.config/Code/CachedData/da76f93349a72022ca4670c1b84860304616aaa2
 # environment
 LOGNAME = yyj-avikus
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
 # environment
-CONDA_PROMPT_MODIFIER = (base) 
+LD = aarch64-poky-linux-ld  --sysroot=/opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
+# environment
+RANLIB = aarch64-poky-linux-ranlib
 # automatic
 +F = $(notdir $+)
+# environment
+OPENSSL_CONF = /opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/lib/ssl-1.1/openssl.cnf
 # environment
 ELECTRON_NO_ATTACH_CONSOLE = 1
 # environment
@@ -176,11 +215,15 @@ GNOME_DESKTOP_SESSION_ID = this-is-deprecated
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
 # environment
+CONDA_PROMPT_MODIFIER = (base) 
+# environment
 XDG_VTNR = 2
 # makefile (from 'Makefile', line 189)
 PCH_INC = ./src/Dsl.h
 # environment
 LC_TIME = ko_KR.UTF-8
+# environment
+OE_CMAKE_TOOLCHAIN_FILE = /opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux/usr/share/cmake/OEToolchainConfig.cmake
 # environment
 CONDA_DEFAULT_ENV = base
 # environment
@@ -192,11 +235,15 @@ MAKECMDGOALS := all
 # environment
 QT_IM_MODULE = ibus
 # makefile (from 'Makefile', line 65)
-SRCS = $(wildcard ./src/nms/*.cpp) $(wildcard ./test/nms/*.cpp) $(wildcard ./src/*.cpp) $(wildcard ./src/thirdparty/*.cpp) $(wildcard ./test/*.cpp) $(wildcard ./test/api/*.cpp) $(wildcard ./test/unit/*.cpp)
+SRCS = $(wildcard ./src/nmp/*.cpp) $(wildcard ./test/nmp/*.cpp) $(wildcard ./src/*.cpp) $(wildcard ./src/thirdparty/*.cpp) $(wildcard ./test/*.cpp) $(wildcard ./test/api/*.cpp) $(wildcard ./test/unit/*.cpp)
 # environment
-SHLVL = 1
-# makefile (from 'Makefile', line 48)
-BUILD_NMS_PPH := true
+SHLVL = 3
+# environment
+TARGET_PREFIX = aarch64-poky-linux-
+# environment
+NM = aarch64-poky-linux-nm
+# environment
+CC = aarch64-poky-linux-gcc  -march=armv8-a+crc -fstack-protector-strong  -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security -Werror=format-security --sysroot=/opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # makefile (from 'Makefile', line 34)
@@ -219,26 +266,36 @@ DSL_VERSION := 'L"v0.26.alpha"'
 %D = $(patsubst %/,%,$(dir $%))
 # environment
 LC_TELEPHONE = ko_KR.UTF-8
+# environment
+READELF = aarch64-poky-linux-readelf
 # makefile (from 'Makefile', line 49)
 NUM_CPP_PATH := ../NumCpp/include
+# makefile (from 'Makefile', line 28)
+APP := dsl-test-app.exe
 # makefile (from 'Makefile', line 39)
 GSTREAMER_VERSION := 1.0
 # environment
 CONDA_SHLVL = 1
+# environment
+OECORE_DISTRO_VERSION = 3.1.17
 # default
 MAKE_COMMAND := make
 # environment
 OLDPWD = /home/yyj-avikus/contrib
 # environment
-TERMINATOR_DBUS_PATH = /net/tenshu/Terminator2
+KCFLAGS = --sysroot=/opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
 # default
 .VARIABLES := 
 # automatic
 *F = $(notdir $*)
+# makefile (from 'Makefile', line 190)
+PCH_OUT = ./src/Dsl.h.gch
 # environment
-VSCODE_IPC_HOOK = /run/user/1000/vscode-9bed1d1a-1.69.1-main.sock
+VSCODE_IPC_HOOK = /run/user/1000/vscode-9bed1d1a-1.70.0-main.sock
 # makefile (from 'Makefile', line 53)
 LIB_INSTALL_DIR = /opt/nvidia/deepstream/deepstream/lib
+# environment
+ARCH = arm64
 # makefile
 MAKEFLAGS = pqrR
 # environment
@@ -248,27 +305,35 @@ MFLAGS = -pqrR
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
+OBJDUMP = aarch64-poky-linux-objdump
+# environment
 GDK_BACKEND = x11
 # environment
 LC_PAPER = ko_KR.UTF-8
 # makefile (from 'Makefile', line 41)
 GSTREAMER_SDP_VERSION := 1.0
 # environment
+STRIP = aarch64-poky-linux-strip
+# environment
 QT_ACCESSIBILITY = 1
 # environment
-DESKTOP_AUTOSTART_ID = 10dd99a9a4188689a816593161452826800000027150007
+DESKTOP_AUTOSTART_ID = 10d5a2de019ec2cab4166008546992597300000023100007
 # environment
 DEFAULTS_PATH = /usr/share/gconf/ubuntu.default.path
+# environment
+CROSS_COMPILE = aarch64-poky-linux-
 # environment
 TEXTDOMAINDIR = /usr/share/locale/
 # default
 MAKEFILES := 
-# environment
-LC_NUMERIC = ko_KR.UTF-8
 # automatic
 <F = $(notdir $<)
+# environment
+ELECTRON_RUN_AS_NODE = 1
 # makefile (from 'Makefile', line 42)
 GSTREAMER_WEBRTC_VERSION := 1.0
+# environment
+OECORE_BASELIB = lib
 # makefile (from 'Makefile', line 31)
 CXX = g++
 # environment
@@ -282,19 +347,27 @@ CXX_VERSION := c++17
 # environment
 CONDA_PYTHON_EXE = /home/yyj-avikus/anaconda3/bin/python
 # environment
+OECORE_NATIVE_SYSROOT = /opt/poky/NVIDIA1.1-r4/sysroots/x86_64-pokysdk-linux
+# environment
 QT4_IM_MODULE = xim
 # makefile (from 'Makefile', line 182)
 LIBS = -L$(LIB_INSTALL_DIR) -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -laprutil-1 -lapr-1 -lX11 -lcuda -L/usr/lib/$(TARGET_DEVICE)-linux-gnu -lgeos_c -lcurl -lnvdsgst_meta -lnvds_meta -lnvdsgst_helper -lnvds_utils -lnvbufsurface -lnvbufsurftransform -lnvdsgst_smartrecord -lnvds_msgbroker -lglib-$(GLIB_VERSION) -lgstreamer-$(GSTREAMER_VERSION) -Lgstreamer-video-$(GSTREAMER_VERSION) -Lgstreamer-rtsp-server-$(GSTREAMER_VERSION) -L/usr/local/cuda/lib64/ -lcudart -Wl,-rpath,$(LIB_INSTALL_DIR) `pkg-config --libs $(PKGS)`
 # automatic
 ^F = $(notdir $^)
+# makefile (from 'Makefile', line 48)
+BUILD_NMP_PPH := true
 # default
 SUFFIXES := 
+# environment
+OECORE_TARGET_SYSROOT = /opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
 # environment
 _CE_M = 
 # environment
 CHROME_DESKTOP = code-url-handler.desktop
 # environment
 WINDOWPATH = 2
+# environment
+SDKTARGETSYSROOT = /opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
 # default
 .INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
 # environment
@@ -304,18 +377,21 @@ LC_IDENTIFICATION = ko_KR.UTF-8
 # environment
 LC_ADDRESS = ko_KR.UTF-8
 # environment
+CONFIGURE_FLAGS = --target=aarch64-poky-linux --host=aarch64-poky-linux --build=x86_64-linux --with-libtool-sysroot=/opt/poky/NVIDIA1.1-r4/sysroots/aarch64-poky-linux
+# environment
+GIO_LAUNCHED_DESKTOP_FILE = /etc/xdg/autostart/org.gnome.SettingsDaemon.MediaKeys.desktop
+# environment
 LANG = C
 # environment
 TERM = xterm-256color
 # environment
 TERMINATOR_DBUS_NAME = net.tenshu.Terminator20x1a6021154d881d
 # environment
-VSCODE_PID = 10680
+VSCODE_PID = 23824
 # environment
 _CE_CONDA = 
 # variable set hash-table stats:
- 
-# Load=151/1024=15%, Rehash=0, Collisions=52/272=19%
+# Load=189/1024=18%, Rehash=0, Collisions=75/312=24%
 
 # Pattern-specific Variable Values
 
@@ -323,36 +399,30 @@ _CE_CONDA =
 
 # Directories
 
-# . (device 66309, inode 16416835): 22 files, no impossibilities.
-# ./src (device 66309, inode 16416869): 162 files, no impossibilities.
-# ./test (device 66309, inode 16416872): 12 files, no impossibilities.
-# test (device 66309, inode 16416872): 12 files, no impossibilities.
-# src/nms (device 66309, inode 16651517): 5 files, no impossibilities.
-# src/thirdparty (device 66309, inode 16416870): 5 files, no impossibilities.
-# ./test/nms (device 66309, inode 16651521): 3 files, no impossibilities.
+# . (device 66309, inode 16416835): 24 files, no impossibilities.
+# ./src (device 66309, inode 16416869): 163 files, no impossibilities.
+# src/nmp (device 66309, inode 16651198): 8 files, no impossibilities.
+# ./test (device 66309, inode 16416872): 14 files, no impossibilities.
+# test (device 66309, inode 16416872): 14 files, no impossibilities.
+# src/thirdparty (device 66309, inode 16416870): 6 files, no impossibilities.
+# ./test/nmp (device 66309, inode 16655815): 6 files, no impossibilities.
 # ./test/unit (device 66309, inode 16416876): 69 files, no impossibilities.
-# ./src/nms (device 66309, inode 16651517): 5 files, no impossibilities.
-# src (device 66309, inode 16416869): 162 files, no impossibilities.
-# ./src/thirdparty (device 66309, inode 16416870): 5 files, no impossibilities.
+# ./src/nmp (device 66309, inode 16651198): 8 files, no impossibilities.
+# src (device 66309, inode 16416869): 163 files, no impossibilities.
+# ./src/thirdparty (device 66309, inode 16416870): 6 files, no impossibilities.
 # ./test/api (device 66309, inode 16416873): 83 files, no impossibilities.
 
-# 545 files, no impossibilities in 12 directories.
+# 564 files, no impossibilities in 12 directories.
 
 # Implicit Rules
 
-%.o: %.cpp src/Dsl.h.gch src/nms/DslPadProbeHandlerNms.h src/DslLogGst.h src/DslPipelineSourcesBintr.h src/DslOdeAction.h src/DslMutex.h src/DslStateChange.h src/DslTrackerBintr.h src/DslLog.h src/DslBintr.h src/DslBranchBintr.h src/DslPadProbeHandler.h src/DslPipelineSInfersBintr.h src/DslElementr.h src/DslTilerBintr.h src/DslOdeHeatMapper.h src/DslOdeArea.h src/DslTapBintr.h src/DslMessageBroker.h src/DslSourceBintr.h src/DslGeosTypes.h src/DslApi.h src/DslServices.h src/DslOsdBintr.h src/DslSourceMeter.h src/Dsl.h src/DslOdeAccumulator.h src/DslServicesValidate.h src/DslSegVisualBintr.h src/DslOdeBase.h src/DslRecordMgr.h src/DslInferBintr.h src/DslPipelineBintr.h src/DslMultiComponentsBintr.h src/DslPlayerBintr.h src/DslOfvBintr.h src/DslPreprocBintr.h src/DslSinkBintr.h src/DslSurfaceTransform.h src/DslPipelineXWinMgr.h src/DslDewarperBintr.h src/DslMailer.h src/DslDisplayTypes.h src/DslBase.h src/DslNodetr.h src/DslOdeTrigger.h src/DslPipelineStateMgr.h src/DslOdeTrackedObject.h src/thirdparty/randomcolor.h test/catch.hpp Makefile
+%.o: %.cpp src/Dsl.h.gch src/nmp/DslPadProbeHandlerNmp.h src/DslLogGst.h src/DslPipelineSourcesBintr.h src/DslOdeAction.h src/DslMutex.h src/DslStateChange.h src/DslTrackerBintr.h src/DslLog.h src/DslBintr.h src/DslBranchBintr.h src/DslPadProbeHandler.h src/DslPipelineSInfersBintr.h src/DslElementr.h src/DslTilerBintr.h src/DslOdeHeatMapper.h src/DslOdeArea.h src/DslTapBintr.h src/DslMessageBroker.h src/DslSourceBintr.h src/DslGeosTypes.h src/DslApi.h src/DslServices.h src/DslOsdBintr.h src/DslSourceMeter.h src/Dsl.h src/DslOdeAccumulator.h src/DslServicesValidate.h src/DslSegVisualBintr.h src/DslOdeBase.h src/DslRecordMgr.h src/DslInferBintr.h src/DslPipelineBintr.h src/DslMultiComponentsBintr.h src/DslPlayerBintr.h src/DslOfvBintr.h src/DslPreprocBintr.h src/DslSinkBintr.h src/DslSurfaceTransform.h src/DslPipelineXWinMgr.h src/DslDewarperBintr.h src/DslMailer.h src/DslDisplayTypes.h src/DslBase.h src/DslNodetr.h src/DslOdeTrigger.h src/DslPipelineStateMgr.h src/DslOdeTrackedObject.h src/thirdparty/randomcolor.h test/catch.hpp Makefile
 #  recipe to execute (from 'Makefile', line 195):
 	$(CXX) -c -o $@ $(CFLAGS) $<
 
 # 1 implicit rules, 0 (0.0%) terminal.
 
 # Files
-
-# Not a target:
-src/DslRecordMgr.o:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
-#  File has not been updated.
 
 # Not a target:
 src/DslOdeHeatMapper.h:
@@ -460,6 +530,12 @@ test/api/DslComponentMgt.o:
 #  File has not been updated.
 
 # Not a target:
+test/nmp/DslPphNmpApiTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
 src/DslPipelineSInfersBintr.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -499,6 +575,13 @@ src/DslSinkBintr.h:
 test/api/DslMessageSinkBehaviorTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+test/nmp/DslPphNmpUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+ 
 #  File has not been updated.
 
 # Not a target:
@@ -549,7 +632,6 @@ src/DslServicesOdeHeatMapper.o:
 #  Modification time never checked.
 #  File has not been updated.
 
- 
 # Not a target:
 src/DslServicesValidate.h:
 #  Implicit rule search has not been done.
@@ -624,12 +706,6 @@ src/DslMessageBroker.h:
 #  File has not been updated.
 
 # Not a target:
-src/nms/DslServicesPphNms.o:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
-#  File has not been updated.
-
-# Not a target:
 test/unit/DslSourceUnitTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -650,7 +726,7 @@ src/DslPadProbeHandler.o:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-08-01 13:17:21.549579004
+#  Last modified 2022-08-12 14:17:40.307693102
 #  File has been updated.
 #  Successfully updated.
 
@@ -772,6 +848,13 @@ src/DslDisplayTypes.o:
 #  File has not been updated.
 
 # Not a target:
+src/nmp/DslServicesPphNmp.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-08-12 14:17:40.31169305
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
 test/api/DslTeeApiTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -784,7 +867,6 @@ src/DslServicesOsd.o:
 #  File has not been updated.
 
 # Not a target:
- 
 test/unit/DslOfvUnitTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -836,6 +918,7 @@ test/api/DslPipelineTilerApiTest.o:
 test/api/DslOdeAccumulatorApiTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
+ 
 #  File has not been updated.
 
 # Not a target:
@@ -917,12 +1000,6 @@ src/DslPipelineSourcesBintr.h:
 #  File has not been updated.
 
 # Not a target:
-src/nms/DslPadProbeHandlerNms.h:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
-#  File has not been updated.
-
-# Not a target:
 src/DslApi.h:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -930,6 +1007,12 @@ src/DslApi.h:
 
 # Not a target:
 test/unit/DslPadProbeHandlerUnitTest.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/nmp/DslPadProbeHandlerNmp.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -953,7 +1036,7 @@ lib:
 src/Dsl.h.gch: src/Dsl.h Makefile
 #  Implicit rule search has not been done.
 #  Implicit/static pattern stem: ''
-#  Last modified 2022-07-20 15:23:07.907654781
+#  Last modified 2022-08-11 09:27:00.063203036
 #  File has been updated.
 #  Needs to be updated (-q is set).
 # automatic
@@ -973,7 +1056,7 @@ src/Dsl.h.gch: src/Dsl.h Makefile
 # automatic
 # ? := Makefile
 # variable set hash-table stats:
-# Load=8/32=25%, Rehash=0, Collisions=10/45=22%
+# Load=8/32=25%, Rehash=0, Collisions=9/45=20%
 #  recipe to execute (from 'Makefile', line 192):
 	$(CXX) -c -o $@ $(CFLAGS) $<
 
@@ -989,10 +1072,9 @@ src/DslTilerBintr.h:
 #  Modification time never checked.
 #  File has not been updated.
 
- 
-dsl-test-app.exe: src/nms/DslPadProbeHandlerNms.o src/nms/DslServicesPphNms.o test/nms/DslPphNmsUnitTest.o src/DslGeosTypes.o src/DslServicesInfo.o src/DslServicesOdeTrigger.o src/DslServicesTracker.o src/DslApi.o src/DslTilerBintr.o src/DslServicesOdeAction.o src/DslRecordMgr.o src/DslOdeHeatMapper.o src/DslPreprocBintr.o src/DslInferBintr.o src/DslServicesTee.o src/DslServicesOdeHeatMapper.o src/DslServicesOdeArea.o src/DslPadProbeHandler.o src/DslOsdBintr.o src/DslServicesSource.o src/DslSegVisualBintr.o src/DslServicesMessageBroker.o src/DslPipelineBintr.o src/DslOdeArea.o src/DslMultiComponentsBintr.o src/DslServicesBranch.o src/DslOfvBintr.o src/DslServicesMailer.o src/DslOdeAccumulator.o src/DslServicesSink.o src/DslSinkBintr.o src/DslServicesPipeline.o src/DslPipelineXWinMgr.o src/DslDewarperBintr.o src/DslPipelineSourcesBintr.o src/DslMailer.o src/DslServicesPlayer.o src/DslServicesOdeAccumulator.o src/DslPipelineSInfersBintr.o src/DslMessageBroker.o src/DslServicesDisplayType.o src/DslServicesInfer.o src/DslDisplayTypes.o src/DslPipelineStateMgr.o src/DslOdeTrackedObject.o src/DslServicesTiler.o src/DslOdeAction.o src/DslPlayerBintr.o src/DslOdeTrigger.o src/DslTrackerBintr.o src/DslServicesPph.o src/DslBranchBintr.o src/DslServicesOsd.o src/DslServicesComponent.o src/DslSourceBintr.o src/DslServices.o src/DslTapBintr.o src/DslServicesPreproc.o src/thirdparty/randomcolor.o test/DslCatch.o test/api/DslBranchMgtApiTest.o test/api/DslImageSourceBehaviorTest.o test/api/DslOdeTriggerApiTest.o test/api/DslOsdApiTest.o test/api/DslPipelineSourcesApiTest.o test/api/DslPipelineMgtApiTest.o test/api/DslDisplayTypesApiTest.o test/api/DslPipelineXWindowApiTest.o test/api/DslPipelinePlayTrackerTest.o test/api/DslPreprocApiText.o test/api/DslOdeBehaviorTest.o test/api/DslPipelineTilerApiTest.o test/api/DslPlayerApiTest.o test/api/DslMessageSinkBehaviorTest.o test/api/DslTrackerApiTest.o test/api/DslOdeActionApiTest.o test/api/DslSinkMessageApiTest.o test/api/DslPipelineCbApiTest.o test/api/DslSourceApiTest.o test/api/DslPipelineMainLoopTest.o test/api/DslOdeHeatMapperApiTest.o test/api/DslPipelineDbgApiTest.o test/api/DslOdeAccumulatorApiTest.o test/api/DslInferApiTest.o test/api/DslSinkApiTest.o test/api/DslTilerApiTest.o test/api/DslComponentMgt.o test/api/DslPipelineStateMgt.o test/api/DslDisplayTypesBehaviorTest.o test/api/DslTeeApiTest.o test/api/DslTapApiTest.o test/api/DslImageSourceApiTest.o test/api/DslPipelinePlayComponentsTest.o test/api/DslSegVisualApiTest.o test/api/DslMessageBrokerApiTest.o test/api/DslMailerApiTest.o test/api/DslCrossTriggerExampleTest.o test/api/DslPphApiTest.o test/api/DslOdeAreaApiTest.o test/api/DslPipelineStreamMuxerApiTest.o test/unit/DslOdeTrackedObjectUnitTest.o test/unit/DslGeosTypesUnitTest.o test/unit/DslPipelineSInfersUnitTest.o test/unit/DslPadProbeHandlerUnitTest.o test/unit/DslNodetrUnitTest.o test/unit/DslDewarperUnitTest.o test/unit/DslMailerUnitTest.o test/unit/DslPipelineSourcesUnitTest.o test/unit/DslOdeAreaUnitTest.o test/unit/DslSourceUnitTest.o test/unit/DslDisplayTypesUnitTest.o test/unit/DslSecondaryGieUnitTest.o test/unit/DslMessageBrokerAzureDeviceClientUnitTest.o test/unit/DslPrimaryGieUnitTest.o test/unit/DslTapUnitTest.o test/unit/DslOdeTriggerUnitTest.o test/unit/DslSinkUnitTest.o test/unit/DslOdeAccumulatorUnitTest.o test/unit/DslPlayerUnitTest.o test/unit/DslPipelineUnitTest.o test/unit/DslOdeActionUnitTest.o test/unit/DslTrackerUnitTest.o test/unit/DslOsdUnitTest.o test/unit/DslPipelineMainLoopUnitTest.o test/unit/DslMsgSinkUnitTest.o test/unit/DslPreprocUnitTest.o test/unit/DslMultiSinksUnitTest.o test/unit/DslTilerUnitTest.o test/unit/DslSegVisualUnitTest.o test/unit/DslElementrUnitTest.o test/unit/DslOfvUnitTest.o test/unit/DslDemuxerAndTeeUnitTest.o test/unit/DslOdeHeatMapperUnitTest.o Makefile
+dsl-test-app.exe: src/nmp/DslServicesPphNmp.o src/nmp/DslPadProbeHandlerNmp.o test/nmp/DslPphNmpUnitTest.o test/nmp/DslPphNmpApiTest.o src/DslGeosTypes.o src/DslServicesInfo.o src/DslServicesOdeTrigger.o src/DslServicesTracker.o src/DslApi.o src/DslTilerBintr.o src/DslServicesOdeAction.o src/DslRecordMgr.o src/DslOdeHeatMapper.o src/DslPreprocBintr.o src/DslInferBintr.o src/DslServicesTee.o src/DslServicesOdeHeatMapper.o src/DslServicesOdeArea.o src/DslPadProbeHandler.o src/DslOsdBintr.o src/DslServicesSource.o src/DslSegVisualBintr.o src/DslServicesMessageBroker.o src/DslPipelineBintr.o src/DslOdeArea.o src/DslMultiComponentsBintr.o src/DslServicesBranch.o src/DslOfvBintr.o src/DslServicesMailer.o src/DslOdeAccumulator.o src/DslServicesSink.o src/DslSinkBintr.o src/DslServicesPipeline.o src/DslPipelineXWinMgr.o src/DslDewarperBintr.o src/DslPipelineSourcesBintr.o src/DslMailer.o src/DslServicesPlayer.o src/DslServicesOdeAccumulator.o src/DslPipelineSInfersBintr.o src/DslMessageBroker.o src/DslServicesDisplayType.o src/DslServicesInfer.o src/DslDisplayTypes.o src/DslPipelineStateMgr.o src/DslOdeTrackedObject.o src/DslServicesTiler.o src/DslOdeAction.o src/DslPlayerBintr.o src/DslOdeTrigger.o src/DslTrackerBintr.o src/DslServicesPph.o src/DslBranchBintr.o src/DslServicesOsd.o src/DslServicesComponent.o src/DslSourceBintr.o src/DslServices.o src/DslTapBintr.o src/DslServicesPreproc.o src/thirdparty/randomcolor.o test/DslCatch.o test/api/DslBranchMgtApiTest.o test/api/DslImageSourceBehaviorTest.o test/api/DslOdeTriggerApiTest.o test/api/DslOsdApiTest.o test/api/DslPipelineSourcesApiTest.o test/api/DslPipelineMgtApiTest.o test/api/DslDisplayTypesApiTest.o test/api/DslPipelineXWindowApiTest.o test/api/DslPipelinePlayTrackerTest.o test/api/DslPreprocApiText.o test/api/DslOdeBehaviorTest.o test/api/DslPipelineTilerApiTest.o test/api/DslPlayerApiTest.o test/api/DslMessageSinkBehaviorTest.o test/api/DslTrackerApiTest.o test/api/DslOdeActionApiTest.o test/api/DslSinkMessageApiTest.o test/api/DslPipelineCbApiTest.o test/api/DslSourceApiTest.o test/api/DslPipelineMainLoopTest.o test/api/DslOdeHeatMapperApiTest.o test/api/DslPipelineDbgApiTest.o test/api/DslOdeAccumulatorApiTest.o test/api/DslInferApiTest.o test/api/DslSinkApiTest.o test/api/DslTilerApiTest.o test/api/DslComponentMgt.o test/api/DslPipelineStateMgt.o test/api/DslDisplayTypesBehaviorTest.o test/api/DslTeeApiTest.o test/api/DslTapApiTest.o test/api/DslImageSourceApiTest.o test/api/DslPipelinePlayComponentsTest.o test/api/DslSegVisualApiTest.o test/api/DslMessageBrokerApiTest.o test/api/DslMailerApiTest.o test/api/DslCrossTriggerExampleTest.o test/api/DslPphApiTest.o test/api/DslOdeAreaApiTest.o test/api/DslPipelineStreamMuxerApiTest.o test/unit/DslOdeTrackedObjectUnitTest.o test/unit/DslGeosTypesUnitTest.o test/unit/DslPipelineSInfersUnitTest.o test/unit/DslPadProbeHandlerUnitTest.o test/unit/DslNodetrUnitTest.o test/unit/DslDewarperUnitTest.o test/unit/DslMailerUnitTest.o test/unit/DslPipelineSourcesUnitTest.o test/unit/DslOdeAreaUnitTest.o test/unit/DslSourceUnitTest.o test/unit/DslDisplayTypesUnitTest.o test/unit/DslSecondaryGieUnitTest.o test/unit/DslMessageBrokerAzureDeviceClientUnitTest.o test/unit/DslPrimaryGieUnitTest.o test/unit/DslTapUnitTest.o test/unit/DslOdeTriggerUnitTest.o test/unit/DslSinkUnitTest.o test/unit/DslOdeAccumulatorUnitTest.o test/unit/DslPlayerUnitTest.o test/unit/DslPipelineUnitTest.o test/unit/DslOdeActionUnitTest.o test/unit/DslTrackerUnitTest.o test/unit/DslOsdUnitTest.o test/unit/DslPipelineMainLoopUnitTest.o test/unit/DslMsgSinkUnitTest.o test/unit/DslPreprocUnitTest.o test/unit/DslMultiSinksUnitTest.o test/unit/DslTilerUnitTest.o test/unit/DslSegVisualUnitTest.o test/unit/DslElementrUnitTest.o test/unit/DslOfvUnitTest.o test/unit/DslDemuxerAndTeeUnitTest.o test/unit/DslOdeHeatMapperUnitTest.o Makefile
 #  Implicit rule search has not been done.
-#  Last modified 2022-07-19 19:24:43.510037469
+#  Last modified 2022-08-11 09:27:29.320967868
 #  File has been updated.
 #  Needs to be updated (-q is set).
 # variable set hash-table stats:
@@ -1036,13 +1118,6 @@ test/api/DslPipelineSourcesApiTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-
-# Not a target:
-src/nms/DslPadProbeHandlerNms.cpp:
-#  Implicit rule search has been done.
-#  Last modified 2022-08-01 10:04:52.027003554
-#  File has been updated.
-#  Successfully updated.
 
 # Not a target:
 src/DslTrackerBintr.h:
@@ -1145,6 +1220,7 @@ test/unit/DslTrackerUnitTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
+ 
 
 # Not a target:
 src/DslPreprocBintr.o:
@@ -1198,7 +1274,7 @@ debug_lib:
 	cp $(LIB).so examples/python/
 
 # Not a target:
-test/nms/DslPphNmsUnitTest.o:
+src/DslRecordMgr.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -1286,7 +1362,6 @@ src/DslMessageBroker.o:
 src/DslPadProbeHandler.h:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
- 
 #  File has not been updated.
 
 # Not a target:
@@ -1295,11 +1370,16 @@ src/DslServicesSink.o:
 #  Modification time never checked.
 #  File has not been updated.
 
-# Not a target:
-src/DslOdeArea.h:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
-#  File has not been updated.
+src/nmp/DslServicesPphNmp.o: src/nmp/DslServicesPphNmp.cpp src/Dsl.h.gch src/nmp/DslPadProbeHandlerNmp.h src/DslLogGst.h src/DslPipelineSourcesBintr.h src/DslOdeAction.h src/DslMutex.h src/DslStateChange.h src/DslTrackerBintr.h src/DslLog.h src/DslBintr.h src/DslBranchBintr.h src/DslPadProbeHandler.h src/DslPipelineSInfersBintr.h src/DslElementr.h src/DslTilerBintr.h src/DslOdeHeatMapper.h src/DslOdeArea.h src/DslTapBintr.h src/DslMessageBroker.h src/DslSourceBintr.h src/DslGeosTypes.h src/DslApi.h src/DslServices.h src/DslOsdBintr.h src/DslSourceMeter.h src/Dsl.h src/DslOdeAccumulator.h src/DslServicesValidate.h src/DslSegVisualBintr.h src/DslOdeBase.h src/DslRecordMgr.h src/DslInferBintr.h src/DslPipelineBintr.h src/DslMultiComponentsBintr.h src/DslPlayerBintr.h src/DslOfvBintr.h src/DslPreprocBintr.h src/DslSinkBintr.h src/DslSurfaceTransform.h src/DslPipelineXWinMgr.h src/DslDewarperBintr.h src/DslMailer.h src/DslDisplayTypes.h src/DslBase.h src/DslNodetr.h src/DslOdeTrigger.h src/DslPipelineStateMgr.h src/DslOdeTrackedObject.h src/thirdparty/randomcolor.h test/catch.hpp Makefile
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'src/nmp/DslServicesPphNmp'
+#  Last modified 2022-08-11 09:27:02.579006716
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/35=0%
+#  recipe to execute (from 'Makefile', line 195):
+	$(CXX) -c -o $@ $(CFLAGS) $<
 
 # Not a target:
 src/DslTilerBintr.o:
@@ -1369,6 +1449,12 @@ src/DslOdeAction.h:
 
 # Not a target:
 src/DslPipelineStateMgr.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/DslOdeArea.h:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -1445,6 +1531,7 @@ test/api/DslSinkMessageApiTest.o:
 #  Modification time never checked.
 #  File has not been updated.
 
+ 
 # Not a target:
 test/unit/DslOsdUnitTest.o:
 #  Implicit rule search has not been done.
@@ -1540,18 +1627,12 @@ test/unit/DslDewarperUnitTest.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
- 
 
-src/nms/DslPadProbeHandlerNms.o: src/nms/DslPadProbeHandlerNms.cpp src/Dsl.h.gch src/nms/DslPadProbeHandlerNms.h src/DslLogGst.h src/DslPipelineSourcesBintr.h src/DslOdeAction.h src/DslMutex.h src/DslStateChange.h src/DslTrackerBintr.h src/DslLog.h src/DslBintr.h src/DslBranchBintr.h src/DslPadProbeHandler.h src/DslPipelineSInfersBintr.h src/DslElementr.h src/DslTilerBintr.h src/DslOdeHeatMapper.h src/DslOdeArea.h src/DslTapBintr.h src/DslMessageBroker.h src/DslSourceBintr.h src/DslGeosTypes.h src/DslApi.h src/DslServices.h src/DslOsdBintr.h src/DslSourceMeter.h src/Dsl.h src/DslOdeAccumulator.h src/DslServicesValidate.h src/DslSegVisualBintr.h src/DslOdeBase.h src/DslRecordMgr.h src/DslInferBintr.h src/DslPipelineBintr.h src/DslMultiComponentsBintr.h src/DslPlayerBintr.h src/DslOfvBintr.h src/DslPreprocBintr.h src/DslSinkBintr.h src/DslSurfaceTransform.h src/DslPipelineXWinMgr.h src/DslDewarperBintr.h src/DslMailer.h src/DslDisplayTypes.h src/DslBase.h src/DslNodetr.h src/DslOdeTrigger.h src/DslPipelineStateMgr.h src/DslOdeTrackedObject.h src/thirdparty/randomcolor.h test/catch.hpp Makefile
-#  Implicit rule search has been done.
-#  Implicit/static pattern stem: 'src/nms/DslPadProbeHandlerNms'
-#  File does not exist.
-#  File has been updated.
-#  Needs to be updated (-q is set).
-# variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/35=0%
-#  recipe to execute (from 'Makefile', line 195):
-	$(CXX) -c -o $@ $(CFLAGS) $<
+# Not a target:
+src/nmp/DslPadProbeHandlerNmp.h:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 # Not a target:
 test/unit/DslMsgSinkUnitTest.o:
@@ -1578,21 +1659,21 @@ src/DslGeosTypes.h:
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=194/1024=19%, Rehash=0, Collisions=51/452=11%
+# Load=195/1024=19%, Rehash=0, Collisions=52/454=11%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 2 (1) / strings = 551 / storage = 12145 B / avg = 22 B
-# current buf: size = 8162 B / used = 3988 B / count = 144 / avg = 27 B
-# other used: total = 3983 B / count = 407 / avg = 9 B
+# strcache buffers: 2 (1) / strings = 561 / storage = 12302 B / avg = 21 B
+# current buf: size = 8162 B / used = 4145 B / count = 152 / avg = 27 B
+# other used: total = 4140 B / count = 409 / avg = 10 B
 # other free: total = 5 B / max = 5 B / min = 5 B / avg = 5 B
 
-# strcache performance: lookups = 696 / hit rate = 20%
+# strcache performance: lookups = 709 / hit rate = 20%
 # hash-table stats:
-# Load=551/8192=7%, Rehash=0, Collisions=33/696=5%
-# Finished Make data base on Mon Aug  1 16:37:54 2022
+# Load=561/8192=7%, Rehash=0, Collisions=29/709=4%
+# Finished Make data base on Fri Aug 12 14:18:25 2022
 
  
