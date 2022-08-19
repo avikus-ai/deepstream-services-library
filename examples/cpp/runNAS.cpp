@@ -42,6 +42,9 @@ THE SOFTWARE.
 namespace YML_VARIABLE {
     uint vector_reserve_size;
     uint class_agnostic;
+    uint preprocssing;
+    uint tracking;
+    uint postprocessing;
     std::wstring postprocess;
     std::wstring match_metric; // IOU, IOS 
     float match_threshold;
@@ -54,6 +57,12 @@ namespace YML_VARIABLE {
     uint window_height;
     int font_size;
     int bbox_border_size;
+    uint batch_size;
+    uint perf;
+    uint monitoring;
+    uint send_medula;
+    uint uri_cnt;
+    uint repeat_video;
 }
 
 class ReportData {
@@ -313,14 +322,24 @@ int main(int argc, char** argv)
         return std::wstring(suri.begin(), suri.end());
     };
 
-    std::wstring uri = str2wstr("uri0");
+    uri_cnt = root["uri_cnt"].As<int>();
+    std::wstring inputs = str2wstr("inputs");
+    std::vector<std::wstring> uri;
+    for(int i=0; i<uri_cnt; i++) {
+        uri.emplace_back(str2wstr("uri"+std::to_string(i)));
+    }
+    std::wstring rtsp_url = str2wstr("rtsp_url");
     std::wstring preproc_config = str2wstr("preprocess");
     std::wstring primary_infer_config_file = str2wstr("infer");
     std::wstring primary_model_engine_file = str2wstr("model");
     std::wstring tracker_config_file = str2wstr("trk_cfg");
-
+    std::wstring sink = str2wstr("sink");
+    
     vector_reserve_size = root["vector_reserve_size"].As<int>();
     class_agnostic = root["class_agnostic"].As<bool>();
+    preprocssing = root["preprocssing"].As<bool>();
+    tracking = root["tracking"].As<bool>();
+    postprocessing = root["postprocessing"].As<bool>();
     postprocess = str2wstr("postprocess");
     match_metric = str2wstr("match_metric");
     match_threshold = root["match_threshold"].As<float>();
@@ -333,6 +352,10 @@ int main(int argc, char** argv)
     window_height = root["window_height"].As<int>();
     font_size = root["font_size"].As<int>();
     bbox_border_size = root["bbox_border_size"].As<int>();
+    perf = root["perf"].As<bool>();
+    monitoring = root["monitoring"].As<bool>();
+    send_medula = root["send_medula"].As<bool>();
+    repeat_video = root["repeat_video"].As<bool>();
 
     auto DSL_NMP_PROCESS_METHOD = (postprocess == L"NMM") ? 
                                     DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
@@ -356,6 +379,7 @@ int main(int argc, char** argv)
         retval = dsl_pph_custom_new(L"send-to-medula", 
             send_data, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
+
         // Create an Any-Class Occurrence Trigger for our remove Actions
         retval = dsl_ode_trigger_occurrence_new(L"every-occurrence-trigger", DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -388,8 +412,14 @@ int main(int argc, char** argv)
         retval = dsl_ode_action_monitor_new(L"every-occurrence-monitor", ode_occurrence_monitor, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"customize-label-action", nullptr};
-        retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+        if (monitoring) {
+            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"customize-label-action", nullptr};
+            retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+        }
+        else {
+            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", nullptr};
+            retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+        }
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // `````````````````````````````````````````````````````````````````````````````
@@ -402,73 +432,127 @@ int main(int argc, char** argv)
         retval = dsl_pph_ode_trigger_add_many(L"ode-handler", triggers);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        // New File Source
-        retval = dsl_source_file_new(L"uri-source-1", uri.c_str(), true);
-        if (retval != DSL_RESULT_SUCCESS) break;
+        std::vector<std::wstring> v_components;
 
-        // New Preprocessor component using the config filespec defined above.
-        retval = dsl_preproc_new(L"preprocessor", preproc_config.c_str());
-        if (retval != DSL_RESULT_SUCCESS) break;
-
+        if (inputs == L"video") {
+            // New File Source
+            for(int i=0; i<uri_cnt; i++) {
+                retval = dsl_source_file_new(L"uri-source-"+i, uri[i].c_str(), repeat_video);
+                if (retval != DSL_RESULT_SUCCESS) break;
+                v_components.emplace_back(L"uri-source-"+std::to_wstring(i));
+            }
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        else {
+            // New File Source
+            retval = dsl_source_file_new(L"rtsp-source", rtsp_url.c_str(), true);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            v_components.emplace_back(L"rtsp-source");
+        }
+        
+        if (preprocssing) {
+            // New Preprocessor component using the config filespec defined above.
+            retval = dsl_preproc_new(L"preprocessor", preproc_config.c_str());
+            if (retval != DSL_RESULT_SUCCESS) break;
+            v_components.emplace_back(L"preprocessor");
+        }
+        
         // New Primary GIE using the filespecs defined above, with interval and Id
         retval = dsl_infer_gie_primary_new(L"primary-gie", 
             primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), interval);
         if (retval != DSL_RESULT_SUCCESS) break;
-        
-        // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
-        // to the number of ROI's defined in the Preprocessor configuraton file.
-        retval = dsl_infer_batch_size_set(L"primary-gie", 4);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        
-        // **** IMPORTANT! we must set the input-meta-tensor setting to true when
-        // using the preprocessor, otherwise the GIE will use its own preprocessor.
-        retval = dsl_infer_gie_tensor_meta_settings_set(L"primary-gie",
-            true, false);
-        if (retval != DSL_RESULT_SUCCESS) break;
+        v_components.emplace_back(L"primary-gie");
 
-        if (trk == L"IOU") {
-            retval = dsl_tracker_iou_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height);
+        if (preprocssing) {
+            // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
+            // to the number of ROI's defined in the Preprocessor configuraton file.
+            retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
+            // **** IMPORTANT! we must set the input-meta-tensor setting to true when
+            // using the preprocessor, otherwise the GIE will use its own preprocessor.
+            retval = dsl_infer_gie_tensor_meta_settings_set(L"primary-gie",
+                true, false);
             if (retval != DSL_RESULT_SUCCESS) break;
         }
-        else if (trk == L"KLT") {
-            retval = dsl_tracker_ktl_new(L"tracker", trk_width, trk_height);
-            if (retval != DSL_RESULT_SUCCESS) break;
+    
+        if (tracking) {
+            if (trk == L"IOU") {
+                retval = dsl_tracker_iou_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            else if (trk == L"KLT") {
+                retval = dsl_tracker_ktl_new(L"tracker", trk_width, trk_height);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            else if (trk == L"DCF") {
+                retval = dsl_tracker_dcf_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height, true, true);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            else {
+                retval = DSL_RESULT_FAILURE;
+                break;
+            }
+            v_components.emplace_back(L"tracker");
         }
-        else if (trk == L"DCF") {
-            retval = dsl_tracker_dcf_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height, true, true);
-            if (retval != DSL_RESULT_SUCCESS) break;
-        }
-        else {
-            retval = DSL_RESULT_FAILURE;
-            break;
-        }
-
+        
         // Add the NMP PPH to the source pad of the Tracker
-        retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
+        if (tracking && postprocessing) {
+            retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        
         // New OSD with text, clock and bbox display all enabled. 
         retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
         if (retval != DSL_RESULT_SUCCESS) break;
+        v_components.emplace_back(L"tracker");
 
-        retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
+        if (perf) {
+            retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        
         retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
         if (retval != DSL_RESULT_SUCCESS) break;
+        v_components.emplace_back(L"on-screen-display");
 
-        retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
-        retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
-        if (retval != DSL_RESULT_SUCCESS) break;
-    
+        if (send_medula) {
+            retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        
+        if (sink == L"window") {
+            // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
+            retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            v_components.emplace_back(L"window-sink");
+        }
+        // else if (sink == L"file-sink") {
+        //     retval = dsl_sink_file_new(L"file-sink",);
+        //     if (retval != DSL_RESULT_SUCCESS) break;
+        //     v_components.emplace_back(L"file-sink");
+        // }
+        else if (sink == L"fake") {
+            retval = dsl_sink_fake_new(L"fake-sink");
+            if (retval != DSL_RESULT_SUCCESS) break;
+            v_components.emplace_back(L"fake-sink");
+        }
+        else {
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        
         // Create a list of Pipeline Components to add to the new Pipeline.
-        const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
-            L"tracker", L"on-screen-display", L"window-sink", nullptr};
+        // const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
+        //     L"tracker", L"on-screen-display", L"window-sink", nullptr};
+        wchar_t** components = new wchar_t*[v_components.size() + 1]; // include nullptr
+        for (int i=0; i<v_components.size()-1; i++) {
+            components[i] = new wchar_t[v_components[i].size()+1];
+            wcscpy(components[i], v_components[i].c_str());
+        }
+        components[v_components.size()-1] = nullptr;
         
         // Add all the components to our pipeline
-        retval = dsl_pipeline_new_component_add_many(L"pipeline", components);
+        retval = dsl_pipeline_new_component_add_many(L"pipeline", const_cast<const wchar_t**>(components));
         if (retval != DSL_RESULT_SUCCESS) break;
             
         // Add the EOS listener and XWindow event handler functions defined above

@@ -1,16 +1,22 @@
-#uri: ../../../dvcData/videos/wangsan-test1.mp4
-#uri2: ../../../dvcData/videos/TESTCASE-VIDEO/AiBOAT/AVIKUS/BUSAN_drive0_many_motor_bridge_0.mp4
-#uri3: ../../../dvcData/videos/TESTCASE-VIDEO/AiBOAT/AVIKUS/BUSAN_drivemedium_buoy_bridge_0.mp4
-#uri4: ../../../dvcData/videos/TESTCASE-VIDEO/AiBOAT/AVIKUS/BUSAN_drivemeduim_motor_builing_0.mp4
-uri: ../../../dvcData/videos/Sony/front_middle.MP4
-uri2: ../../../dvcData/videos/Sony/front_narrow.MP4
-uri3: ../../../dvcData/videos/Sony/front_Wide.MP4
-uri4: ../../../dvcData/videos/Sony/wheel_middle.MP4
-preprocess: ../../../dvcData/cuda114/yolov5s/config_preprocess_v5s.txt
-infer: ../../../dvcData/cuda114/yolov5s/config_infer_primary_yoloV5s.txt
-model: ../../../dvcData/cuda114/yolov5s/model_b8_gpu0_fp16.engine
+# VIDEO_ROOT_DIR
+# DATA_ROOT_DIR
+# usage export VIDEO_ROOT_DIR=? 
+
+inputs: video
+repeat_video: false
+rtsp_url: 
+uri0: /home/root/aiboat/aiboat/_bin/datas/front_middle.MP4
+uri1: ${VIDEO_ROOT_DIR}/front_narrow.MP4
+uri2: ${VIDEO_ROOT_DIR}/front_Wide.MP4
+uri3: ${VIDEO_ROOT_DIR}/wheel_middle.MP4
+uri_cnt: 1
+preprocessing: true
+preprocess: /home/root/aiboat/aiboat/_bin/datas/002/config_preprocess_v5s.txt
+infer: /home/root/aiboat/aiboat/_bin/datas/002/config_infer_primary_yoloV5s.txt
+model: /home/root/aiboat/aiboat/_bin/datas/002/model_b4_gpu0_fp16.engine
+tracking: true
 trk: DCF
-trk_cfg: ../../../dvcData/cuda114/yolov5s/config_tracker_NvDCF_max_perf.yml
+trk_cfg: /home/root/aiboat/aiboat/_bin/datas/002/config_tracker_NvDCF_max_perf.yml
 trk_width: 1280
 trk_height: 768
 vector_reserve_size: 500
@@ -25,3 +31,7 @@ window_height: 1080
 font_size: 16
 bbox_border_size: 3
 batch_size: 4
+perf: true
+monitoring: false
+send_medula: false
+sink: window
