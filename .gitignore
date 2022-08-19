@@ -61,3 +61,22 @@
 # *.txt
  
 # Directories
+
+## ignore file list
+Makefile
+cmake_install.cmake
+cMakeCache.txt
+.cmake
+tags
+cscope.files
+cscope.out
+*.so
+*.a
+*.swp
+*.out
+
+
+## ignore dir list
+build/
+.vscode/
+CMakeFiles/
