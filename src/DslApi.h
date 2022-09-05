@@ -1978,39 +1978,6 @@ DslReturnType dsl_ode_action_custom_new(const wchar_t* name,
     dsl_ode_handle_occurrence_cb client_handler, void* client_data);
 
 /**
- * @brief Creates a uniquely named "Customize Object Label" ODE Action that updates 
- * an Object's label to display specific content.
- * @param[in] name unique name for the "Customize Object Label ODE Action. 
- * @param[in] content_types an array of DSL_OBJECT_LABEL_<type> constants.
- * @param[in] size of the content_types array 
- * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
- */
-DslReturnType dsl_ode_action_customize_label_new(const wchar_t* name,  
-    const uint* content_types, uint size);
-
-/**
- * @brief Gets the current content_types, size and write mode settings for the 
- * "Customize Object Label" ODE Action 
- * @param[in] name unique name for the "Customize Object Label ODE Action to query. 
- * @param[out] content_types an array of DSL_OBJECT_LABEL_<type> constants.
- * @param[inout] size max size of the content_types array on call, actual size on return
- * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
- */
-DslReturnType dsl_ode_action_customize_label_get(const wchar_t* name,  
-    uint* content_types, uint* size);
-    
-/**
- * @brief Sets the content_types, size and write mode settings for the 
- * "Customize Object Label" ODE Action,
- * @param[in] name unique name for the "Customize Object Label ODE Action. 
- * @param[in] content_types an array of DSL_OBJECT_LABEL_<type> constants.
- * @param[in] size of the content_types array 
- * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
- */
-DslReturnType dsl_ode_action_customize_label_set(const wchar_t* name,  
-    const uint* content_types, uint size);
-    
-/**
  * @brief Creates a uniquely named Display ODE Action
  * @param[in] name unique name for the ODE Display Action 
  * @param[in] format_string string with format tokens for display
@@ -2106,21 +2073,17 @@ DslReturnType dsl_ode_action_fill_surroundings_new(const wchar_t* name, const wc
  * @param[in] bg_color RGBA Color for the Text background if set
  * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
  */
-DslReturnType dsl_ode_action_format_bbox_new(const wchar_t* name, uint border_width, 
+DslReturnType dsl_ode_action_bbox_format_new(const wchar_t* name, uint border_width, 
     const wchar_t* border_color, boolean has_bg_color, const wchar_t* bg_color);
-
+    
 /**
- * @brief Creates a uniquely named "Format Label" ODE Action that updates 
- * an Object's RGBA Label Font
- * @param[in] name unique name for the Format Label ODE Action 
- * @param[in] font RGBA font to use for the object's label
- * @param[in] has_bg_color set to true to enable background color, false otherwise
- * @param[in] bg_color RGBA Color for the Text background if has_bg_color = true
+ * @brief Creates a uniquely named "Scale Bounding Box" ODE Action that scales
+ * and Objects bounding box by a given percentage.
+ * @param[in] name unique name for the "Scale Bounding Box" ODE Action. 
+ * @param[in] scale scale factor in units of percent.
  * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
  */
-DslReturnType dsl_ode_action_format_label_new(const wchar_t* name, 
-    const wchar_t* font, boolean has_bg_color, const wchar_t* bg_color);
-    
+DslReturnType dsl_ode_action_bbox_scale_new(const wchar_t* name, uint scale);
 
 /**
  * @brief Creates a uniquely named Disable Handler Action that disables
@@ -2131,6 +2094,64 @@ DslReturnType dsl_ode_action_format_label_new(const wchar_t* name,
  */
 DslReturnType dsl_ode_action_handler_disable_new(const wchar_t* name, const wchar_t* handler);
 
+/**
+ * @brief Creates a uniquely named "Format Label" ODE Action that updates 
+ * an Object's RGBA Label Font
+ * @param[in] name unique name for the Format Label ODE Action 
+ * @param[in] font RGBA font to use for the object's label
+ * @param[in] has_bg_color set to true to enable background color, false otherwise
+ * @param[in] bg_color RGBA Color for the Text background if has_bg_color = true
+ * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
+ */
+DslReturnType dsl_ode_action_label_format_new(const wchar_t* name, 
+    const wchar_t* font, boolean has_bg_color, const wchar_t* bg_color);
+    
+/**
+ * @brief Creates a uniquely named "Customize Object Label" ODE Action that updates 
+ * an Object's label to display specific content.
+ * @param[in] name unique name for the "Customize Object Label ODE Action. 
+ * @param[in] content_types an array of DSL_OBJECT_LABEL_<type> constants.
+ * @param[in] size of the content_types array 
+ * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
+ */
+DslReturnType dsl_ode_action_label_customize_new(const wchar_t* name,  
+    const uint* content_types, uint size);
+
+/**
+ * @brief Gets the current content_types, size and write mode settings for the 
+ * "Customize Object Label" ODE Action 
+ * @param[in] name unique name for the "Customize Object Label ODE Action to query. 
+ * @param[out] content_types an array of DSL_OBJECT_LABEL_<type> constants.
+ * @param[inout] size max size of the content_types array on call, actual size on return
+ * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
+ */
+DslReturnType dsl_ode_action_label_customize_get(const wchar_t* name,  
+    uint* content_types, uint* size);
+    
+/**
+ * @brief Sets the content_types, size and write mode settings for the 
+ * "Customize Object Label" ODE Action,
+ * @param[in] name unique name for the "Customize Object Label ODE Action. 
+ * @param[in] content_types an array of DSL_OBJECT_LABEL_<type> constants.
+ * @param[in] size of the content_types array 
+ * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
+ */
+DslReturnType dsl_ode_action_label_customize_set(const wchar_t* name,  
+    const uint* content_types, uint size);
+
+/**
+ * @brief Creates a uniquely named "Customize Object Label" ODE Action that offsets 
+ * an Object's label from the default location. 
+ * @param[in] name unique name for the "Customize Object Label ODE Action. 
+ * @param[in] offset_x horizontal offset from the default top left bounding box corner. 
+ * Use a negative value to move left, positive to move right  in units of pixels.
+ * @param[in] offset_y vertical offset from the default top left bounding box corner. 
+ * Use a negative value to move up, positive to move down in units of pixels.
+ * @return DSL_RESULT_SUCCESS on success, one of DSL_RESULT_ODE_ACTION_RESULT otherwise.
+ */
+DslReturnType dsl_ode_action_label_offset_new(const wchar_t* name,  
+    int offset_x, int offset_y);
+    
 /**
  * @brief Creates a uniquely named Log ODE Action
  * @param[in] name unique name for the Log ODE Action 
@@ -3974,8 +3995,65 @@ DslReturnType dsl_source_image_stream_timeout_get(const wchar_t* name, uint* tim
 DslReturnType dsl_source_image_stream_timeout_set(const wchar_t* name, uint timeout);
     
 /**
+ * @brief creates a new, uniquely named Interpipe Source component to listen to
+ * an Interpipe Sink Component. Supports dynamic switching between Interpipe Sinks.
+ * @param[in] name unique name for the new Interpipe Source
+ * @param[in] listen_to unique name of the Interpipe Sink to listen to.
+ * @param[in] is_live set to true to act as live source, false otherwise
+ * @param[in] accept_eos set to true to accept EOS events from the Interpipe Sink,
+ * false otherwise.
+ * @param[in] accept_event set to true to accept events (except EOS event) from 
+ * the Interpipe Sink, false otherwise.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_interpipe_new(const wchar_t* name, 
+    const wchar_t* listen_to, boolean is_live, 
+    boolean accept_eos, boolean accept_events);
+
+/**
+ * @brief gets the current name of the Interpipe Sink the Interpipe Source 
+ * component is listening to.
+ * @param[in] name unique name of Interpipe Source to query
+ * @param[out] listen_to unique name of the Interpipe Sink the Source is listening to.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_interpipe_listen_to_get(const wchar_t* name, 
+    const wchar_t** listen_to);
+
+/**
+ * @brief sets the name of the Interpipe Sink the named Interpipe Source 
+ * component is to listening to.
+ * @param[in] name unique name of Interpipe Source to update
+ * @param[in] listen_to unique name of the Interpipe Sink to listen to.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_interpipe_listen_to_set(const wchar_t* name, 
+    const wchar_t* listen_to);
+
+/**
+ * @brief Gets the current accept settings in use by the named Interpipe Source.
+ * @param[out] accept_eos if true, the Source accepts EOS events from the Interpipe Sink.
+ * @param[out] accept_event if true, the Source accepts events (except EOS event) from 
+ * the Interpipe Sink.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_interpipe_accept_settings_get(const wchar_t* name,
+    boolean* accept_eos, boolean* accept_events);
+
+/**
+ * @brief Sets the accept settings for the named Interpipe Source to use
+ * @param[in] accept_eos set to true to accept EOS events from the Interpipe Sink,
+ * false otherwise.
+ * @param[in] accept_event set to true to accept events (except EOS event) from 
+ * the Interpipe Sink, false otherwise.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_interpipe_accept_settings_set(const wchar_t* name,
+    boolean accept_eos, boolean accept_events);
+    
+/**
  * @brief creates a new, uniquely named RTSP Source component
- * @param[in] name Unique Resource Identifier (file or live)
+ * @param[in] name Unique for the new RTSP Source.
  * @param[in] protocol one of the constant protocol values [ DSL_RTP_TCP | DSL_RTP_ALL ]
  * @param[in] intra_decode set to True to enable, false to disable.
  * @param[in] drop_frame_interval, set to 0 to decode every frame.
@@ -5116,13 +5194,35 @@ DslReturnType dsl_tiler_dimensions_set(const wchar_t* name, uint width, uint hei
 DslReturnType dsl_tiler_tiles_get(const wchar_t* name, uint* cols, uint* rows);
 
 /**
- * @brief Sets the number of columns and rows for the named Tiled Display
+ * @brief Sets the number of columns and rows for the named Tiler.
  * @param[in] name name of the Display to update
  * @param[in] cols current number of colums for all Tiles
  * @param[in] rows current number of rows for all Tiles
  * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_TILER_RESULT
  */
 DslReturnType dsl_tiler_tiles_set(const wchar_t* name, uint cols, uint rows);
+
+/**
+ * @brief Gets the current frame-numbering enabled setting for the named Tiler.
+ * @param[in] name unique name of the Tiler to query.
+ * @param[out] enabled if true, the Tiler will add an incrementing frame number
+ * to each frame metadata structure -- for each buffer flowing over the Tiler's 
+ * source pad -- overwriting the 0 value set by the NVIDIA Tiler plugin. 
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_TILER_RESULT
+ */
+DslReturnType dsl_tiler_frame_numbering_enabled_get(const wchar_t* name,
+    boolean* enabled);
+
+/**
+ * @brief Sets the frame-numbering enabled setting for the named Tiler.
+ * @param[in] name unique name of the Tiler to update.
+ * @param[in] enabled set to true to have the Tiler add an incrementing frame number
+ * to each frame metadata structure -- for each buffer flowing over the Tiler's 
+ * source pad -- overwriting the 0 value set by the NVIDIA Tiler plugin. 
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_TILER_RESULT
+ */
+DslReturnType dsl_tiler_frame_numbering_enabled_set(const wchar_t* name,
+    boolean enabled);
 
 /** 
  * @brief Gets the current Show Source setting for the named Tiler
@@ -5530,6 +5630,51 @@ DslReturnType dsl_sink_rtsp_new(const wchar_t* name, const wchar_t* host,
  */
 DslReturnType dsl_sink_rtsp_server_settings_get(const wchar_t* name,
     uint* udpPort, uint* rtspPort);
+
+/**
+ * @brief creates a new, uniquely named Interpipe Sink component.
+ * @param[in] name unique coomponent name for the new Interpipe Sink
+ * @param[in] forward_eos set to true to forward the EOS event to all the 
+ * listeners. False to not forward.
+ * @param[in] forward_events set to true to forward downstream events to 
+ * all the listeners (except for EOS). False to not forward.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SINK_RESULT on failure
+ */
+DslReturnType dsl_sink_interpipe_new(const wchar_t* name,
+    boolean forward_eos, boolean forward_events);
+
+/**
+ * @brief gets the current forward settings for named Interpipe Sink component.
+ * @param[in] name unique coomponent name of the Interpipe Sink to query.
+ * @param[in] forward_eos if true the EOS event will be forwarded to all the 
+ * listeners. False otherwise.
+ * @param[in] forward_events if true all downstream events will be forwarded 
+ * to all the listeners (except for EOS). False otherwise.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SINK_RESULT on failure
+ */
+DslReturnType dsl_sink_interpipe_forward_settings_get(const wchar_t* name,
+    boolean* forward_eos, boolean* forward_events);    
+
+/**
+ * @brief sets the forward settings for named Interpipe Sink component.
+ * @param[in] name unique coomponent name of the Interpipe Sink to update.
+ * @param[in] forward_eos set to true to forward the EOS event to all the 
+ * listeners. False to not forward.
+ * @param[in] forward_events set to true to forward downstream events to 
+ * all the listeners (except for EOS). False to not forward.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SINK_RESULT on failure
+ */
+DslReturnType dsl_sink_interpipe_forward_settings_set(const wchar_t* name,
+    boolean forward_eos, boolean forward_events);    
+    
+/**
+ * @brief gets the current number of Interpipe Sources listening to 
+ * the named Interpipe Sink component.
+ * @param[out] num_listeners current number of Interpipe Sources listening.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SINK_RESULT on failure
+ */ 
+DslReturnType dsl_sink_interpipe_num_listeners_get(const wchar_t* name,
+    uint* num_listeners);
 
 /**
  * @brief creates a new, uniquely named WebRTC Sink component

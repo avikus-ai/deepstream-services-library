@@ -175,23 +175,28 @@ namespace DSL {
         DslReturnType OdeActionCaptureMailerRemove(const char* name,
             const char* mailer);
 
-        DslReturnType OdeActionCustomizeLabelNew(const char* name, 
-            const uint* contentTypes, uint size);
-
-        DslReturnType OdeActionCustomizeLabelGet(const char* name, 
-            uint* contentTypes, uint* size);
-        
-        DslReturnType OdeActionCustomizeLabelSet(const char* name, 
-            const uint* contentTypes, uint size);
-        
         DslReturnType OdeActionDisplayNew(const char* name, 
             const char* formatString, uint offsetX, uint offsetY, 
             const char* font, boolean hasBgColor, const char* bgColor);
             
-        DslReturnType OdeActionFormatBBoxNew(const char* name,
+        DslReturnType OdeActionBBoxFormatNew(const char* name,
             uint borderWidth, const char* borderColor, boolean hasBgColor, const char* bgColor);
+            
+        DslReturnType OdeActionBBoxScaleNew(const char* name, uint scale);
 
-        DslReturnType OdeActionFormatLabelNew(const char* name,
+        DslReturnType OdeActionLabelCustomizeNew(const char* name, 
+            const uint* contentTypes, uint size);
+
+        DslReturnType OdeActionLabelCustomizeGet(const char* name, 
+            uint* contentTypes, uint* size);
+        
+        DslReturnType OdeActionLabelCustomizeSet(const char* name, 
+            const uint* contentTypes, uint size);
+        
+        DslReturnType OdeActionLabelOffsetNew(const char* name, 
+            int offset_x, int offset_y);
+        
+        DslReturnType OdeActionLabelFormatNew(const char* name,
             const char* font, boolean hasBgColor, const char* bgColor);
         
         DslReturnType OdeActionLogNew(const char* name);
@@ -637,6 +642,19 @@ namespace DSL {
     
         DslReturnType SourceImageStreamTimeoutSet(const char* name, uint timeout);
             
+        DslReturnType SourceInterpipeNew(const char* name, const char* listenTo,
+            boolean isLive, boolean acceptEos, boolean acceptEvents);
+            
+        DslReturnType SourceInterpipeListenToGet(const char* name, const char** listenTo);
+            
+        DslReturnType SourceInterpipeListenToSet(const char* name, const char* listenTo);
+        
+        DslReturnType SourceInterpipeAcceptSettingsGet(const char* name,
+            boolean* acceptEos, boolean* acceptEvents);
+            
+        DslReturnType SourceInterpipeAcceptSettingsSet(const char* name,
+            boolean acceptEos, boolean acceptEvents);
+            
         DslReturnType SourceRtspNew(const char* name, const char* uri, uint protocol, 
             uint intraDecode, uint dropFrameInterval, uint latency, uint timeout);
             
@@ -874,7 +892,13 @@ namespace DSL {
         DslReturnType TilerTilesGet(const char* name, uint* columns, uint* rows);
 
         DslReturnType TilerTilesSet(const char* name, uint columns, uint rows);
+        
+        DslReturnType TilerFrameNumberingEnabledGet(const char* name,
+            boolean* enabled);
 
+        DslReturnType TilerFrameNumberingEnabledSet(const char* name,
+            boolean enabled);
+            
         DslReturnType TilerSourceShowGet(const char* name, const char** source, uint* timeout);
 
         DslReturnType TilerSourceShowSet(const char* name, const char* source, uint timeout, bool hasPrecedence);
@@ -1011,7 +1035,19 @@ namespace DSL {
             
         DslReturnType SinkRtspServerSettingsGet(const char* name, 
             uint* updPort, uint* rtspPort);
+            
+        DslReturnType SinkInterpipeNew(const char* name,
+            boolean forward_eos, boolean forward_events);
 
+        DslReturnType SinkInterpipeForwardSettingsGet(const char* name,
+            boolean* forward_eos, boolean* forward_events);
+
+        DslReturnType SinkInterpipeForwardSettingsSet(const char* name,
+            boolean forward_eos, boolean forward_events);
+
+        DslReturnType SinkInterpipeNumListenersGet(const char* name,
+            uint* numListeners);
+        
         DslReturnType SinkWebRtcNew(const char* name, const char* stunServer, 
             const char* turnServer, uint codec, uint bitrate, uint interval);
 

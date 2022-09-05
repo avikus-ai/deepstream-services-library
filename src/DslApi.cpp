@@ -491,7 +491,7 @@ uint dsl_display_type_list_size()
     return DSL::Services::GetServices()->DisplayTypeListSize();
 }
 
-DslReturnType dsl_ode_action_format_bbox_new(const wchar_t* name, uint border_width, 
+DslReturnType dsl_ode_action_bbox_format_new(const wchar_t* name, uint border_width, 
     const wchar_t* border_color, boolean has_bg_color, const wchar_t* bg_color)
 {
     RETURN_IF_PARAM_IS_NULL(name);
@@ -515,11 +515,22 @@ DslReturnType dsl_ode_action_format_bbox_new(const wchar_t* name, uint border_wi
         cstrBgColor.assign(wstrBgColor.begin(), wstrBgColor.end());
     }
     
-    return DSL::Services::GetServices()->OdeActionFormatBBoxNew(cstrName.c_str(), 
+    return DSL::Services::GetServices()->OdeActionBBoxFormatNew(cstrName.c_str(), 
         border_width, cstrBorderColor.c_str(), has_bg_color, cstrBgColor.c_str());
 }
 
-DslReturnType dsl_ode_action_format_label_new(const wchar_t* name, 
+DslReturnType dsl_ode_action_bbox_scale_new(const wchar_t* name, uint scale)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->OdeActionBBoxScaleNew(cstrName.c_str(), 
+        scale);
+}
+
+DslReturnType dsl_ode_action_label_format_new(const wchar_t* name, 
     const wchar_t* font, boolean has_bg_color, const wchar_t* bg_color)
 {
     RETURN_IF_PARAM_IS_NULL(name);
@@ -542,7 +553,7 @@ DslReturnType dsl_ode_action_format_label_new(const wchar_t* name,
         cstrBgColor.assign(wstrBgColor.begin(), wstrBgColor.end());
     }
     
-    return DSL::Services::GetServices()->OdeActionFormatLabelNew(cstrName.c_str(), 
+    return DSL::Services::GetServices()->OdeActionLabelFormatNew(cstrName.c_str(), 
         cstrFont.c_str(), has_bg_color, cstrBgColor.c_str());
 }
     
@@ -678,7 +689,7 @@ DslReturnType dsl_ode_action_capture_mailer_remove(const wchar_t* name,
         cstrName.c_str(), cstrMailer.c_str());
 }
 
-DslReturnType dsl_ode_action_customize_label_new(const wchar_t* name,  
+DslReturnType dsl_ode_action_label_customize_new(const wchar_t* name,  
     const uint* content_types, uint size)
 {
     RETURN_IF_PARAM_IS_NULL(name);
@@ -687,11 +698,11 @@ DslReturnType dsl_ode_action_customize_label_new(const wchar_t* name,
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
 
-    return DSL::Services::GetServices()->OdeActionCustomizeLabelNew(
+    return DSL::Services::GetServices()->OdeActionLabelCustomizeNew(
         cstrName.c_str(), content_types, size);
 }    
 
-DslReturnType dsl_ode_action_customize_label_get(const wchar_t* name,  
+DslReturnType dsl_ode_action_label_customize_get(const wchar_t* name,  
     uint* content_types, uint* size)
 {
     RETURN_IF_PARAM_IS_NULL(name);
@@ -701,11 +712,11 @@ DslReturnType dsl_ode_action_customize_label_get(const wchar_t* name,
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
 
-    return DSL::Services::GetServices()->OdeActionCustomizeLabelGet(
+    return DSL::Services::GetServices()->OdeActionLabelCustomizeGet(
         cstrName.c_str(), content_types, size);
 }    
     
-DslReturnType dsl_ode_action_customize_label_set(const wchar_t* name,  
+DslReturnType dsl_ode_action_label_customize_set(const wchar_t* name,  
     const uint* content_types, uint size)
 {
     RETURN_IF_PARAM_IS_NULL(name);
@@ -713,8 +724,20 @@ DslReturnType dsl_ode_action_customize_label_set(const wchar_t* name,
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
 
-    return DSL::Services::GetServices()->OdeActionCustomizeLabelSet(
+    return DSL::Services::GetServices()->OdeActionLabelCustomizeSet(
         cstrName.c_str(), content_types, size);
+}    
+
+DslReturnType dsl_ode_action_label_offset_new(const wchar_t* name,  
+    int offset_x, int offset_y)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->OdeActionLabelOffsetNew(
+        cstrName.c_str(), offset_x, offset_y);
 }    
     
 DslReturnType dsl_ode_action_display_new(const wchar_t* name, 
@@ -3411,6 +3434,123 @@ DslReturnType dsl_source_image_stream_timeout_set(const wchar_t* name, uint time
         timeout);
 }
 
+DslReturnType dsl_source_interpipe_new(const wchar_t* name, 
+    const wchar_t* listen_to, boolean is_live,
+    boolean accept_eos, boolean accept_events)
+{
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(listen_to);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    std::wstring wstrListenTo(listen_to);
+    std::string cstrListenTo(wstrListenTo.begin(), wstrListenTo.end());
+
+    return DSL::Services::GetServices()->SourceInterpipeNew(cstrName.c_str(), 
+        cstrListenTo.c_str(), is_live, accept_eos, accept_events);
+#endif
+}
+
+DslReturnType dsl_source_interpipe_listen_to_get(const wchar_t* name, 
+    const wchar_t** listen_to)
+{
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(listen_to);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    const char* cListenTo;
+    static std::string cstrListenTo;
+    static std::wstring wcstrListenTo;
+    
+    uint retval = DSL::Services::GetServices()->SourceInterpipeListenToGet(cstrName.c_str(), 
+        &cListenTo);
+
+    if (retval ==  DSL_RESULT_SUCCESS)
+    {
+        cstrListenTo.assign(cListenTo);
+        wcstrListenTo.assign(cstrListenTo.begin(), cstrListenTo.end());
+        *listen_to = wcstrListenTo.c_str();
+    }
+    return retval;
+#endif
+}
+
+DslReturnType dsl_source_interpipe_listen_to_set(const wchar_t* name, 
+    const wchar_t* listen_to)
+{
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(listen_to);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    std::wstring wstrListenTo(listen_to);
+    std::string cstrListenTo(wstrListenTo.begin(), wstrListenTo.end());
+
+    return DSL::Services::GetServices()->SourceInterpipeListenToSet(cstrName.c_str(), 
+        cstrListenTo.c_str());
+#endif        
+}    
+
+DslReturnType dsl_source_interpipe_accept_settings_get(const wchar_t* name,
+    boolean* accept_eos, boolean* accept_events)
+{
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(accept_eos);
+    RETURN_IF_PARAM_IS_NULL(accept_events);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->SourceInterpipeAcceptSettingsGet(
+        cstrName.c_str(), accept_eos, accept_events);        
+#endif        
+}
+
+DslReturnType dsl_source_interpipe_accept_settings_set(const wchar_t* name,
+    boolean accept_eos, boolean accept_events)    
+{
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->SourceInterpipeAcceptSettingsSet(
+        cstrName.c_str(), accept_eos, accept_events);      
+#endif
+}
+    
 DslReturnType dsl_source_rtsp_new(const wchar_t* name, const wchar_t* uri, uint protocol, 
     uint intra_decode, uint dropFrameInterval, uint latency, uint timeout)
 {
@@ -4935,6 +5075,8 @@ DslReturnType dsl_tiler_new(const wchar_t* name, uint width, uint height)
 DslReturnType dsl_tiler_dimensions_get(const wchar_t* name, uint* width, uint* height)
 {
     RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(width);
+    RETURN_IF_PARAM_IS_NULL(height);
 
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
@@ -4955,6 +5097,8 @@ DslReturnType dsl_tiler_dimensions_set(const wchar_t* name, uint width, uint hei
 DslReturnType dsl_tiler_tiles_get(const wchar_t* name, uint* cols, uint* rows)
 {
     RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(cols);
+    RETURN_IF_PARAM_IS_NULL(rows);
 
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
@@ -4972,11 +5116,37 @@ DslReturnType dsl_tiler_tiles_set(const wchar_t* name, uint cols, uint rows)
     return DSL::Services::GetServices()->TilerTilesSet(cstrName.c_str(), cols, rows);
 }
 
+DslReturnType dsl_tiler_frame_numbering_enabled_get(const wchar_t* name,
+    boolean* enabled)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(enabled);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->TilerFrameNumberingEnabledGet(
+        cstrName.c_str(), enabled);
+}
+    
+DslReturnType dsl_tiler_frame_numbering_enabled_set(const wchar_t* name,
+    boolean enabled)
+{
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+
+    return DSL::Services::GetServices()->TilerFrameNumberingEnabledSet(
+        cstrName.c_str(), enabled);
+}
+    
 DslReturnType dsl_tiler_source_show_get(const wchar_t* name, 
     const wchar_t** source, uint* timeout)
 {
     RETURN_IF_PARAM_IS_NULL(name);
     RETURN_IF_PARAM_IS_NULL(source);
+    RETURN_IF_PARAM_IS_NULL(timeout);
 
     std::wstring wstrName(name);
     std::string cstrName(wstrName.begin(), wstrName.end());
@@ -5463,6 +5633,85 @@ DslReturnType dsl_sink_rtsp_server_settings_get(const wchar_t* name,
     
     return DSL::Services::GetServices()->SinkRtspServerSettingsGet(cstrName.c_str(), 
         udpPort, rtspPort);
+}    
+
+DslReturnType dsl_sink_interpipe_new(const wchar_t* name,
+    boolean forward_eos, boolean forward_events)
+{    
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->SinkInterpipeNew(cstrName.c_str(),
+        forward_eos, forward_events);
+#endif        
+}    
+
+DslReturnType dsl_sink_interpipe_forward_settings_get(const wchar_t* name,
+    boolean* forward_eos, boolean* forward_events)
+{    
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(forward_eos);
+    RETURN_IF_PARAM_IS_NULL(forward_events);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->SinkInterpipeForwardSettingsGet(
+        cstrName.c_str(), forward_eos, forward_events);
+#endif        
+}    
+    
+DslReturnType dsl_sink_interpipe_forward_settings_set(const wchar_t* name,
+    boolean forward_eos, boolean forward_events)
+{    
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->SinkInterpipeForwardSettingsSet(
+        cstrName.c_str(), forward_eos, forward_events);
+#endif        
+}    
+
+DslReturnType dsl_sink_interpipe_num_listeners_get(const wchar_t* name,
+    uint* num_listeners)
+{
+#if !defined(BUILD_INTER_PIPE)
+    #error "BUILD_INTER_PIPE must be defined"
+#elif BUILD_INTER_PIPE != true
+    LOG_ERROR("To use the Inter-Pipe services, set BUILD_INTER_PIPE=true in the Makefile");
+    return DSL_RESULT_API_NOT_SUPPORTED;
+#else
+    RETURN_IF_PARAM_IS_NULL(name);
+    RETURN_IF_PARAM_IS_NULL(num_listeners);
+
+    std::wstring wstrName(name);
+    std::string cstrName(wstrName.begin(), wstrName.end());
+    
+    return DSL::Services::GetServices()->SinkInterpipeNumListenersGet(
+        cstrName.c_str(), num_listeners);
+#endif    
 }    
 
 // NOTE: the WebRTC Sink implementation requires DS 1.18.0 or later

@@ -727,16 +727,26 @@ def dsl_display_type_list_size():
     return int(result)
 
 ##
-## dsl_ode_action_format_bbox_new()
+## dsl_ode_action_bbox_format_new()
 ##
-_dsl.dsl_ode_action_format_bbox_new.argtypes = [c_wchar_p, 
+_dsl.dsl_ode_action_bbox_format_new.argtypes = [c_wchar_p, 
     c_uint, c_wchar_p, c_bool, c_wchar_p]
-_dsl.dsl_ode_action_format_bbox_new.restype = c_uint
-def dsl_ode_action_format_bbox_new(name, 
+_dsl.dsl_ode_action_bbox_format_new.restype = c_uint
+def dsl_ode_action_bbox_format_new(name, 
     border_width, border_color, has_bg_color, bg_color):
     global _dsl
-    result =_dsl.dsl_ode_action_format_bbox_new(name, 
+    result =_dsl.dsl_ode_action_bbox_format_new(name, 
         border_width, border_color, has_bg_color, bg_color)
+    return int(result)
+
+##
+## dsl_ode_action_bbox_scale_new()
+##
+_dsl.dsl_ode_action_bbox_scale_new.argtypes = [c_wchar_p, c_uint]
+_dsl.dsl_ode_action_bbox_scale_new.restype = c_uint
+def dsl_ode_action_bbox_scale_new(name, scale):
+    global _dsl
+    result =_dsl.dsl_ode_action_bbox_scale_new(name, scale)
     return int(result)
 
 ##
@@ -844,12 +854,12 @@ def dsl_ode_action_capture_mailer_remove(name, mailer):
     return int(result)
 
 ##
-## dsl_ode_action_customize_label_new()
+## dsl_ode_action_label_customize_new()
 ##
-#_dsl.dsl_ode_action_customize_label_new.argtypes = [c_wchar_p, 
+#_dsl.dsl_ode_action_label_customize_new.argtypes = [c_wchar_p, 
 #    c_uint, c_uint]
-_dsl.dsl_ode_action_customize_label_new.restype = c_uint
-def dsl_ode_action_customize_label_new(name, 
+_dsl.dsl_ode_action_label_customize_new.restype = c_uint
+def dsl_ode_action_label_customize_new(name, 
     content_types, size):
     global _dsl
     if content_types is None:
@@ -857,33 +867,33 @@ def dsl_ode_action_customize_label_new(name,
     else:
         arr = (c_int * size)()
         arr[:] = content_types
-    result =_dsl.dsl_ode_action_customize_label_new(name, 
+    result =_dsl.dsl_ode_action_label_customize_new(name, 
         arr, size)
     return int(result)
 
 ##
-## dsl_ode_action_customize_label_get()
+## dsl_ode_action_label_customize_get()
 ##
-_dsl.dsl_ode_action_customize_label_get.argtypes = [c_wchar_p]
-_dsl.dsl_ode_action_customize_label_get.restype = c_uint
-def dsl_ode_action_customize_label_get(name):
+_dsl.dsl_ode_action_label_customize_get.argtypes = [c_wchar_p]
+_dsl.dsl_ode_action_label_customize_get.restype = c_uint
+def dsl_ode_action_label_customize_get(name):
     global _dsl
     content_types = [0,0,0,0,0,0]
     size = c_uint(len(content_types))
     arr = (c_int * len(content_types))()
     arr[:] = content_types
-    result =_dsl.dsl_ode_action_customize_label_set(name, 
+    result =_dsl.dsl_ode_action_label_customize_set(name, 
         arr, DSL_UINT_P(size))
     return int(result), arr[:], size.value
 
 
 ##
-## dsl_ode_action_customize_label_set()
+## dsl_ode_action_label_customize_set()
 ##
-#_dsl.dsl_ode_action_customize_label_set.argtypes = [c_wchar_p, 
+#_dsl.dsl_ode_action_label_customize_set.argtypes = [c_wchar_p, 
 #    c_uint_p, c_uint]
-_dsl.dsl_ode_action_customize_label_set.restype = c_uint
-def dsl_ode_action_customize_label_set(name, 
+_dsl.dsl_ode_action_label_customize_set.restype = c_uint
+def dsl_ode_action_label_customize_set(name, 
     content_types, size):
     global _dsl
     if content_types is None:
@@ -891,7 +901,7 @@ def dsl_ode_action_customize_label_set(name,
     else:
         arr = (c_int * size)()
         arr[:] = content_types
-    result =_dsl.dsl_ode_action_customize_label_set(name, 
+    result =_dsl.dsl_ode_action_label_customize_set(name, 
         arr, size)
     return int(result)
 
@@ -949,15 +959,15 @@ def dsl_ode_action_fill_surroundings_new(name, color):
     return int(result)
 
 ##
-## dsl_ode_action_format_label_new()
+## dsl_ode_action_label_format_new()
 ##
-_dsl.dsl_ode_action_format_label_new.argtypes = [c_wchar_p, 
+_dsl.dsl_ode_action_label_format_new.argtypes = [c_wchar_p, 
     c_wchar_p, c_bool, c_wchar_p]
-_dsl.dsl_ode_action_format_label_new.restype = c_uint
-def dsl_ode_action_format_label_new(name, 
+_dsl.dsl_ode_action_label_format_new.restype = c_uint
+def dsl_ode_action_label_format_new(name, 
     font, has_bg_color, bg_color):
     global _dsl
-    result =_dsl.dsl_ode_action_format_label_new(name, 
+    result =_dsl.dsl_ode_action_label_format_new(name, 
         font, has_bg_color, bg_color)
     return int(result)
 
@@ -2885,6 +2895,66 @@ def dsl_source_image_stream_timeout_set(name, timeout):
     return int(result)
 
 ##
+## dsl_source_interpipe_new()
+##
+_dsl.dsl_source_interpipe_new.argtypes = [c_wchar_p, c_wchar_p, c_bool, 
+    c_bool, c_bool]
+_dsl.dsl_source_interpipe_new.restype = c_uint
+def dsl_source_interpipe_new(name, listen_to, is_live, accept_eos, 
+    accept_events):
+    global _dsl
+    result = _dsl.dsl_source_interpipe_new(name, 
+        listen_to, is_live, accept_eos, accept_events)
+    return int(result)
+
+##
+## dsl_source_interpipe_listen_to_get()
+##
+_dsl.dsl_source_interpipe_listen_to_get.argtypes = [c_wchar_p, POINTER(c_wchar_p)]
+_dsl.dsl_source_interpipe_listen_to_get.restype = c_uint
+def dsl_source_interpipe_listen_to_get(name):
+    global _dsl
+    listen_to = c_wchar_p(0)
+    result = _dsl.dsl_source_interpipe_listen_to_get(name, DSL_WCHAR_PP(listen_to))
+    return int(result), listen_to.value 
+
+##
+## dsl_source_interpipe_listen_to_set()
+##
+_dsl.dsl_source_interpipe_listen_to_set.argtypes = [c_wchar_p, c_wchar_p]
+_dsl.dsl_source_interpipe_listen_to_set.restype = c_uint
+def dsl_source_interpipe_listen_to_set(name, listen_to):
+    global _dsl
+    result = _dsl.dsl_source_interpipe_listen_to_set(name, listen_to)
+    return int(result)
+
+##
+## dsl_source_interpipe_accept_settings_get()
+##
+_dsl.dsl_source_interpipe_accept_settings_get.argtypes = [c_wchar_p, 
+    POINTER(c_bool), POINTER(c_bool)]
+_dsl.dsl_source_interpipe_accept_settings_get.restype = c_uint
+def dsl_source_interpipe_accept_settings_get(name):
+    global _dsl
+    accept_eos = c_bool_p(0)
+    accept_events = c_bool_p(0)
+    result = _dsl.dsl_source_interpipe_accept_settings_get(name, 
+        DSL_BOOL_P(accept_eos), DSL_BOOL_P(accept_events))
+    return int(result), accept_eos.value, accept_events.value 
+
+##
+## dsl_source_interpipe_accept_settings_set()
+##
+_dsl.dsl_source_interpipe_accept_settings_set.argtypes = [c_wchar_p, 
+    c_bool, c_bool]
+_dsl.dsl_source_interpipe_accept_settings_set.restype = c_uint
+def dsl_source_interpipe_accept_settings_set(name, accept_eos, accept_events):
+    global _dsl
+    result = _dsl.dsl_source_interpipe_accept_settings_set(name, 
+        accept_eos, accept_events)
+    return int(result)
+
+##
 ## dsl_source_rtsp_new()
 ##
 _dsl.dsl_source_rtsp_new.argtypes = [c_wchar_p, c_wchar_p, c_uint, c_uint, 
@@ -4017,6 +4087,28 @@ def dsl_tiler_dimensions_set(name, width, height):
     return int(result)
 
 ##
+## dsl_tiler_frame_numbering_enabled_get()
+##
+_dsl.dsl_tiler_frame_numbering_enabled_get.argtypes = [c_wchar_p, POINTER(c_bool)]
+_dsl.dsl_tiler_frame_numbering_enabled_get.restype = c_uint
+def dsl_tiler_frame_numbering_enabled_get(name):
+    global _dsl
+    enabled = c_bool(0)
+    result = _dsl.dsl_tiler_frame_numbering_enabled_get(name, 
+        DSL_BOOL_P(enabled))
+    return int(result), enabled.value 
+
+##
+## dsl_tiler_frame_numbering_enabled_set()
+##
+_dsl.dsl_tiler_frame_numbering_enabled_set.argtypes = [c_wchar_p, c_bool]
+_dsl.dsl_tiler_frame_numbering_enabled_set.restype = c_uint
+def dsl_tiler_frame_numbering_enabled_set(name, enabled):
+    global _dsl
+    result = _dsl.dsl_tiler_frame_numbering_enabled_set(name, enabled)
+    return int(result)
+
+##
 ## dsl_tiler_source_show_get()
 ##
 _dsl.dsl_tiler_source_show_get.argtypes = [c_wchar_p, POINTER(c_wchar_p), POINTER(c_uint)]
@@ -4467,7 +4559,57 @@ def dsl_sink_message_new(name, converter_config_file, payload_type,
     result =_dsl.dsl_sink_message_new(name, converter_config_file, payload_type, 
         broker_config_file, protocol_lib, connection_string, topic)
     return int(result)
-    
+
+##
+## dsl_sink_interpipe_new()
+##
+_dsl.dsl_sink_interpipe_new.argtypes = [c_wchar_p, c_bool, c_bool]
+_dsl.dsl_sink_interpipe_new.restype = c_uint
+def dsl_sink_interpipe_new(name, forward_eos, forward_events):
+    global _dsl
+    result =_dsl.dsl_sink_interpipe_new(name, 
+        forward_eos, forward_events)
+    return int(result)
+
+##
+## dsl_sink_interpipe_forward_settings_get()
+##
+_dsl.dsl_sink_interpipe_forward_settings_get.argtypes = [c_wchar_p, 
+    POINTER(c_bool), POINTER(c_bool)]
+_dsl.dsl_sink_interpipe_forward_settings_get.restype = c_uint
+def dsl_sink_interpipe_forward_settings_get(name):
+    global _dsl
+    forward_eos = c_bool_p(0)
+    forward_events = c_bool_p(0)
+    result = _dsl.dsl_sink_interpipe_forward_settings_get(name, 
+        DSL_BOOL_P(forward_eos), DSL_BOOL_P(forward_events))
+    return int(result), forward_eos.value, forward_events.value 
+
+##
+## dsl_sink_interpipe_forward_settings_set()
+##
+_dsl.dsl_sink_interpipe_forward_settings_set.argtypes = [c_wchar_p, 
+    c_bool, c_bool]
+_dsl.dsl_sink_interpipe_forward_settings_set.restype = c_uint
+def dsl_sink_interpipe_forward_settings_set(name, forward_eos, forward_events):
+    global _dsl
+    result = _dsl.dsl_sink_interpipe_forward_settings_set(name, 
+        forward_eos, forward_events)
+    return int(result)
+
+##
+## dsl_sink_interpipe_num_listeners_get()
+##
+_dsl.dsl_sink_interpipe_num_listeners_get.argtypes = [c_wchar_p, 
+    POINTER(c_uint)]
+_dsl.dsl_sink_interpipe_num_listeners_get.restype = c_uint
+def dsl_sink_interpipe_num_listeners_get(name):
+    global _dsl
+    num_listeners = c_uint_p(0)
+    result = _dsl.dsl_sink_interpipe_num_listeners_get(name, 
+        DSL_UINT_P(num_listeners))
+    return int(result), num_listeners.value
+
 ##
 ## dsl_sink_sync_enabled_get()
 ##

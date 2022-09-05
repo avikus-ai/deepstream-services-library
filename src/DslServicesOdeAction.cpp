@@ -315,20 +315,55 @@ namespace DSL
             m_odeActions[name] = DSL_ODE_ACTION_CUSTOM_NEW(
                 name, clientHandler, clientData);
 
-            LOG_INFO("New ODE Callback Action '" << name 
+            LOG_INFO("New ODE Custom Action '" << name 
                 << "' created successfully");
 
             return DSL_RESULT_SUCCESS;
         }
         catch(...)
         {
-            LOG_ERROR("New ODE Callback Action '" << name 
+            LOG_ERROR("New ODE Custom Action '" << name 
                 << "' threw exception on create");
             return DSL_RESULT_ODE_ACTION_THREW_EXCEPTION;
         }
     }
 
-    DslReturnType  Services::OdeActionCustomizeLabelNew(const char* name, 
+    DslReturnType Services::OdeActionBBoxScaleNew(const char* name, uint scale)
+    {
+        LOG_FUNC();
+        LOCK_MUTEX_FOR_CURRENT_SCOPE(&m_servicesMutex);
+
+        try
+        {
+            // ensure event name uniqueness 
+            if (m_odeActions.find(name) != m_odeActions.end())
+            {   
+                LOG_ERROR("ODE Action name '" << name << "' is not unique");
+                return DSL_RESULT_ODE_ACTION_NAME_NOT_UNIQUE;
+            }
+            if (scale <= 100)
+            {
+                LOG_ERROR("Invalid scale factor = " << scale << " for ODE Action '"
+                    << name << "', must be greater than 100%");
+                return DSL_RESULT_ODE_ACTION_PARAMETER_INVALID;
+            }
+            m_odeActions[name] = DSL_ODE_ACTION_BBOX_SCALE_NEW(
+                name, scale);
+
+            LOG_INFO("New ODE Scale BBox Action '" << name 
+                << "' created successfully");
+
+            return DSL_RESULT_SUCCESS;
+        }
+        catch(...)
+        {
+            LOG_ERROR("New ODE Scale BBox Action '" << name 
+                << "' threw exception on create");
+            return DSL_RESULT_ODE_ACTION_THREW_EXCEPTION;
+        }
+    }
+    
+    DslReturnType Services::OdeActionLabelCustomizeNew(const char* name, 
         const uint* contentTypes, uint size)
     {
         LOG_FUNC();
@@ -365,7 +400,7 @@ namespace DSL
                 contentTypesCopy.push_back(*contentType);
                 count--;
             }    
-            m_odeActions[name] = DSL_ODE_ACTION_CUSTOMIZE_LABEL_NEW(
+            m_odeActions[name] = DSL_ODE_ACTION_LABEL_CUSTOMIZE_NEW(
                 name, contentTypesCopy);
 
             LOG_INFO("New ODE Customize Label Action '" << name 
@@ -382,7 +417,7 @@ namespace DSL
         
     }
 
-    DslReturnType  Services::OdeActionCustomizeLabelGet(const char* name, 
+    DslReturnType  Services::OdeActionLabelCustomizeGet(const char* name, 
         uint* contentTypes, uint* size)
     {
         LOG_FUNC();
@@ -394,7 +429,7 @@ namespace DSL
             DSL_RETURN_IF_COMPONENT_IS_NOT_CORRECT_TYPE(m_odeActions, 
                 name, CustomizeLabelOdeAction);
             
-            DSL_ODE_ACTION_CUSTOMIZE_LABEL_PTR pOdeAction = 
+            DSL_ODE_ACTION_LABEL_CUSTOMIZE_PTR pOdeAction = 
                 std::dynamic_pointer_cast<CustomizeLabelOdeAction>(m_odeActions[name]);
                 
             std::vector <uint> contentTypesCopy = pOdeAction->Get();
@@ -421,7 +456,7 @@ namespace DSL
         }
     }
 
-    DslReturnType  Services::OdeActionCustomizeLabelSet(const char* name, 
+    DslReturnType  Services::OdeActionLabelCustomizeSet(const char* name, 
         const uint* contentTypes, uint size)
     {
         LOG_FUNC();
@@ -455,7 +490,7 @@ namespace DSL
                 contentTypesCopy.push_back(*contentType);
                 count--;
             }
-            DSL_ODE_ACTION_CUSTOMIZE_LABEL_PTR pOdeAction = 
+            DSL_ODE_ACTION_LABEL_CUSTOMIZE_PTR pOdeAction = 
                 std::dynamic_pointer_cast<CustomizeLabelOdeAction>(m_odeActions[name]);
                 
             pOdeAction->Set(contentTypesCopy);
@@ -471,6 +506,38 @@ namespace DSL
                 << "' threw exception on set");
             return DSL_RESULT_ODE_ACTION_THREW_EXCEPTION;
         }
+    }
+
+    DslReturnType Services::OdeActionLabelOffsetNew(const char* name, 
+        int offsetX, int offsetY)
+{
+        LOG_FUNC();
+        LOCK_MUTEX_FOR_CURRENT_SCOPE(&m_servicesMutex);
+
+        try
+        {
+            // ensure event name uniqueness 
+            if (m_odeActions.find(name) != m_odeActions.end())
+            {   
+                LOG_ERROR("ODE Action name '" << name << "' is not unique");
+                return DSL_RESULT_ODE_ACTION_NAME_NOT_UNIQUE;
+            }
+            
+            m_odeActions[name] = DSL_ODE_ACTION_LABEL_OFFSET_NEW(name,
+                offsetX, offsetY);
+
+            LOG_INFO("New ODE Offset Label Action '" << name 
+                << "' created successfully");
+
+            return DSL_RESULT_SUCCESS;
+        }
+        catch(...)
+        {
+            LOG_ERROR("New ODE Offset Label Action '" << name 
+                << "' threw exception on create");
+            return DSL_RESULT_ODE_ACTION_THREW_EXCEPTION;
+        }
+        
     }
     
     DslReturnType Services::OdeActionDisplayNew(const char* name, 
@@ -682,7 +749,7 @@ namespace DSL
     }
 
 
-    DslReturnType Services::OdeActionFormatBBoxNew(const char* name,
+    DslReturnType Services::OdeActionBBoxFormatNew(const char* name,
         uint borderWidth, const char* borderColor, boolean hasBgColor, const char* bgColor)  
     {
         LOG_FUNC();
@@ -726,7 +793,7 @@ namespace DSL
                 pBgColor = std::dynamic_pointer_cast<RgbaColor>
                     (m_intrinsicDisplayTypes[DISPLAY_TYPE_NO_COLOR.c_str()]);
             }
-            m_odeActions[name] = DSL_ODE_ACTION_FORMAT_BBOX_NEW(name, 
+            m_odeActions[name] = DSL_ODE_ACTION_BBOX_FORMAT_NEW(name, 
                 borderWidth, pBorderColor, hasBgColor, pBgColor);
                 
             LOG_INFO("New Format Bounding Box ODE Action '" 
@@ -743,7 +810,7 @@ namespace DSL
     }
     
 
-    DslReturnType Services::OdeActionFormatLabelNew(const char* name,
+    DslReturnType Services::OdeActionLabelFormatNew(const char* name,
         const char* font, boolean hasBgColor, const char* bgColor)  
     {
         LOG_FUNC();
@@ -787,7 +854,7 @@ namespace DSL
                 pBgColor = std::dynamic_pointer_cast<RgbaColor>
                     (m_intrinsicDisplayTypes[DISPLAY_TYPE_NO_COLOR.c_str()]);
             }
-            m_odeActions[name] = DSL_ODE_ACTION_FORMAT_LABEL_NEW(name, 
+            m_odeActions[name] = DSL_ODE_ACTION_LABEL_FORMAT_NEW(name, 
                 pFont, hasBgColor, pBgColor);
                 
             LOG_INFO("New Format Label ODE Action '" << name << "' created successfully");
