@@ -45,12 +45,12 @@ JSON_GLIB_VERSION:=1.0
 
 # To enable the InterPipe Sink and Source components
 # - set BUILD_INTER_PIPE:=true
-BUILD_INTER_PIPE:=false
+BUILD_INTER_PIPE:=true
 
 # To enable the Non Maximum Processor (NMP) Pad Probe Handler (PPH)
 # - set BUILD_NMP_PPH:=true and NUM_CPP_PATH:=<path-to-numcpp-include-folder>
-BUILD_NMP_PPH:=false
-NUM_CPP_PATH:=
+BUILD_NMP_PPH:=true
+NUM_CPP_PATH:=../NumCpp
 
 SRC_INSTALL_DIR?=/opt/nvidia/deepstream/deepstream/sources
 INC_INSTALL_DIR?=/opt/nvidia/deepstream/deepstream/sources/includes
