@@ -704,7 +704,7 @@ int main(int argc, char** argv)
         retval = dsl_display_type_rgba_font_new(L"verdana-bold-16-white", L"verdana bold", font_size, L"full-white");
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_ode_action_format_label_new(L"format-label", 
+        retval = dsl_ode_action_label_format_new(L"format-label", 
             L"verdana-bold-16-white", 
             true, 
             L"opaque-black");
@@ -713,11 +713,11 @@ int main(int argc, char** argv)
         retval = dsl_display_type_rgba_color_palette_random_new(L"random-color", num_labels, DSL_COLOR_HUE_RANDOM, DSL_COLOR_LUMINOSITY_RANDOM, 1.0, 1000);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_ode_action_format_bbox_new(L"format-bbox", bbox_border_size, L"random-color", false, nullptr);
+        retval = dsl_ode_action_bbox_format_new(L"format-bbox", bbox_border_size, L"random-color", false, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
         
         uint content_types[] = {DSL_METRIC_OBJECT_TRACKING_ID, DSL_METRIC_OBJECT_CLASS};
-        retval = dsl_ode_action_customize_label_new(L"customize-label-action", content_types, sizeof(content_types)/sizeof(uint));
+        retval = dsl_ode_action_label_customize_new(L"customize-label-action", content_types, sizeof(content_types)/sizeof(uint));
         if (retval != DSL_RESULT_SUCCESS) break;
 
 

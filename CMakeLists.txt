@@ -13,6 +13,7 @@ ADD_COMPILE_DEFINITIONS(NVDS_AZURE_EDGE_PROTO_LIB="/opt/nvidia/deepstream/deepst
 ADD_COMPILE_DEFINITIONS(NVDS_KAFKA_PROTO_LIB="/opt/nvidia/deepstream/deepstream-6.0/lib/libnvds_kafka_proto.so")
 ADD_COMPILE_DEFINITIONS(NVDS_REDIS_PROTO_LIB="/opt/nvidia/deepstream/deepstream-6.0/lib/libnvds_redis_proto.so")
 ADD_DEFINITIONS(-DBUILD_NMP_PPH=true)
+ADD_DEFINITIONS(-DBUILD_INTER_PIPE=false)
 
 ### INCLUDE DIRECTORIES ###
 INCLUDE_DIRECTORIES(
