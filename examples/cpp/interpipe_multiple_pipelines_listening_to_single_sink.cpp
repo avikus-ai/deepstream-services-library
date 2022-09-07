@@ -298,7 +298,6 @@ int main(int argc, char** argv)
         // Create the first Pipeline with common components 
         // - interpipe source, OSD, and window sink,
         // - then add PGIE and Tracker using first set of configs
-        
         retval = create_pipeline(&client_data_1);
         if (retval != DSL_RESULT_SUCCESS) break;
 

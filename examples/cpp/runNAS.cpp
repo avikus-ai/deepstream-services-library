@@ -27,13 +27,9 @@ THE SOFTWARE.
 #include <gst/gst.h>
 #include <gstnvdsmeta.h>
 #include <nvdspreprocess_meta.h>
-#include <algorithm>
-#include <numeric>
 #include <iomanip>
 // https://github.com/dpilger26/NumCpp/blob/master/docs/markdown/Installation.md
-#include <NumCpp.hpp>
 #include <cstdint>
-#include <unordered_map>
 #include <chrono>
 #include "yaml.hpp"
 
@@ -42,7 +38,7 @@ THE SOFTWARE.
 namespace YML_VARIABLE {
     uint vector_reserve_size;
     uint class_agnostic;
-    uint preprocssing;
+    uint preprocessing;
     uint tracking;
     uint postprocessing;
     std::wstring postprocess;
@@ -53,12 +49,14 @@ namespace YML_VARIABLE {
     std::wstring trk;
     int trk_width;
     int trk_height;
+    uint on_display_screen;
     uint window_width;
     uint window_height;
     int font_size;
     int bbox_border_size;
     uint batch_size;
     uint perf;
+    uint ode;
     uint monitoring;
     uint send_medula;
     uint uri_cnt;
@@ -288,30 +286,6 @@ uint send_data(void* buffer, void* client_data)
 int main(int argc, char** argv)
 {
     DslReturnType retval = DSL_RESULT_FAILURE;
-
-    // std::string set_file("1file_yolov5_preproc_pgie_iou_osd_window_nmm_config.txt");
-    // std::ifstream ifs(set_file);
-
-    // if (!ifs.is_open()) {
-    //     std::cout << "Could not open set file: " << set_file << "\n";
-    //     return retval;
-    // }
-    
-    // std::wstring uri;
-
-    // int ci = 0;
-    // while (ifs.good() && !ifs.eof()) {
-    //     std::string line;
-    //     std::getline(ifs, line);
-    //     switch(ci) {
-    //         case 0:
-    //             uri.assign(line.begin(), line.end());
-    //             break;
-    //     }
-    //     ci++;
-    // }
-
-    // std::wcout << uri;
     using namespace YML_VARIABLE;
 
     Yaml::Node root;
@@ -337,7 +311,7 @@ int main(int argc, char** argv)
     
     vector_reserve_size = root["vector_reserve_size"].As<int>();
     class_agnostic = root["class_agnostic"].As<bool>();
-    preprocssing = root["preprocssing"].As<bool>();
+    preprocessing = root["preprocessing"].As<bool>();
     tracking = root["tracking"].As<bool>();
     postprocessing = root["postprocessing"].As<bool>();
     postprocess = str2wstr("postprocess");
@@ -348,10 +322,12 @@ int main(int argc, char** argv)
     trk = str2wstr("trk");
     trk_width = root["trk_width"].As<int>();
     trk_height = root["trk_height"].As<int>();
+    on_display_screen = root["on_display_screen"].As<bool>();
     window_width = root["window_width"].As<int>();
     window_height = root["window_height"].As<int>();
     font_size = root["font_size"].As<int>();
     bbox_border_size = root["bbox_border_size"].As<int>();
+    ode = root["ode"].As<bool>();
     perf = root["perf"].As<bool>();
     monitoring = root["monitoring"].As<bool>();
     send_medula = root["send_medula"].As<bool>();
@@ -412,12 +388,15 @@ int main(int argc, char** argv)
         retval = dsl_ode_action_monitor_new(L"every-occurrence-monitor", ode_occurrence_monitor, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
 
+        retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
         if (monitoring) {
-            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"customize-label-action", nullptr};
+            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
             retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
         }
         else {
-            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", nullptr};
+            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", nullptr};
             retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
         }
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -432,14 +411,31 @@ int main(int argc, char** argv)
         retval = dsl_pph_ode_trigger_add_many(L"ode-handler", triggers);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        std::vector<std::wstring> v_components;
-
         if (inputs == L"video") {
             // New File Source
             for(int i=0; i<uri_cnt; i++) {
-                retval = dsl_source_file_new(L"uri-source-"+i, uri[i].c_str(), repeat_video);
+                std::string component = std::string("uri-source-"+std::to_string(i));
+                std::wstring v_component = std::wstring(component.begin(), component.end());
+                retval = dsl_source_file_new(v_component.c_str(), uri[i].c_str(), repeat_video);
                 if (retval != DSL_RESULT_SUCCESS) break;
-                v_components.emplace_back(L"uri-source-"+std::to_wstring(i));
+                
+                if (i==0) {
+                    const wchar_t* component_names[] = 
+                    {
+                        v_component.c_str(),
+                        NULL
+                    };
+
+                    retval = dsl_pipeline_new_component_add_many(L"pipeline",
+                        component_names);
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
+                else {
+                    retval = dsl_pipeline_component_add(L"pipeline",
+                        v_component.c_str());
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
+                
             }
             if (retval != DSL_RESULT_SUCCESS) break;
         }
@@ -447,23 +443,32 @@ int main(int argc, char** argv)
             // New File Source
             retval = dsl_source_file_new(L"rtsp-source", rtsp_url.c_str(), true);
             if (retval != DSL_RESULT_SUCCESS) break;
-            v_components.emplace_back(L"rtsp-source");
+
+            const wchar_t* component_names[] = 
+            {
+                L"rtsp-source",
+                NULL
+            };
+            
+            retval = dsl_pipeline_new_component_add_many(L"pipeline", component_names);
+            if (retval != DSL_RESULT_SUCCESS) break;
         }
         
-        if (preprocssing) {
+        if (preprocessing) {
             // New Preprocessor component using the config filespec defined above.
             retval = dsl_preproc_new(L"preprocessor", preproc_config.c_str());
             if (retval != DSL_RESULT_SUCCESS) break;
-            v_components.emplace_back(L"preprocessor");
+
+            retval = dsl_pipeline_component_add(L"pipeline", L"preprocessor");
+            if (retval != DSL_RESULT_SUCCESS) break;
         }
         
         // New Primary GIE using the filespecs defined above, with interval and Id
         retval = dsl_infer_gie_primary_new(L"primary-gie", 
             primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), interval);
         if (retval != DSL_RESULT_SUCCESS) break;
-        v_components.emplace_back(L"primary-gie");
-
-        if (preprocssing) {
+        
+        if (preprocessing) {
             // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
             // to the number of ROI's defined in the Preprocessor configuraton file.
             retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
@@ -475,7 +480,10 @@ int main(int argc, char** argv)
                 true, false);
             if (retval != DSL_RESULT_SUCCESS) break;
         }
-    
+
+        retval = dsl_pipeline_component_add(L"pipeline", L"primary-gie");
+        if (retval != DSL_RESULT_SUCCESS) break;
+
         if (tracking) {
             if (trk == L"IOU") {
                 retval = dsl_tracker_iou_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height);
@@ -489,11 +497,9 @@ int main(int argc, char** argv)
                 retval = dsl_tracker_dcf_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height, true, true);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
-            else {
-                retval = DSL_RESULT_FAILURE;
-                break;
-            }
-            v_components.emplace_back(L"tracker");
+
+            retval = dsl_pipeline_component_add(L"pipeline", L"tracker");
+            if (retval != DSL_RESULT_SUCCESS) break;
         }
         
         // Add the NMP PPH to the source pad of the Tracker
@@ -502,22 +508,27 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         
-        // New OSD with text, clock and bbox display all enabled. 
-        retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        v_components.emplace_back(L"tracker");
-
-        if (perf) {
-            retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
+        // New OSD with text, clock and bbox display all enabled.
+        if (on_display_screen) {
+            retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
             if (retval != DSL_RESULT_SUCCESS) break;
-        }
-        
-        retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        v_components.emplace_back(L"on-screen-display");
+            
+            if (perf) {
+                retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
 
-        if (send_medula) {
-            retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
+            if (ode) {
+                retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            
+            if (send_medula) {
+                retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            
+            retval = dsl_pipeline_component_add(L"pipeline", L"on-screen-display");
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         
@@ -525,48 +536,30 @@ int main(int argc, char** argv)
             // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
             retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
             if (retval != DSL_RESULT_SUCCESS) break;
-            v_components.emplace_back(L"window-sink");
+
+            retval = dsl_pipeline_component_add(L"pipeline", L"window-sink");
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            // Add the EOS listener and XWindow event handler functions defined above
+            retval = dsl_pipeline_eos_listener_add(L"pipeline", eos_event_listener, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            retval = dsl_pipeline_xwindow_key_event_handler_add(L"pipeline", 
+                xwindow_key_event_handler, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            retval = dsl_pipeline_xwindow_delete_event_handler_add(L"pipeline", 
+                xwindow_delete_event_handler, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
         }
-        // else if (sink == L"file-sink") {
-        //     retval = dsl_sink_file_new(L"file-sink",);
-        //     if (retval != DSL_RESULT_SUCCESS) break;
-        //     v_components.emplace_back(L"file-sink");
-        // }
         else if (sink == L"fake") {
             retval = dsl_sink_fake_new(L"fake-sink");
             if (retval != DSL_RESULT_SUCCESS) break;
-            v_components.emplace_back(L"fake-sink");
-        }
-        else {
+
+            retval = dsl_pipeline_component_add(L"pipeline", L"fake-sink");
             if (retval != DSL_RESULT_SUCCESS) break;
         }
-        
-        // Create a list of Pipeline Components to add to the new Pipeline.
-        // const wchar_t* components[] = {L"uri-source-1",  L"preprocessor", L"primary-gie", 
-        //     L"tracker", L"on-screen-display", L"window-sink", nullptr};
-        wchar_t** components = new wchar_t*[v_components.size() + 1]; // include nullptr
-        for (int i=0; i<v_components.size()-1; i++) {
-            components[i] = new wchar_t[v_components[i].size()+1];
-            wcscpy(components[i], v_components[i].c_str());
-        }
-        components[v_components.size()-1] = nullptr;
-        
-        // Add all the components to our pipeline
-        retval = dsl_pipeline_new_component_add_many(L"pipeline", const_cast<const wchar_t**>(components));
-        if (retval != DSL_RESULT_SUCCESS) break;
-            
-        // Add the EOS listener and XWindow event handler functions defined above
-        retval = dsl_pipeline_eos_listener_add(L"pipeline", eos_event_listener, nullptr);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
-        retval = dsl_pipeline_xwindow_key_event_handler_add(L"pipeline", 
-            xwindow_key_event_handler, nullptr);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
-        retval = dsl_pipeline_xwindow_delete_event_handler_add(L"pipeline", 
-            xwindow_delete_event_handler, nullptr);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
+ 
         // Play the pipeline
         retval = dsl_pipeline_play(L"pipeline");
         if (retval != DSL_RESULT_SUCCESS) break;
