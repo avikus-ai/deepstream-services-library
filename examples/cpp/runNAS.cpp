@@ -356,61 +356,63 @@ int main(int argc, char** argv)
             send_data, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        // Create an Any-Class Occurrence Trigger for our remove Actions
-        retval = dsl_ode_trigger_occurrence_new(L"every-occurrence-trigger", DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
-        if (retval != DSL_RESULT_SUCCESS) break;
+        if (ode) {
+            // Create an Any-Class Occurrence Trigger for our remove Actions
+            retval = dsl_ode_trigger_occurrence_new(L"every-occurrence-trigger", DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_display_type_rgba_color_custom_new(L"full-white", 1.0, 1.0, 1.0, 1.0);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        
-        retval = dsl_display_type_rgba_color_custom_new(L"opaque-black", 0.0, 0.0, 0.0, 0.8);
-        if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_display_type_rgba_color_custom_new(L"full-white", 1.0, 1.0, 1.0, 1.0);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
+            retval = dsl_display_type_rgba_color_custom_new(L"opaque-black", 0.0, 0.0, 0.0, 0.8);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_display_type_rgba_font_new(L"verdana-bold-16-white", L"verdana bold", font_size, L"full-white");
-        if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_display_type_rgba_font_new(L"verdana-bold-16-white", L"verdana bold", font_size, L"full-white");
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_ode_action_label_format_new(L"format-label", 
-            L"verdana-bold-16-white", 
-            true, 
-            L"opaque-black");
-        if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_ode_action_label_format_new(L"format-label", 
+                L"verdana-bold-16-white", 
+                true, 
+                L"opaque-black");
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_display_type_rgba_color_palette_random_new(L"random-color", num_labels, DSL_COLOR_HUE_RANDOM, DSL_COLOR_LUMINOSITY_RANDOM, 1.0, 1000);
-        if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_display_type_rgba_color_palette_random_new(L"random-color", num_labels, DSL_COLOR_HUE_RANDOM, DSL_COLOR_LUMINOSITY_RANDOM, 1.0, 1000);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_ode_action_bbox_format_new(L"format-bbox", bbox_border_size, L"random-color", false, nullptr);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        
-        uint content_types[] = {DSL_METRIC_OBJECT_TRACKING_ID, DSL_METRIC_OBJECT_CLASS};
-        retval = dsl_ode_action_label_customize_new(L"customize-label-action", content_types, sizeof(content_types)/sizeof(uint));
-        if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_ode_action_bbox_format_new(L"format-bbox", bbox_border_size, L"random-color", false, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
+            uint content_types[] = {DSL_METRIC_OBJECT_TRACKING_ID, DSL_METRIC_OBJECT_CLASS};
+            retval = dsl_ode_action_label_customize_new(L"customize-label-action", content_types, sizeof(content_types)/sizeof(uint));
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_ode_action_monitor_new(L"every-occurrence-monitor", ode_occurrence_monitor, nullptr);
-        if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_ode_action_monitor_new(L"every-occurrence-monitor", ode_occurrence_monitor, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
-        if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-        if (monitoring) {
-            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
-            retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+            if (monitoring) {
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
+                retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+            }
+            else {
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", nullptr};
+                retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+            }
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            // `````````````````````````````````````````````````````````````````````````````
+            // New ODE Handler to handle all ODE Triggers with their Areas and Actions
+            retval = dsl_pph_ode_new(L"ode-handler");
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            // Add the two Triggers to the ODE PPH to be invoked on every frame. 
+            const wchar_t* triggers[] = {L"every-occurrence-trigger", nullptr};
+            retval = dsl_pph_ode_trigger_add_many(L"ode-handler", triggers);
+            if (retval != DSL_RESULT_SUCCESS) break;
         }
-        else {
-            const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", nullptr};
-            retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
-        }
-        if (retval != DSL_RESULT_SUCCESS) break;
-
-        // `````````````````````````````````````````````````````````````````````````````
-        // New ODE Handler to handle all ODE Triggers with their Areas and Actions
-        retval = dsl_pph_ode_new(L"ode-handler");
-        if (retval != DSL_RESULT_SUCCESS) break;
-
-        // Add the two Triggers to the ODE PPH to be invoked on every frame. 
-        const wchar_t* triggers[] = {L"every-occurrence-trigger", nullptr};
-        retval = dsl_pph_ode_trigger_add_many(L"ode-handler", triggers);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
+        
         if (inputs == L"video") {
             // New File Source
             for(int i=0; i<uri_cnt; i++) {
@@ -440,9 +442,11 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         else {
-            // New File Source
-            retval = dsl_source_file_new(L"rtsp-source", rtsp_url.c_str(), true);
-            if (retval != DSL_RESULT_SUCCESS) break;
+            // # For each camera, create a new RTSP Source for the specific RTSP URI    
+            retval = dsl_source_rtsp_new(L"rtsp-source", rtsp_url.c_str(), DSL_RTP_ALL,     
+                false, 0, 100, 2);
+            if (retval != DSL_RESULT_SUCCESS)    
+                return retval;
 
             const wchar_t* component_names[] = 
             {
@@ -494,17 +498,11 @@ int main(int argc, char** argv)
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
             else if (trk == L"DCF") {
-                retval = dsl_tracker_dcf_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height, true, true);
+                retval = dsl_tracker_dcf_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height, true, false);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
 
             retval = dsl_pipeline_component_add(L"pipeline", L"tracker");
-            if (retval != DSL_RESULT_SUCCESS) break;
-        }
-        
-        // Add the NMP PPH to the source pad of the Tracker
-        if (tracking && postprocessing) {
-            retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         
@@ -513,6 +511,11 @@ int main(int argc, char** argv)
             retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
             if (retval != DSL_RESULT_SUCCESS) break;
             
+            if (postprocessing) {
+                retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+
             if (perf) {
                 retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
                 if (retval != DSL_RESULT_SUCCESS) break;
@@ -527,11 +530,33 @@ int main(int argc, char** argv)
                 retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
-            
+
             retval = dsl_pipeline_component_add(L"pipeline", L"on-screen-display");
             if (retval != DSL_RESULT_SUCCESS) break;
         }
-        
+        else if (tracking) {
+            // Add the NMP PPH to the source pad of the Tracker
+            if (postprocessing) {
+                retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+
+            if (perf) {
+                retval = dsl_tracker_pph_add(L"tracker", L"meter-pph", DSL_PAD_SRC);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+
+            if (ode) {
+                retval = dsl_tracker_pph_add(L"tracker", L"ode-handler", DSL_PAD_SRC);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            
+            if (send_medula) {
+                retval = dsl_tracker_pph_add(L"tracker", L"send-to-medula", DSL_PAD_SRC);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+        }
+
         if (sink == L"window") {
             // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
             retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);

@@ -2,10 +2,10 @@
 # DATA_ROOT_DIR
 # usage export VIDEO_ROOT_DIR=? 
 
-inputs: video
+inputs:
 repeat_video: false
-rtsp_url: 
-uri0: /opt/dsl/datas/videos/shared/1280x720_many_motor_0.mp4
+rtsp_url: rtsp://10.180.91.66:554/h264
+uri0: /opt/dsl/datas/videos/shared/FL_NOVITEC.mp4
 uri1: ${VIDEO_ROOT_DIR}/front_narrow.MP4
 uri2: ${VIDEO_ROOT_DIR}/front_Wide.MP4
 uri3: ${VIDEO_ROOT_DIR}/wheel_middle.MP4
@@ -15,18 +15,18 @@ preprocess: /opt/dsl/datas/002-cu114/config_preprocess_v5s.txt
 infer: /opt/dsl/datas/002-cu114/config_infer_primary_yoloV5s.txt
 model: /opt/dsl/datas/002-cu114/model_b1_gpu0_fp16.engine
 tracking: true
-trk: IOU
+trk: DCF
 trk_cfg: /opt/dsl/datas/002-cu114/config_tracker_NvDCF_max_perf.yml
 trk_width: 1280
 trk_height: 768
 vector_reserve_size: 500
 class_agnostic: true
-postprocessing: true
+postprocessing: true 
 postprocess: NMM
 match_metric: IOS
 match_threshold: 0.8
 num_labels: 7
-interval: 0
+interval: 2
 on_display_screen: true
 ode: true
 window_width: 1920
