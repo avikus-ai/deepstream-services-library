@@ -475,8 +475,8 @@ int main(int argc, char** argv)
         if (preprocessing) {
             // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
             // to the number of ROI's defined in the Preprocessor configuraton file.
-            retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
-            if (retval != DSL_RESULT_SUCCESS) break;
+            // retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
+            // if (retval != DSL_RESULT_SUCCESS) break;
             
             // **** IMPORTANT! we must set the input-meta-tensor setting to true when
             // using the preprocessor, otherwise the GIE will use its own preprocessor.
