@@ -23,7 +23,6 @@ THE SOFTWARE.
 */
 
 #include <iostream>
-#include <cstdio>
 #include <glib.h>
 #include <gst/gst.h>
 #include <gstnvdsmeta.h>
@@ -35,10 +34,33 @@ THE SOFTWARE.
 #include "yaml.hpp"
 
 #include "DslApi.h"
-#include "nas_ami.h"
 
 namespace YML_VARIABLE {
-    
+    uint vector_reserve_size;
+    uint class_agnostic;
+    uint preprocessing;
+    uint tracking;
+    uint postprocessing;
+    std::wstring postprocess;
+    std::wstring match_metric; // IOU, IOS 
+    float match_threshold;
+    int num_labels;
+    int interval;
+    std::wstring trk;
+    int trk_width;
+    int trk_height;
+    uint on_display_screen;
+    uint window_width;
+    uint window_height;
+    int font_size;
+    int bbox_border_size;
+    uint batch_size;
+    uint perf;
+    uint ode;
+    uint monitoring;
+    uint send_medula;
+    uint uri_cnt;
+    uint repeat_video;
 }
 
 class ReportData {
@@ -224,8 +246,7 @@ uint send_data(void* buffer, void* client_data)
         {
             NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
             std::vector<SendDataStruct> outputs;
-            // outputs.reserve(vector_reserve_size);
-            outputs.reserve(200);
+            outputs.reserve(vector_reserve_size);
 
             // For each detected object in the frame.
             while (pObjectMetaList)
@@ -253,306 +274,89 @@ uint send_data(void* buffer, void* client_data)
                 outputs.emplace_back(std::move(output));
                 pObjectMetaList = pObjectMetaList->next;
             }
+
             // write to shared memory
+
        }
    }
 
    return DSL_PAD_PROBE_OK;
 }
 
-
-T_DATA_PRC data;
-uint data_checker(void* buffer, void* client_data)
-{
-    if(T_INFER_opt.infer_level == INFER_ALL)
-    {
-        PRC(" FPS: %f \n", data.fps);
-        for(int i = 0; i< data.infer_length; i++)
-        {
-            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
-            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].witdh),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
-        }
-        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
-    }
-    else if(T_INFER_opt.infer_level == INFER_FPS)
-    {
-        PRC(" FPS: %f \n", data.fps);
-    }
-    else if(T_INFER_opt.infer_level == INFER_INF)
-    {
-        for(int i = 0; i< data.infer_length; i++)
-        {
-            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
-            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].witdh),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
-        }
-    }
-    else if(T_INFER_opt.infer_level == INFER_IMU)
-    {
-        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
-    }
-
-    return DSL_PAD_PROBE_OK;
-}
-
-static void register_cli_command(void)
-{
-    ami_cli_reg_cmd("infer",cmd_infer, g_p_usage__cmd_infer);
-    // ami_cli_reg_cmd("pipe",cmd_pipeline, g_p_usage__cmd_pipeline);
-}
-
 int main(int argc, char** argv)
 {
-    // 0.display logo
-    PR("=== INFERENCE Start... ===\n");
-
-    int rst_init = 0;
-    // 1.ami_init
-    if ((rst_init = ami_init(xID__PSS__APP_NAS, argc, argv)) < 0)
-		{ PR("ami_init(%02x) failed. err=%d\n", xID__PSS__INFER, rst_init); return 21; }
-
-    // 2.Register command
-    register_cli_command();
-    
-    // 3.read INI for setting
-    unsigned int ini_id;
-    char filepath[AVKS_FILE_PATH_LEN*2];
-    sprintf(filepath,"%s","/home/root/aiboat/aiboat/_bin/option.ini");
-    int rst_ini = 0;
-
-    rst_ini = ami_ini_load(filepath, &ini_id);
-    if(rst_ini < 0)
-    {
-        PR("There isn't INI file\n");
-    }
-    else{
-        PR("Success load INI file\n");
-    }
-
-    char char_buffer[255];
-    ////////////// SETTING
-    std::string cudaversion;
-    int perf;
-    
-    ////////////// INPUT
-    std::wstring input_type;
-    std::wstring uri;
-    int repeat;
-    int uri_cnt;
-
-    ////////////// PREPROCESS
-    int preproc_enable;
-    int batch_size;
-    std::wstring preproc_config;
-    
-    ////////////// INFER
-    std::wstring infer_config;
-    std::wstring infer_model;
-    int interval;
-
-    ////////////// TRACKER
-    int trk_enable;
-    std::wstring trk_method;
-    std::wstring trk_config;
-    int trk_width;
-    int trk_height;
-    
-    ////////////// POSTPROCESS 
-    int postproc_enable;
-    int class_agnostic;
-    std::wstring postproc_method;
-    std::wstring postproc_match_metric;
-    float postproc_match_threshold;
-
-    ////////////// OSD
-    int osd_enable;
-    int num_labels;
-    int monitor;
-    int font_size;
-    int bbox_border_size;
-    
-    ////////////// SINK
-    std::wstring sink_method;
-    int window_width;
-    int window_height;
-    
-    int rst_ini_parse = 0;
-    if ((rst_ini_parse = ami_ini_str(ini_id,"CUDA","version",char_buffer,255))< 0) {
-        cudaversion = "cuda102";
-    }
-    else {
-        cudaversion = std::string(char_buffer);
-    }
-
-    perf = ami_ini_s32(ini_id,"SETTING","perf",0, 10);
-    
-    ////////////// INPUT
-    if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","type",char_buffer, 255)) < 0)
-    {
-        std::string str("video");
-        input_type = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        input_type = std::wstring(str.begin(), str.end());
-    }
-
-    if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","uri",char_buffer, 255)) < 0)
-    {
-        std::string str("video");
-        uri = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        uri = std::wstring(str.begin(), str.end());
-    }
-
-    repeat = ami_ini_s32(ini_id,"INPUT","repeat",0,10);
-    uri_cnt = ami_ini_s32(ini_id,"INPUT","uri_cnt",1,10);
-    
-    ////////////// PREPOCESS
-    preproc_enable = ami_ini_s32(ini_id,"PREPOCESS","enable",1,10);
-    batch_size = ami_ini_s32(ini_id,"PREPOCESS","batch_size",1,10);
-
-    if((rst_ini_parse = ami_ini_str(ini_id,"PREPOCESS","config",char_buffer, 255)) < 0)
-    {
-        std::string str("");
-        preproc_config = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        preproc_config = std::wstring(str.begin(), str.end());
-    }
-
-    ////////////// INFER
-    if((rst_ini_parse = ami_ini_str(ini_id,"INFER","config",char_buffer, 255)) < 0)
-    {
-        std::string str("");
-        infer_config = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        infer_config = std::wstring(str.begin(), str.end());
-    }
-
-    if((rst_ini_parse = ami_ini_str(ini_id,"INFER","model",char_buffer, 255)) < 0)
-    {
-        std::string str("");
-        infer_model = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        infer_model = std::wstring(str.begin(), str.end());
-    }
-
-    interval = ami_ini_s32(ini_id,"INFER","interval",0,10);
-
-    ////////////// TRACKER
-    trk_enable = ami_ini_s32(ini_id,"TRACKER","enable",1, 10);
-
-    if((rst_ini_parse = ami_ini_str(ini_id,"TRACKER","method",char_buffer, 255)) < 0)
-    {
-        std::string str("");
-        trk_method = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        trk_method = std::wstring(str.begin(), str.end());
-    }
-
-    if((rst_ini_parse = ami_ini_str(ini_id,"TRACKER","config",char_buffer, 255)) < 0)
-    {
-        std::string str("");
-        trk_config = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        trk_config = std::wstring(str.begin(), str.end());
-    }
-
-    trk_width = ami_ini_s32(ini_id,"TRACKER","width",1280, 10);
-    trk_height = ami_ini_s32(ini_id,"TRACKER","height",1280, 10);
-
-    ////////////// POSTPROCESS
-    postproc_enable = ami_ini_s32(ini_id,"POSTPROCESS","enable",1, 10);
-    class_agnostic = ami_ini_s32(ini_id,"POSTPROCESS","agnostic",1, 10);
-
-    if((rst_ini_parse = ami_ini_str(ini_id,"POSTPROCESS","method",char_buffer, 255)) < 0)
-     {
-        std::string str("");
-        postproc_method = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        postproc_method = std::wstring(str.begin(), str.end());
-    }
-
-    if((rst_ini_parse = ami_ini_str(ini_id,"POSTPROCESS","match_metric",char_buffer, 255)) < 0)
-    {
-        std::string str("");
-        postproc_match_metric = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        postproc_match_metric = std::wstring(str.begin(), str.end());
-    }
-
-    postproc_match_threshold = ami_ini_float(ini_id,"POSTPROCESS","match_threshold",0.6f); 
-    
-    ////////////// SINK
-    osd_enable = ami_ini_s32(ini_id,"OSD","enable",1, 10);
-    num_labels = ami_ini_s32(ini_id,"OSD","num_labels",7, 10);
-    monitor = ami_ini_s32(ini_id,"OSD","montior",0, 10);
-    bbox_border_size = ami_ini_s32(ini_id,"OSD","bbox_border_size",3, 10);
-    font_size = ami_ini_s32(ini_id,"OSD","font_size",16, 10);
-
-    ////////////// SINK
-    if((rst_ini_parse = ami_ini_str(ini_id,"SINK","method",char_buffer, 255)) < 0)
-    {
-        std::string str("");
-        sink_method = std::wstring(str.begin(), str.end());
-    }
-    else
-    {
-        std::string str(char_buffer);
-        sink_method = std::wstring(str.begin(), str.end());
-    }
-
-    window_width = ami_ini_s32(ini_id,"SINK","width",1920, 10); 
-    window_height = ami_ini_s32(ini_id,"SINK","height",1080, 10);
-
-    
     DslReturnType retval = DSL_RESULT_FAILURE;
+    using namespace YML_VARIABLE;
+
+    Yaml::Node root;
+    Yaml::Parse(root, "run.yml");
+
+    auto str2wstr = [&root](const std::string &key){
+        auto suri = root[key].As<std::string>();
+        return std::wstring(suri.begin(), suri.end());
+    };
+
+    uri_cnt = root["uri_cnt"].As<int>();
+    std::wstring inputs = str2wstr("inputs");
+    std::vector<std::wstring> uri;
+    for(int i=0; i<uri_cnt; i++) {
+        uri.emplace_back(str2wstr("uri"+std::to_string(i)));
+    }
+    std::wstring rtsp_url = str2wstr("rtsp_url");
+    std::wstring preproc_config = str2wstr("preprocess");
+    std::wstring primary_infer_config_file = str2wstr("infer");
+    std::wstring primary_model_engine_file = str2wstr("model");
+    std::wstring tracker_config_file = str2wstr("trk_cfg");
+    std::wstring sink = str2wstr("sink");
+    
+    vector_reserve_size = root["vector_reserve_size"].As<int>();
+    class_agnostic = root["class_agnostic"].As<bool>();
+    preprocessing = root["preprocessing"].As<bool>();
+    tracking = root["tracking"].As<bool>();
+    postprocessing = root["postprocessing"].As<bool>();
+    postprocess = str2wstr("postprocess");
+    match_metric = str2wstr("match_metric");
+    match_threshold = root["match_threshold"].As<float>();
+    num_labels = root["num_labels"].As<int>();
+    interval = root["interval"].As<int>();
+    trk = str2wstr("trk");
+    trk_width = root["trk_width"].As<int>();
+    trk_height = root["trk_height"].As<int>();
+    on_display_screen = root["on_display_screen"].As<bool>();
+    window_width = root["window_width"].As<int>();
+    window_height = root["window_height"].As<int>();
+    font_size = root["font_size"].As<int>();
+    bbox_border_size = root["bbox_border_size"].As<int>();
+    ode = root["ode"].As<bool>();
+    perf = root["perf"].As<bool>();
+    monitoring = root["monitoring"].As<bool>();
+    send_medula = root["send_medula"].As<bool>();
+    repeat_video = root["repeat_video"].As<bool>();
+
+    auto DSL_NMP_PROCESS_METHOD = (postprocess == L"NMM") ? 
+                                    DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
+    auto DSL_NMP_MATCH_METHOD = (match_metric == L"IOS") ? 
+                                    DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
 
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
     {    
         ReportData report_data(0, 12);
+        
         retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         //```````````````````````````````````````````````````````````````````````````````````
-        // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH).
-
-        // retval = dsl_pph_custom_new(L"send-to-medula", 
-        //     send_data, nullptr);
-        // if (retval != DSL_RESULT_SUCCESS) break;
-
-        retval = dsl_pph_custom_new(L"tcd-data-check", 
-            data_checker, nullptr);
+        // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH). 
+        retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
+            DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, match_threshold);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        if (osd_enable) {
+        retval = dsl_pph_custom_new(L"send-to-medula", 
+            send_data, nullptr);
+        if (retval != DSL_RESULT_SUCCESS) break;
+
+        if (ode) {
             // Create an Any-Class Occurrence Trigger for our remove Actions
             retval = dsl_ode_trigger_occurrence_new(L"every-occurrence-trigger", DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
             if (retval != DSL_RESULT_SUCCESS) break;
@@ -588,7 +392,7 @@ int main(int argc, char** argv)
             retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
             if (retval != DSL_RESULT_SUCCESS) break;
 
-            if (monitor) {
+            if (monitoring) {
                 const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
@@ -609,48 +413,37 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         
-        if (input_type == L"video") {
+        if (inputs == L"video") {
             // New File Source
-            // for(int i=0; i<uri_cnt; i++) {
-            //     std::string component = std::string("uri-source-"+std::to_string(i));
-            //     std::wstring v_component = std::wstring(component.begin(), component.end());
-            //     retval = dsl_source_file_new(v_component.c_str(), uri[i].c_str(), repeat);
-            //     if (retval != DSL_RESULT_SUCCESS) break;
+            for(int i=0; i<uri_cnt; i++) {
+                std::string component = std::string("uri-source-"+std::to_string(i));
+                std::wstring v_component = std::wstring(component.begin(), component.end());
+                retval = dsl_source_file_new(v_component.c_str(), uri[i].c_str(), repeat_video);
+                if (retval != DSL_RESULT_SUCCESS) break;
                 
-            //     if (i==0) {
-            //         const wchar_t* component_names[] = 
-            //         {
-            //             v_component.c_str(),
-            //             NULL
-            //         };
+                if (i==0) {
+                    const wchar_t* component_names[] = 
+                    {
+                        v_component.c_str(),
+                        NULL
+                    };
 
-            //         retval = dsl_pipeline_new_component_add_many(L"pipeline",
-            //             component_names);
-            //         if (retval != DSL_RESULT_SUCCESS) break;
-            //     }
-            //     else {
-            //         retval = dsl_pipeline_component_add(L"pipeline",
-            //             v_component.c_str());
-            //         if (retval != DSL_RESULT_SUCCESS) break;
-            //     }
+                    retval = dsl_pipeline_new_component_add_many(L"pipeline",
+                        component_names);
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
+                else {
+                    retval = dsl_pipeline_component_add(L"pipeline",
+                        v_component.c_str());
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
                 
-            // }
-
-            retval = dsl_source_file_new(L"file-source", uri.c_str(), repeat);
-            if (retval != DSL_RESULT_SUCCESS) break;
-            
-            const wchar_t* component_names[] = 
-            {
-                L"file-source",
-                NULL
-            };
-
-            retval = dsl_pipeline_new_component_add_many(L"pipeline",component_names);
+            }
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         else {
             // # For each camera, create a new RTSP Source for the specific RTSP URI    
-            retval = dsl_source_rtsp_new(L"rtsp-source", uri.c_str(), DSL_RTP_ALL,     
+            retval = dsl_source_rtsp_new(L"rtsp-source", rtsp_url.c_str(), DSL_RTP_ALL,     
                 false, 0, 100, 2);
             if (retval != DSL_RESULT_SUCCESS)    
                 return retval;
@@ -665,7 +458,7 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         
-        if (preproc_enable) {
+        if (preprocessing) {
             // New Preprocessor component using the config filespec defined above.
             retval = dsl_preproc_new(L"preprocessor", preproc_config.c_str());
             if (retval != DSL_RESULT_SUCCESS) break;
@@ -676,14 +469,14 @@ int main(int argc, char** argv)
         
         // New Primary GIE using the filespecs defined above, with interval and Id
         retval = dsl_infer_gie_primary_new(L"primary-gie", 
-            infer_config.c_str(), infer_model.c_str(), interval);
+            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), interval);
         if (retval != DSL_RESULT_SUCCESS) break;
         
-        if (preproc_enable) {
+        if (preprocessing) {
             // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
             // to the number of ROI's defined in the Preprocessor configuraton file.
-            retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
-            if (retval != DSL_RESULT_SUCCESS) break;
+            // retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
+            // if (retval != DSL_RESULT_SUCCESS) break;
             
             // **** IMPORTANT! we must set the input-meta-tensor setting to true when
             // using the preprocessor, otherwise the GIE will use its own preprocessor.
@@ -695,17 +488,17 @@ int main(int argc, char** argv)
         retval = dsl_pipeline_component_add(L"pipeline", L"primary-gie");
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        if (trk_enable) {
-            if (trk_method == L"IOU") {
-                retval = dsl_tracker_iou_new(L"tracker", trk_config.c_str(), trk_width, trk_height);
+        if (tracking) {
+            if (trk == L"IOU") {
+                retval = dsl_tracker_iou_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
-            else if (trk_method == L"KLT") {
+            else if (trk == L"KLT") {
                 retval = dsl_tracker_ktl_new(L"tracker", trk_width, trk_height);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
-            else if (trk_method == L"DCF") {
-                retval = dsl_tracker_dcf_new(L"tracker", trk_config.c_str(), trk_width, trk_height, true, false);
+            else if (trk == L"DCF") {
+                retval = dsl_tracker_dcf_new(L"tracker", tracker_config_file.c_str(), trk_width, trk_height, true, false);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
 
@@ -714,21 +507,12 @@ int main(int argc, char** argv)
         }
         
         // New OSD with text, clock and bbox display all enabled.
-        if (osd_enable) {
+        if (on_display_screen) {
             retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
             if (retval != DSL_RESULT_SUCCESS) break;
             
-            if (postproc_enable) {
-                auto DSL_NMP_PROCESS_METHOD = (postproc_method == L"NMM") ? 
-                                                DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
-                auto DSL_NMP_MATCH_METHOD = (postproc_match_metric == L"IOS") ? 
-                                                DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
-
-                retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
-                    DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
-                if (retval != DSL_RESULT_SUCCESS) break;
-
-                retval = dsl_osd_pph_add(L"on-screen-display", L"nmp-pph", DSL_PAD_SINK);
+            if (postprocessing) {
+                retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
 
@@ -737,28 +521,22 @@ int main(int argc, char** argv)
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
 
-            retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
-            if (retval != DSL_RESULT_SUCCESS) break;
-        
-            // if (send_medula) {
-            //     retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
-            //     if (retval != DSL_RESULT_SUCCESS) break;
-            // }
+            if (ode) {
+                retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            
+            if (send_medula) {
+                retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
 
             retval = dsl_pipeline_component_add(L"pipeline", L"on-screen-display");
             if (retval != DSL_RESULT_SUCCESS) break;
         }
-        else if (trk_enable) {
-            if (postproc_enable) {
-                auto DSL_NMP_PROCESS_METHOD = (postproc_method == L"NMM") ? 
-                                                DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
-                auto DSL_NMP_MATCH_METHOD = (postproc_match_metric == L"IOS") ? 
-                                                DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
-
-                retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
-                    DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
-                if (retval != DSL_RESULT_SUCCESS) break;
-
+        else if (tracking) {
+            // Add the NMP PPH to the source pad of the Tracker
+            if (postprocessing) {
                 retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
@@ -768,16 +546,18 @@ int main(int argc, char** argv)
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
 
-            // if (send_medula) {
-            //     retval = dsl_tracker_pph_add(L"tracker", L"send-to-medula", DSL_PAD_SRC);
-            //     if (retval != DSL_RESULT_SUCCESS) break;
-            // }
-
-            // retval = dsl_tracker_pph_add(L"tracker", L"tcd-data-check", DSL_PAD_SRC);
-            // if (retval != DSL_RESULT_SUCCESS) break;
+            if (ode) {
+                retval = dsl_tracker_pph_add(L"tracker", L"ode-handler", DSL_PAD_SRC);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
+            
+            if (send_medula) {
+                retval = dsl_tracker_pph_add(L"tracker", L"send-to-medula", DSL_PAD_SRC);
+                if (retval != DSL_RESULT_SUCCESS) break;
+            }
         }
 
-        if (sink_method == L"window") {
+        if (sink == L"window") {
             // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
             retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
             if (retval != DSL_RESULT_SUCCESS) break;
@@ -797,7 +577,7 @@ int main(int argc, char** argv)
                 xwindow_delete_event_handler, nullptr);
             if (retval != DSL_RESULT_SUCCESS) break;
         }
-        else if (sink_method == L"fake") {
+        else if (sink == L"fake") {
             retval = dsl_sink_fake_new(L"fake-sink");
             if (retval != DSL_RESULT_SUCCESS) break;
 
@@ -819,8 +599,7 @@ int main(int argc, char** argv)
 
     dsl_delete_all();
 
-    PRC("[INFERENCE] terminated... call am_term()\n");
-	(void)ami_term();
+    std::cout<<"Goodbye!"<<std::endl;  
     return 0;
 }
             

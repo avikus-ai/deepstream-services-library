@@ -1,12 +1,8 @@
 
 ### Examge All Source Files ###
 FILE(GLOB SOURCES_FILES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/runNAS.cpp
 )
-
-LIST(REMOVE_ITEM SOURCES_FILES "${CMAKE_CURRENT_SOURCE_DIR}/1file_yolov5_preproc_pgie_iou_osd_window_nmm_xtensor.cpp")
-
-LIST(REMOVE_ITEM SOURCES_FILES "${CMAKE_CURRENT_SOURCE_DIR}/2file_yolov5_preproc_nmm_compare.cpp")
 
 ### MAKE TARGET FILE ###
 #ADD_EXECUTABLE(multiple_pipelines.out multiple_pipelines.cpp)
@@ -26,12 +22,15 @@ FIND_LIBRARY( NVDS_META
 foreach(loopVar ${SOURCES_FILES})
     STRING(REPLACE .cpp .out output ${loopVar})
     STRING(REPLACE ${CMAKE_CURRENT_SOURCE_DIR}/ "" bin ${output})
-    ADD_EXECUTABLE(${bin} ${loopVar})
+    ADD_EXECUTABLE(${bin} ${loopVar} cmd.cpp)
    
-    TARGET_LINK_LIBRARIES(${bin} 
+    TARGET_LINK_LIBRARIES(${bin}
+        ami
         dsl
         glib-2.0
 		yaml
+        pthread
+        rt
         ${NVDS_META}
     )
 	### INSTALL TARGETS ###
@@ -40,7 +39,7 @@ foreach(loopVar ${SOURCES_FILES})
 	)
 endforeach()
 
-INSTALL(FILES run.yml
+INSTALL(FILES run.yml option.ini
 	DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
