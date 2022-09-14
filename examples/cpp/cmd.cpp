@@ -14,7 +14,7 @@
 // include header
 
 #include "nas_ami.h"
-// #include "DslApi.h"
+#include "DslApi.h"
 #include "ami.h"
 
 /*==========================================================================*/
@@ -85,13 +85,13 @@ int cmd_pipeline(int ac, char *av[])
     unsigned int ini_id;
     int rst;
     char filepath[AVKS_FILE_PATH_LEN*2];
-    sprintf(filepath,"%s","/home/avikus/work/aiboat/aiboat/APP/INFER/option.ini");
+    sprintf(filepath,"%s","option.ini");
     if((rst = ami_ini_load(filepath, &ini_id)) < 0)
     {
         PRC("There isn't INI file\n");
     }
 
-    if(ac>=3)
+    if(ac>=4)
     {
         for(int i=1; i<ac; i=i+3)
         {
@@ -99,14 +99,14 @@ int cmd_pipeline(int ac, char *av[])
             {
                 // INI CUDA option change
                 PRC("CUDA option changed: %s \n",av[i+2]);
-                ami_ini_chg_str(ini_id, av[i], av[i+1], av[i+2], sizeof(av[i+2])/sizeof(char));
+                ami_ini_chg_str(ini_id, av[i], av[i+1], av[i+2], strlen(av[i+2]));
 
             }
-            else if(!strcmp(av[i],"URI"))
+            else if(!strcmp(av[i],"SETTING"))
             {
                 // INI URI option change
-                PRC("URI option changed: %s \n",av[i+2]);
-                ami_ini_chg_str(ini_id, av[i], av[i+1], av[i+2], sizeof(av[i+2])/sizeof(char));
+                PRC("SETTING option changed: %s \n",av[i+2]);
+                ami_ini_chg_str(ini_id, av[i], av[i+1], av[i+2], strlen(av[i+2]));
 
             }
             else if(!strcmp(av[i],"INFER"))
@@ -119,20 +119,20 @@ int cmd_pipeline(int ac, char *av[])
                 // INI INFER option change
                 for(int j = i+1; j < k; j = j+2)
                 {
-                    if(!strcmp(av[j],"preprocess"))
-                    {
-                        PRC("INFER-preprocess option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
-                    }
-                    else if(!strcmp(av[j],"preprocess"))
+                    if(!strcmp(av[j],"config"))
                     {
                         PRC("INFER-config option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                     else if(!strcmp(av[j],"model"))
                     {
                         PRC("INFER-model option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"interval"))
+                    {
+                        PRC("INFER-interval option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                 }
             }
@@ -146,36 +146,36 @@ int cmd_pipeline(int ac, char *av[])
                 // INI TRACKER option change
                 for(int j = i+1; j < k; j = j+2)
                 {
-                    if(!strcmp(av[j],"tracker"))
+                    if(!strcmp(av[j],"enable"))
                     {
-                        PRC("TRACKER-tracker option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("TRACKER-enable option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
-                    else if(!strcmp(av[j],"config"))
+                    else if(!strcmp(av[j],"method"))
                     {
-                        PRC("TRACKER-config option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("TRACKER-method option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                     else if(!strcmp(av[j],"width"))
                     {
                         PRC("TRACKER-width option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                     else if(!strcmp(av[j],"height"))
                     {
                         PRC("TRACKER-height option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
-                    else if(!strcmp(av[j],"vectorsize"))
+                    else if(!strcmp(av[j],"config"))
                     {
-                        PRC("TRACKER-vectorsize option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("TRACKER-config option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                 }
             }
-            else if(!strcmp(av[i],"SETTING"))
+            else if(!strcmp(av[i],"INPUT"))
             {
-                int k = i + 16;
+                int k = i + 8;
                 if(k > ac)
                 {
                     k = ac;
@@ -183,70 +183,185 @@ int cmd_pipeline(int ac, char *av[])
                 // INI SETTING option change
                 for(int j = i+1; j < k; j = j+2)
                 {
-                    if(!strcmp(av[j],"agnocit"))
+                    if(!strcmp(av[j],"type"))
                     {
-                        PRC("SETTING-agnocit option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("INPUT-type option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
-                    else if(!strcmp(av[j],"match_metric"))
+                    else if(!strcmp(av[j],"uri"))
                     {
-                        PRC("SETTING-match_metric option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("INPUT-uri option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
-                    else if(!strcmp(av[j],"match_threshold"))
+                    else if(!strcmp(av[j],"repeat"))
                     {
-                        PRC("SETTING-match_threshold option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("INPUT-repeat option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
-                    else if(!strcmp(av[j],"num_labels"))
+                    else if(!strcmp(av[j],"uri_cnt"))
                     {
-                        PRC("SETTING-num_labels option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("INPUT-uri_cnt option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
-                    else if(!strcmp(av[j],"interval"))
+                }
+            }
+            else if(!strcmp(av[i],"PREPROCESS"))
+            {
+                int k = i + 6;
+                if(k > ac)
+                {
+                    k = ac;
+                }
+                // INI SETTING option change
+                for(int j = i+1; j < k; j = j+2)
+                {
+                    if(!strcmp(av[j],"enable"))
                     {
-                        PRC("SETTING-interval option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
-                    }
-                    else if(!strcmp(av[j],"width"))
-                    {
-                        PRC("SETTING-width option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
-                    }
-                    else if(!strcmp(av[j],"height"))
-                    {
-                        PRC("SETTING-height option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("PREPROCESS-enable option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                     else if(!strcmp(av[j],"batch_size"))
                     {
-                        PRC("SETTING-batch_size option changed: %s \n",av[j+1]);
-                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], sizeof(av[j+1])/sizeof(char));
+                        PRC("PREPROCESS-batch_size option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"config"))
+                    {
+                        PRC("PREPROCESS-config option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                }
+            }
+            else if(!strcmp(av[i],"POSTPROCESS"))
+            {
+                int k = i + 10;
+                if(k > ac)
+                {
+                    k = ac;
+                }
+                // INI SETTING option change
+                for(int j = i+1; j < k; j = j+2)
+                {
+                    if(!strcmp(av[j],"enable"))
+                    {
+                        PRC("POSTPROCESS-enable option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"agnostic"))
+                    {
+                        PRC("POSTPROCESS-agnostic option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"method"))
+                    {
+                        PRC("POSTPROCESS-method option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"match_metric"))
+                    {
+                        PRC("POSTPROCESS-match_metric option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"match_threshold"))
+                    {
+                        PRC("POSTPROCESS-match_threshold option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                }
+            }
+            else if(!strcmp(av[i],"OSD"))
+            {
+                int k = i + 10;
+                if(k > ac)
+                {
+                    k = ac;
+                }
+                // INI SETTING option change
+                for(int j = i+1; j < k; j = j+2)
+                {
+                    if(!strcmp(av[j],"enable"))
+                    {
+                        PRC("OSD-enable option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"num_labels"))
+                    {
+                        PRC("OSD-num_labels option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"monitor"))
+                    {
+                        PRC("OSD-monitor option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"bbox_border_size"))
+                    {
+                        PRC("OSD-bbox_border_size option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"font_size"))
+                    {
+                        PRC("OSD-font_size option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                }
+            }
+            else if(!strcmp(av[i],"SINK"))
+            {
+                int k = i + 6;
+                if(k > ac)
+                {
+                    k = ac;
+                }
+                // INI SETTING option change
+                for(int j = i+1; j < k; j = j+2)
+                {
+                    if(!strcmp(av[j],"method"))
+                    {
+                        PRC("SINK-method option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"width"))
+                    {
+                        PRC("SINK-width option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"height"))
+                    {
+                        PRC("SINK-height option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                 }
             }
         }
+        ami_ini_save(ini_id, filepath);
+
+        // Pipeline break
+        dsl_pipeline_stop(L"pipeline");
+        dsl_main_loop_quit();
+
+        // Call MEDULA to operate APP
+        PRC("[NAS] INI modified... restart the process()\n");
+        (void)ami_term();
     }
     else
     {
         PRC("PIPELINE setting\n");
         PRC(" ------------------------------------------ \n");
         PRC("GROUP: CUDA ITEM: version\n");
-        PRC("GROUP: URI ITEM: uri\n");
-        PRC("GROUP: INFER ITEM: preprocess, config, model\n");
-        PRC("GROUP: TRACKER ITEM: tracker, config, width, height, vectorsize\n");
-        PRC("GROUP: SETTING ITEM: agnocit, match_metric, match_threshold, num_labels, interval, width, height, batch_size\n");
+        PRC("GROUP: SETTING ITEM: perf\n");
+        PRC("GROUP: INPUT ITEM: type, uri, repeat, uri_cnt\n");
+        PRC("GROUP: PREPROCESS ITEM: enable, batch_size, config\n");
+        PRC("GROUP: INFER ITEM: config, model, interval\n");
+        PRC("GROUP: TRACKER ITEM: enable, method, config, width, height\n");
+        PRC("GROUP: POSTPROCESS ITEM: enable, agnostic, method, match_metric, match_threshold\n");
+        PRC("GROUP: OSD ITEM: enable, num_labels, monitor, bbox_border_size\n");
+        PRC("GROUP: SINK ITEM: method, width, height\n");
         PRC("USAGE: pipe GROUP ITEM value\n");
         PRC("e.g. pipe CUDA version cuda114\n");
     }
     
     // Save file
-    ami_ini_save(ini_id, filepath);
-
-    // Pipeline break
-    // dsl_pipeline_stop(L"pipeline");
-    // dsl_main_loop_quit();
-
-    // Call MEDULA to operate APP
+    
     return 0;
 }

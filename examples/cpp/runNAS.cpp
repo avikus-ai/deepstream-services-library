@@ -209,7 +209,6 @@ void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data)
 
 uint send_data(void* buffer, void* client_data)
 {
-    using namespace YML_VARIABLE;
     GstBuffer* pGstBuffer = (GstBuffer*)buffer;
 
     NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
@@ -299,7 +298,7 @@ uint data_checker(void* buffer, void* client_data)
 static void register_cli_command(void)
 {
     ami_cli_reg_cmd("infer",cmd_infer, g_p_usage__cmd_infer);
-    // ami_cli_reg_cmd("pipe",cmd_pipeline, g_p_usage__cmd_pipeline);
+    ami_cli_reg_cmd("pipe",cmd_pipeline, g_p_usage__cmd_pipeline);
 }
 
 int main(int argc, char** argv)
@@ -318,7 +317,7 @@ int main(int argc, char** argv)
     // 3.read INI for setting
     unsigned int ini_id;
     char filepath[AVKS_FILE_PATH_LEN*2];
-    sprintf(filepath,"%s","/home/root/aiboat/aiboat/_bin/option.ini");
+    sprintf(filepath,"%s","option.ini");
     int rst_ini = 0;
 
     rst_ini = ami_ini_load(filepath, &ini_id);
@@ -333,6 +332,7 @@ int main(int argc, char** argv)
     char char_buffer[255];
     ////////////// SETTING
     std::string cudaversion;
+    ReportData report_data(0, 12);
     int perf;
     
     ////////////// INPUT
@@ -340,6 +340,7 @@ int main(int argc, char** argv)
     std::wstring uri;
     int repeat;
     int uri_cnt;
+    int drop_frame_interval;
 
     ////////////// PREPROCESS
     int preproc_enable;
@@ -531,23 +532,18 @@ int main(int argc, char** argv)
     window_width = ami_ini_s32(ini_id,"SINK","width",1920, 10); 
     window_height = ami_ini_s32(ini_id,"SINK","height",1080, 10);
 
-    
     DslReturnType retval = DSL_RESULT_FAILURE;
 
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
     {    
-        ReportData report_data(0, 12);
-        retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
         //```````````````````````````````````````````````````````````````````````````````````
         // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH).
 
         // retval = dsl_pph_custom_new(L"send-to-medula", 
         //     send_data, nullptr);
         // if (retval != DSL_RESULT_SUCCESS) break;
-
+        
         retval = dsl_pph_custom_new(L"tcd-data-check", 
             data_checker, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -609,7 +605,7 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
         }
         
-        if (input_type == L"video") {
+        if (input_type == L"file") {
             // New File Source
             // for(int i=0; i<uri_cnt; i++) {
             //     std::string component = std::string("uri-source-"+std::to_string(i));
@@ -733,6 +729,9 @@ int main(int argc, char** argv)
             }
 
             if (perf) {
+                retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
+                if (retval != DSL_RESULT_SUCCESS) break;
+
                 retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
@@ -764,6 +763,9 @@ int main(int argc, char** argv)
             }
 
             if (perf) {
+                retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
+                if (retval != DSL_RESULT_SUCCESS) break;
+
                 retval = dsl_tracker_pph_add(L"tracker", L"meter-pph", DSL_PAD_SRC);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
@@ -773,8 +775,8 @@ int main(int argc, char** argv)
             //     if (retval != DSL_RESULT_SUCCESS) break;
             // }
 
-            // retval = dsl_tracker_pph_add(L"tracker", L"tcd-data-check", DSL_PAD_SRC);
-            // if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_tracker_pph_add(L"tracker", L"tcd-data-check", DSL_PAD_SRC);
+            if (retval != DSL_RESULT_SUCCESS) break;
         }
 
         if (sink_method == L"window") {
