@@ -60,7 +60,7 @@ typedef struct
 typedef struct 
 {
 	// Debug level
-	uint32_t infer_level;
+	unsigned int infer_level;
 
 } T_INFER_OPT;
 
@@ -72,7 +72,7 @@ typedef struct
 	int pitch=0;
 	int yaw=0;
 	unsigned int infer_length = 0;
-	T_NAS_INF_REC infer[0];
+	T_NAS_INF_REC infer[1024];
 
 } T_DATA_PRC;
 

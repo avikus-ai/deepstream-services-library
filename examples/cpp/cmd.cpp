@@ -38,31 +38,31 @@ int cmd_infer(int ac, char *av[])
     {
         if(!strcmp(av[1], "all"))
         {
-            il = INFER_ALL;
+             T_INFER_opt.infer_level = INFER_ALL;
         }
         else if(!strcmp(av[1], "fps"))
         {
-            il = INFER_FPS;
+             T_INFER_opt.infer_level = INFER_FPS;
         }
         else if(!strcmp(av[1], "infer"))
         {
-            il = INFER_INF;
+             T_INFER_opt.infer_level = INFER_INF;
         }
         else if(!strcmp(av[1], "imu"))
         {
-            il = INFER_IMU;
+             T_INFER_opt.infer_level = INFER_IMU;
         }
         else if(!strcmp(av[1], "off"))
         {
-            il = INFER_OFF;
+             T_INFER_opt.infer_level = INFER_OFF;
         }
         else
         {
             PRC(" Wrong debug level input USE all|fps|infer|imu|off\n");
             PRC(" Current Debug level : %08x \n", T_INFER_opt.infer_level);
         }
-        PRC(" Debug-Level : %08x --> %08x \n",T_INFER_opt.infer_level, il);
-        T_INFER_opt.infer_level = il;
+        PRC(" Debug-Level : %08x --> %08x \n",il,T_INFER_opt.infer_level);
+        // T_INFER_opt.infer_level = il;
     }
     else
     {
@@ -203,6 +203,11 @@ int cmd_pipeline(int ac, char *av[])
                         PRC("INPUT-uri_cnt option changed: %s \n",av[j+1]);
                         ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
+                    else if(!strcmp(av[j],"drop_frame_interval"))
+                    {
+                        PRC("INPUT-drop_frame_interval option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
                 }
             }
             else if(!strcmp(av[i],"PREPROCESS"))
@@ -265,6 +270,11 @@ int cmd_pipeline(int ac, char *av[])
                     else if(!strcmp(av[j],"match_threshold"))
                     {
                         PRC("POSTPROCESS-match_threshold option changed: %s \n",av[j+1]);
+                        ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
+                    }
+                    else if(!strcmp(av[j],"label_file"))
+                    {
+                        PRC("POSTPROCESS-label_file option changed: %s \n",av[j+1]);
                         ami_ini_chg_str(ini_id, av[i], av[j], av[j+1], strlen(av[j+1]));
                     }
                 }
@@ -350,11 +360,11 @@ int cmd_pipeline(int ac, char *av[])
         PRC(" ------------------------------------------ \n");
         PRC("GROUP: CUDA ITEM: version\n");
         PRC("GROUP: SETTING ITEM: perf\n");
-        PRC("GROUP: INPUT ITEM: type, uri, repeat, uri_cnt\n");
+        PRC("GROUP: INPUT ITEM: type, uri, repeat, uri_cnt, drop_frame_interval\n");
         PRC("GROUP: PREPROCESS ITEM: enable, batch_size, config\n");
         PRC("GROUP: INFER ITEM: config, model, interval\n");
         PRC("GROUP: TRACKER ITEM: enable, method, config, width, height\n");
-        PRC("GROUP: POSTPROCESS ITEM: enable, agnostic, method, match_metric, match_threshold\n");
+        PRC("GROUP: POSTPROCESS ITEM: enable, agnostic, method, match_metric, match_threshold, label_file\n");
         PRC("GROUP: OSD ITEM: enable, num_labels, monitor, bbox_border_size\n");
         PRC("GROUP: SINK ITEM: method, width, height\n");
         PRC("USAGE: pipe GROUP ITEM value\n");

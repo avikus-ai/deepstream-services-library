@@ -37,9 +37,7 @@ THE SOFTWARE.
 #include "DslApi.h"
 #include "nas_ami.h"
 
-namespace YML_VARIABLE {
-    
-}
+static T_DATA_PRC data;
 
 class ReportData {
 public:
@@ -82,7 +80,7 @@ boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_aver
             header += std::to_wstring(i);
             header += L" (AVG)";
         }
-        std::wcout << header << "\n";
+        // std::wcout << header << "\n";
     }
     
     // Print FPS counters
@@ -90,12 +88,14 @@ boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_aver
 
     for(int i=0; i<source_count; i++) {
         counters += std::to_wstring(interval_fps_averages[i]);
+        if (i==0) {
+            data.fps = interval_fps_averages[i];
+        }
         counters += L" ";
         counters += std::to_wstring(session_fps_averages[i]);
     }
 
-    std::wcout << counters << "\n";
-
+    // std::wcout << counters << "\n";
     // Increment reporting count
     report_data->m_report_count += 1;
     
@@ -212,57 +212,14 @@ uint send_data(void* buffer, void* client_data)
     GstBuffer* pGstBuffer = (GstBuffer*)buffer;
 
     NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+    
+    S__INF__NAS_INF_INFO data_list;
+    D__INF__NAS_INF_INFO *outbuff;
+    T_NAS_INF_REC data_src;
+    D__INF__NAS_INF_INFO data_get;
+    T_NAS_INF_REC data_print;
 
-    // For each frame in the batched meta data
-    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
-        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
-    {
-        // Check for valid frame data
-        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-        if (pFrameMeta != nullptr)
-        {
-            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-            std::vector<SendDataStruct> outputs;
-            // outputs.reserve(vector_reserve_size);
-            outputs.reserve(200);
-
-            // For each detected object in the frame.
-            while (pObjectMetaList)
-            {
-                // Check for valid object data
-                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
-                
-                if (pObjectMeta->text_params.y_offset - 30 < 0) {
-                    pObjectMeta->text_params.y_offset = 0;
-                }
-                else {
-                    pObjectMeta->text_params.y_offset -= 30;
-                }
-                SendDataStruct output = {
-                    .rect_params = std::vector<float>{
-                                        pObjectMeta->rect_params.left,
-                                        pObjectMeta->rect_params.top,
-                                        pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
-                                        pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
-                                    },
-                    // tracking_id
-                    .obj_label = std::string(pObjectMeta->obj_label)
-                };
-                
-                outputs.emplace_back(std::move(output));
-                pObjectMetaList = pObjectMetaList->next;
-            }
-            // write to shared memory
-       }
-   }
-
-   return DSL_PAD_PROBE_OK;
-}
-
-
-T_DATA_PRC data;
-uint data_checker(void* buffer, void* client_data)
-{
+    int len_check;
     if(T_INFER_opt.infer_level == INFER_ALL)
     {
         PRC(" FPS: %f \n", data.fps);
@@ -270,7 +227,7 @@ uint data_checker(void* buffer, void* client_data)
         {
             PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
             data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].witdh),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
+            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
         }
         PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
     }
@@ -284,12 +241,58 @@ uint data_checker(void* buffer, void* client_data)
         {
             PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
             data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].witdh),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
+            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
         }
     }
     else if(T_INFER_opt.infer_level == INFER_IMU)
     {
         PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
+    }
+
+    // For each frame in the batched meta data
+    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+    {
+        // Check for valid frame data
+        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+        if (pFrameMeta != nullptr)
+        {
+            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+
+            // For each detected object in the frame.
+            len_check = 0;
+            while (pObjectMetaList)
+            {
+                // Check for valid object data
+                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
+                
+                data_src.type = static_cast<int>(pObjectMeta->class_id); // gint 	
+                data_src.trkID = static_cast<int>(pObjectMeta->object_id); // guint64
+
+                data_src.x = pObjectMeta->rect_params.left; // float
+                data_src.y = pObjectMeta->rect_params.top; // float
+                data_src.width = pObjectMeta->rect_params.width; // float
+                data_src.height = pObjectMeta->rect_params.height; // float
+                
+                data_list.nas_inf_rec[len_check] = data_src;
+                data.infer[len_check] = data_src;
+
+                len_check += 1;   
+                pObjectMetaList = pObjectMetaList->next;
+            }
+       }
+    }
+
+    data_list.nas_int_rec_no = len_check;
+
+    int rst_put = 0;
+    int len = sizeof(len_check) + len_check * sizeof(T_NAS_INF_REC);
+    outbuff = (D__INF__NAS_INF_INFO*)malloc(len);
+    memcpy(outbuff,(D__INF__NAS_INF_INFO *)  &data_list, len);
+    rst_put = ami_put_obj(DID__INF__NAS_INF_INFO, outbuff, len);
+    if(rst_put < 0)
+    {
+        PRC("DATA PUT ERROR\n");
     }
 
     return DSL_PAD_PROBE_OK;
@@ -309,7 +312,7 @@ int main(int argc, char** argv)
     int rst_init = 0;
     // 1.ami_init
     if ((rst_init = ami_init(xID__PSS__APP_NAS, argc, argv)) < 0)
-		{ PR("ami_init(%02x) failed. err=%d\n", xID__PSS__INFER, rst_init); return 21; }
+		{ PR("ami_init(%02x) failed. err=%d\n", xID__PSS__APP_NAS, rst_init); return 21; }
 
     // 2.Register command
     register_cli_command();
@@ -333,7 +336,6 @@ int main(int argc, char** argv)
     ////////////// SETTING
     std::string cudaversion;
     ReportData report_data(0, 12);
-    int perf;
     
     ////////////// INPUT
     std::wstring input_type;
@@ -365,6 +367,7 @@ int main(int argc, char** argv)
     std::wstring postproc_method;
     std::wstring postproc_match_metric;
     float postproc_match_threshold;
+    std::wstring label_file;
 
     ////////////// OSD
     int osd_enable;
@@ -385,8 +388,6 @@ int main(int argc, char** argv)
     else {
         cudaversion = std::string(char_buffer);
     }
-
-    perf = ami_ini_s32(ini_id,"SETTING","perf",0, 10);
     
     ////////////// INPUT
     if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","type",char_buffer, 255)) < 0)
@@ -402,7 +403,7 @@ int main(int argc, char** argv)
 
     if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","uri",char_buffer, 255)) < 0)
     {
-        std::string str("video");
+        std::string str("");
         uri = std::wstring(str.begin(), str.end());
     }
     else
@@ -413,12 +414,12 @@ int main(int argc, char** argv)
 
     repeat = ami_ini_s32(ini_id,"INPUT","repeat",0,10);
     uri_cnt = ami_ini_s32(ini_id,"INPUT","uri_cnt",1,10);
-    
+    drop_frame_interval = ami_ini_s32(ini_id,"INPUT","drop_frame_interval",0,10);
     ////////////// PREPOCESS
-    preproc_enable = ami_ini_s32(ini_id,"PREPOCESS","enable",1,10);
-    batch_size = ami_ini_s32(ini_id,"PREPOCESS","batch_size",1,10);
+    preproc_enable = ami_ini_s32(ini_id,"PREPROCESS","enable",1,10);
+    batch_size = ami_ini_s32(ini_id,"PREPROCESS","batch_size",1,10);
 
-    if((rst_ini_parse = ami_ini_str(ini_id,"PREPOCESS","config",char_buffer, 255)) < 0)
+    if((rst_ini_parse = ami_ini_str(ini_id,"PREPROCESS","config",char_buffer, 255)) < 0)
     {
         std::string str("");
         preproc_config = std::wstring(str.begin(), str.end());
@@ -510,10 +511,21 @@ int main(int argc, char** argv)
 
     postproc_match_threshold = ami_ini_float(ini_id,"POSTPROCESS","match_threshold",0.6f); 
     
+    if((rst_ini_parse = ami_ini_str(ini_id,"POSTPROCESS","label_file",char_buffer, 255)) < 0)
+    {
+        std::string str("");
+        label_file = std::wstring(str.begin(), str.end());
+    }
+    else
+    {
+        std::string str(char_buffer);
+        label_file = std::wstring(str.begin(), str.end());
+    }
+
     ////////////// SINK
     osd_enable = ami_ini_s32(ini_id,"OSD","enable",1, 10);
     num_labels = ami_ini_s32(ini_id,"OSD","num_labels",7, 10);
-    monitor = ami_ini_s32(ini_id,"OSD","montior",0, 10);
+    monitor = ami_ini_s32(ini_id,"OSD","monitor",0, 10);
     bbox_border_size = ami_ini_s32(ini_id,"OSD","bbox_border_size",3, 10);
     font_size = ami_ini_s32(ini_id,"OSD","font_size",16, 10);
 
@@ -533,21 +545,55 @@ int main(int argc, char** argv)
     window_height = ami_ini_s32(ini_id,"SINK","height",1080, 10);
 
     DslReturnType retval = DSL_RESULT_FAILURE;
+    // std::string cudaversion;
+    
+    ////////////// INPUT
+    std::wcout << "input_type: " << input_type << "\n";
+    std::wcout << "uri: " << uri << "\n";
+    std::cout << "repeat: " << repeat << "\n";
+    std::cout << "uri_cnt: " << uri_cnt << "\n";
+    std::cout << "drop_frame_interval: " << drop_frame_interval << "\n";
+    
+    //////////////// PREPROCESS
+    std::cout << "preproc_enable: " << preproc_enable << "\n";
+    std::cout << "batch_size: " << batch_size << "\n";
+    std::wcout << "preproc_config: " << preproc_config << "\n";
+
+    //////////////// INFER
+    std::wcout << "infer_config: " << infer_config << "\n";
+    std::wcout << "infer_model: " << infer_model << "\n";
+    std::cout << "interval: " << interval << "\n";
+
+    // ////////////// TRACKER
+    std::cout << "trk_enable: " << trk_enable << "\n";
+    std::wcout << "trk_method: " << trk_method << "\n";
+    std::wcout << "trk_config: " << trk_config << "\n";
+    std::cout << "trk_width: " << trk_width << "\n";
+    std::cout << "trk_height: " << trk_height << "\n";
+    
+    //////////////// POSTPROCESS 
+    std::cout << "postproc_enable: " << postproc_enable << "\n";
+    std::cout << "class_agnostic: " << class_agnostic << "\n";
+    std::wcout << "postproc_method: " << postproc_method << "\n";
+    std::wcout << "postproc_match_metric: " << postproc_match_metric << "\n";
+    std::cout << "postproc_match_threshold: " << postproc_match_threshold << "\n";
+    std::wcout << "label_file: " << label_file << "\n";
+
+    //////////////// OSD
+    std::cout << "osd_enable: " << osd_enable << "\n";
+    std::cout << "num_labels: " << num_labels << "\n";
+    std::cout << "monitor: " << monitor << "\n";
+    std::cout << "font_size: " << font_size << "\n";
+    std::cout << "bbox_border_size: " << bbox_border_size << "\n";
+
+    //////////////// SINK
+    std::wcout << "sink_method: " << sink_method << "\n";
+    std::cout << "window_width: " << window_width << "\n";
+    std::cout << "window_height: " << window_height << "\n";
 
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
     {    
-        //```````````````````````````````````````````````````````````````````````````````````
-        // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH).
-
-        // retval = dsl_pph_custom_new(L"send-to-medula", 
-        //     send_data, nullptr);
-        // if (retval != DSL_RESULT_SUCCESS) break;
-        
-        retval = dsl_pph_custom_new(L"tcd-data-check", 
-            data_checker, nullptr);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
         if (osd_enable) {
             // Create an Any-Class Occurrence Trigger for our remove Actions
             retval = dsl_ode_trigger_occurrence_new(L"every-occurrence-trigger", DSL_ODE_ANY_SOURCE, DSL_ODE_ANY_CLASS, DSL_ODE_TRIGGER_LIMIT_NONE);
@@ -607,31 +653,6 @@ int main(int argc, char** argv)
         
         if (input_type == L"file") {
             // New File Source
-            // for(int i=0; i<uri_cnt; i++) {
-            //     std::string component = std::string("uri-source-"+std::to_string(i));
-            //     std::wstring v_component = std::wstring(component.begin(), component.end());
-            //     retval = dsl_source_file_new(v_component.c_str(), uri[i].c_str(), repeat);
-            //     if (retval != DSL_RESULT_SUCCESS) break;
-                
-            //     if (i==0) {
-            //         const wchar_t* component_names[] = 
-            //         {
-            //             v_component.c_str(),
-            //             NULL
-            //         };
-
-            //         retval = dsl_pipeline_new_component_add_many(L"pipeline",
-            //             component_names);
-            //         if (retval != DSL_RESULT_SUCCESS) break;
-            //     }
-            //     else {
-            //         retval = dsl_pipeline_component_add(L"pipeline",
-            //             v_component.c_str());
-            //         if (retval != DSL_RESULT_SUCCESS) break;
-            //     }
-                
-            // }
-
             retval = dsl_source_file_new(L"file-source", uri.c_str(), repeat);
             if (retval != DSL_RESULT_SUCCESS) break;
             
@@ -643,11 +664,13 @@ int main(int argc, char** argv)
 
             retval = dsl_pipeline_new_component_add_many(L"pipeline",component_names);
             if (retval != DSL_RESULT_SUCCESS) break;
+
+            PR("file-source component add\n");
         }
         else {
             // # For each camera, create a new RTSP Source for the specific RTSP URI    
             retval = dsl_source_rtsp_new(L"rtsp-source", uri.c_str(), DSL_RTP_ALL,     
-                false, 0, 100, 2);
+                false, drop_frame_interval, 100, 2);
             if (retval != DSL_RESULT_SUCCESS)    
                 return retval;
 
@@ -659,6 +682,8 @@ int main(int argc, char** argv)
             
             retval = dsl_pipeline_new_component_add_many(L"pipeline", component_names);
             if (retval != DSL_RESULT_SUCCESS) break;
+
+            PR("rtsp-source component add\n");
         }
         
         if (preproc_enable) {
@@ -668,6 +693,8 @@ int main(int argc, char** argv)
 
             retval = dsl_pipeline_component_add(L"pipeline", L"preprocessor");
             if (retval != DSL_RESULT_SUCCESS) break;
+
+            PR("preprocessor component add\n");
         }
         
         // New Primary GIE using the filespecs defined above, with interval and Id
@@ -691,6 +718,8 @@ int main(int argc, char** argv)
         retval = dsl_pipeline_component_add(L"pipeline", L"primary-gie");
         if (retval != DSL_RESULT_SUCCESS) break;
 
+        PR("primary-gie component add\n");
+
         if (trk_enable) {
             if (trk_method == L"IOU") {
                 retval = dsl_tracker_iou_new(L"tracker", trk_config.c_str(), trk_width, trk_height);
@@ -707,6 +736,8 @@ int main(int argc, char** argv)
 
             retval = dsl_pipeline_component_add(L"pipeline", L"tracker");
             if (retval != DSL_RESULT_SUCCESS) break;
+
+            PR("tracker component add\n");
         }
         
         // New OSD with text, clock and bbox display all enabled.
@@ -714,38 +745,49 @@ int main(int argc, char** argv)
             retval = dsl_osd_new(L"on-screen-display", true, true, true, false);
             if (retval != DSL_RESULT_SUCCESS) break;
             
-            if (postproc_enable) {
+            if (postproc_enable && trk_enable) {
                 auto DSL_NMP_PROCESS_METHOD = (postproc_method == L"NMM") ? 
                                                 DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
                 auto DSL_NMP_MATCH_METHOD = (postproc_match_metric == L"IOS") ? 
                                                 DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
 
-                retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
-                    DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
-                if (retval != DSL_RESULT_SUCCESS) break;
+                std::cout << "DSL_NMP_PROCESS_METHOD: " <<DSL_NMP_PROCESS_METHOD << "\n";
+                std::cout << "DSL_NMP_MATCH_METHOD: " <<DSL_NMP_MATCH_METHOD << "\n";
+                
+                if (class_agnostic) {
+                    retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
+                        DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
+                else {
+                    retval = dsl_pph_nmp_new(L"nmp-pph", label_file.c_str(),
+                        DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
 
-                retval = dsl_osd_pph_add(L"on-screen-display", L"nmp-pph", DSL_PAD_SINK);
+                retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
 
-            if (perf) {
-                retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
-                if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-                retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
-                if (retval != DSL_RESULT_SUCCESS) break;
-            }
-
+            retval = dsl_osd_pph_add(L"on-screen-display", L"meter-pph", DSL_PAD_SINK);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
             retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
             if (retval != DSL_RESULT_SUCCESS) break;
-        
-            // if (send_medula) {
-            //     retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
-            //     if (retval != DSL_RESULT_SUCCESS) break;
-            // }
+            
+            // retval = dsl_pph_custom_new(L"send-to-medula", send_data, nullptr);
+            // if (retval != DSL_RESULT_SUCCESS) break;
 
+            // retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
+            // if (retval != DSL_RESULT_SUCCESS) break;
+        
             retval = dsl_pipeline_component_add(L"pipeline", L"on-screen-display");
             if (retval != DSL_RESULT_SUCCESS) break;
+
+            PR("on-screen-display component add\n");
         }
         else if (trk_enable) {
             if (postproc_enable) {
@@ -754,28 +796,34 @@ int main(int argc, char** argv)
                 auto DSL_NMP_MATCH_METHOD = (postproc_match_metric == L"IOS") ? 
                                                 DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
 
-                retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
-                    DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
-                if (retval != DSL_RESULT_SUCCESS) break;
+                std::cout << "DSL_NMP_PROCESS_METHOD: " << DSL_NMP_PROCESS_METHOD << "\n";
+                std::cout << "DSL_NMP_MATCH_METHOD: " << DSL_NMP_MATCH_METHOD << "\n";
+
+                if (class_agnostic) {
+                    retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
+                        DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
+                else {
+                    retval = dsl_pph_nmp_new(L"nmp-pph", label_file.c_str(),
+                        DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, postproc_match_threshold);
+                    if (retval != DSL_RESULT_SUCCESS) break;
+                }
 
                 retval = dsl_tracker_pph_add(L"tracker", L"nmp-pph", DSL_PAD_SINK);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
 
-            if (perf) {
-                retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
-                if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_pph_meter_new(L"meter-pph", 1, dsl_pph_meter_cb, &report_data);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-                retval = dsl_tracker_pph_add(L"tracker", L"meter-pph", DSL_PAD_SRC);
-                if (retval != DSL_RESULT_SUCCESS) break;
-            }
-
-            // if (send_medula) {
-            //     retval = dsl_tracker_pph_add(L"tracker", L"send-to-medula", DSL_PAD_SRC);
-            //     if (retval != DSL_RESULT_SUCCESS) break;
-            // }
-
-            retval = dsl_tracker_pph_add(L"tracker", L"tcd-data-check", DSL_PAD_SRC);
+            retval = dsl_tracker_pph_add(L"tracker", L"meter-pph", DSL_PAD_SRC);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
+            retval = dsl_pph_custom_new(L"send-to-medula", send_data, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
+            retval = dsl_tracker_pph_add(L"tracker", L"send-to-medula", DSL_PAD_SRC);
             if (retval != DSL_RESULT_SUCCESS) break;
         }
 
@@ -798,6 +846,8 @@ int main(int argc, char** argv)
             retval = dsl_pipeline_xwindow_delete_event_handler_add(L"pipeline", 
                 xwindow_delete_event_handler, nullptr);
             if (retval != DSL_RESULT_SUCCESS) break;
+
+            PR("window-sink component add\n");
         }
         else if (sink_method == L"fake") {
             retval = dsl_sink_fake_new(L"fake-sink");
@@ -805,6 +855,8 @@ int main(int argc, char** argv)
 
             retval = dsl_pipeline_component_add(L"pipeline", L"fake-sink");
             if (retval != DSL_RESULT_SUCCESS) break;
+
+            PR("fake-sink component add\n");
         }
  
         // Play the pipeline
