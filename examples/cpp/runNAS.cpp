@@ -831,7 +831,7 @@ int main(int argc, char** argv)
             // New Overlay Sink, 0 x/y offsets and same dimensions as Tiled Display
             retval = dsl_sink_window_new(L"window-sink", 0, 0, window_width, window_height);
             if (retval != DSL_RESULT_SUCCESS) break;
-
+            
             retval = dsl_pipeline_component_add(L"pipeline", L"window-sink");
             if (retval != DSL_RESULT_SUCCESS) break;
 
@@ -848,6 +848,13 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
 
             PR("window-sink component add\n");
+        }
+        else if (sink_method == L"overlay") {
+            retval = dsl_sink_overlay_new(L"overlay-sink", 0, 0, 0, 0, window_width, window_height);
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            retval = dsl_pipeline_component_add(L"pipeline", L"overlay-sink");
+            if (retval != DSL_RESULT_SUCCESS) break;
         }
         else if (sink_method == L"fake") {
             retval = dsl_sink_fake_new(L"fake-sink");
