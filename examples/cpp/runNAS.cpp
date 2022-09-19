@@ -39,7 +39,8 @@ THE SOFTWARE.
 
 static T_DATA_PRC data;
 
-class ReportData {
+class ReportData 
+{
 public:
     int m_report_count;
     int m_header_interval;
@@ -47,262 +48,13 @@ public:
     ReportData(int count, int interval) : m_report_count(count), m_header_interval(interval) {}
 };
 
-class MeasureTime {
-public:
-    int m_print_interval;
-    int m_count;
-    double m_culsum;
-
-    MeasureTime(int print_interval, int count, double culsum) : m_print_interval(print_interval), m_count(count), m_culsum(culsum) {}
-};
-
-class SendDataStruct {
-public:
-    std::vector<float> m_rect_params;
-    std::string m_obj_label;
-
-    SendDataStruct(const std::vector<float> &rect_params, const std::string &obj_label) : m_rect_params(rect_params), m_obj_label(obj_label) {}
-};
-
-boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
-    uint source_count, void* client_data)
-{
-    // cast the C void* client_data back to a py_object pointer and deref
-    // report_data = cast(client_data, POINTER(py_object)).contents.value
-    ReportData *report_data = static_cast<ReportData*>(client_data);
-
-    // Print header on interval
-    if (report_data->m_report_count % report_data->m_header_interval == 0) {
-        std::wstring header = L"";
-
-        for(int i=0; i<source_count; i++) {  
-            header += L"FPS ";
-            header += std::to_wstring(i);
-            header += L" (AVG)";
-        }
-        // std::wcout << header << "\n";
-    }
-    
-    // Print FPS counters
-    std::wstring counters = L"";
-
-    for(int i=0; i<source_count; i++) {
-        counters += std::to_wstring(interval_fps_averages[i]);
-        if (i==0) {
-            data.fps = interval_fps_averages[i];
-        }
-        counters += L" ";
-        counters += std::to_wstring(session_fps_averages[i]);
-    }
-
-    // std::wcout << counters << "\n";
-    // Increment reporting count
-    report_data->m_report_count += 1;
-    
-    return true;
-}
-
-// 
-// Function to be called on XWindow KeyRelease event
-// 
-void xwindow_key_event_handler(const wchar_t* in_key, void* client_data)
-{   
-    std::wstring wkey(in_key); 
-    std::string key(wkey.begin(), wkey.end());
-    std::cout << "key released = " << key << std::endl;
-    key = std::toupper(key[0]);
-    if(key == "P"){
-        dsl_pipeline_pause(L"pipeline");
-    } else if (key == "R"){
-        dsl_pipeline_play(L"pipeline");
-    } else if (key == "Q" or key == "" or key == ""){
-        std::cout << "Main Loop Quit" << std::endl;
-        dsl_pipeline_stop(L"pipeline");
-        dsl_main_loop_quit();
-    }
-}
-
-// 
-// Function to be called on XWindow Delete event
-//
-void xwindow_delete_event_handler(void* client_data)
-{
-    std::cout<<"delete window event"<<std::endl;
-    dsl_pipeline_stop(L"pipeline");
-    dsl_main_loop_quit();
-}
-    
-// 
-// Function to be called on End-of-Stream (EOS) event
-// 
-void eos_event_listener(void* client_data)
-{
-    std::cout<<"Pipeline EOS event"<<std::endl;
-    dsl_pipeline_stop(L"pipeline");
-    dsl_main_loop_quit();
-}    
-
-// 
-// Function to be called on every change of Pipeline state
-// 
-void state_change_listener(uint old_state, uint new_state, void* client_data)
-{
-    std::cout<<"previous state = " << dsl_state_value_to_string(old_state) 
-        << ", new state = " << dsl_state_value_to_string(new_state) << std::endl;
-}
-
-// 
-// Callback function for the ODE Monitor Action - illustrates how to
-// dereference the ODE "info_ptr" and access the data fields.
-// Note: you would normally use the ODE Print Action to print the info
-// to the console window if that is the only purpose of the Action.
-// 
-void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data)
-{
-    std::wcout << "Trigger Name        : " << pInfo->trigger_name << "\n";
-    std::cout << "  Unique Id         : " << pInfo->unique_ode_id << "\n";
-    std::cout << "  NTP Timestamp     : " << pInfo->ntp_timestamp << "\n";
-    std::cout << "  Source Data       : ------------------------" << "\n";
-    std::cout << "    Id              : " << pInfo->source_info.source_id << "\n";
-    std::cout << "    Batch Id        : " << pInfo->source_info.batch_id << "\n";
-    std::cout << "    Pad Index       : " << pInfo->source_info.pad_index << "\n";
-    std::cout << "    Frame           : " << pInfo->source_info.frame_num << "\n";
-    std::cout << "    Width           : " << pInfo->source_info.frame_width << "\n";
-    std::cout << "    Height          : " << pInfo->source_info.frame_height << "\n";
-    std::cout << "    Infer Done      : " << pInfo->source_info.inference_done << "\n";
-
-    if (pInfo->is_object_occurrence)
-    {
-        std::cout << "  Object Data       : ------------------------" << "\n";
-        std::cout << "    Class Id        : " << pInfo->object_info.class_id << "\n";
-        std::cout << "    Infer Comp Id   : " << pInfo->object_info.inference_component_id << "\n";
-        std::cout << "    Tracking Id     : " << pInfo->object_info.tracking_id << "\n";
-        std::cout << "    Label           : " << pInfo->object_info.label << "\n";
-        std::cout << "    Persistence     : " << pInfo->object_info.persistence << "\n";
-        std::cout << "    Direction       : " << pInfo->object_info.direction << "\n";
-        std::cout << "    Infer Conf      : " << pInfo->object_info.inference_confidence << "\n";
-        std::cout << "    Track Conf      : " << pInfo->object_info.tracker_confidence << "\n";
-        std::cout << "    Left            : " << pInfo->object_info.left << "\n";
-        std::cout << "    Top             : " << pInfo->object_info.top << "\n";
-        std::cout << "    Width           : " << pInfo->object_info.width << "\n";
-        std::cout << "    Height          : " << pInfo->object_info.height << "\n";
-    }
-    else
-    {
-        std::cout << "  Accumulative Data : ------------------------" << "\n";
-        std::cout << "    Occurrences     : " << pInfo->accumulative_info.occurrences_total << "\n";
-        std::cout << "    Occurrences In  : " << pInfo->accumulative_info.occurrences_total << "\n";
-        std::cout << "    Occurrences Out : " << pInfo->accumulative_info.occurrences_total << "\n";
-    }
-    std::cout << "  Trigger Criteria  : ------------------------" << "\n";
-    std::cout << "    Class Id        : " << pInfo->criteria_info.class_id << "\n";
-    std::cout << "    Infer Comp Id   : " << pInfo->criteria_info.inference_component_id << "\n";
-    std::cout << "    Min Infer Conf  : " << pInfo->criteria_info.min_inference_confidence << "\n";
-    std::cout << "    Min Track Conf  : " << pInfo->criteria_info.min_tracker_confidence << "\n";
-    std::cout << "    Infer Done Only : " << pInfo->criteria_info.inference_done_only << "\n";
-    std::cout << "    Min Width       : " << pInfo->criteria_info.min_width << "\n";
-    std::cout << "    Min Height      : " << pInfo->criteria_info.min_height << "\n";
-    std::cout << "    Max Width       : " << pInfo->criteria_info.max_width << "\n";
-    std::cout << "    Max Height      : " << pInfo->criteria_info.max_height << "\n";
-    std::cout << "    Interval        : " << pInfo->criteria_info.interval << "\n";
-}
-
-uint send_data(void* buffer, void* client_data)
-{
-    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
-
-    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
-    
-    S__INF__NAS_INF_INFO data_list;
-    D__INF__NAS_INF_INFO *outbuff;
-    T_NAS_INF_REC data_src;
-    D__INF__NAS_INF_INFO data_get;
-    T_NAS_INF_REC data_print;
-
-    int len_check;
-    if(T_INFER_opt.infer_level == INFER_ALL)
-    {
-        PRC(" FPS: %f \n", data.fps);
-        for(int i = 0; i< data.infer_length; i++)
-        {
-            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
-            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
-        }
-        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
-    }
-    else if(T_INFER_opt.infer_level == INFER_FPS)
-    {
-        PRC(" FPS: %f \n", data.fps);
-    }
-    else if(T_INFER_opt.infer_level == INFER_INF)
-    {
-        for(int i = 0; i< data.infer_length; i++)
-        {
-            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
-            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
-        }
-    }
-    else if(T_INFER_opt.infer_level == INFER_IMU)
-    {
-        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
-    }
-
-    // For each frame in the batched meta data
-    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
-        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
-    {
-        // Check for valid frame data
-        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-        if (pFrameMeta != nullptr)
-        {
-            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-
-            // For each detected object in the frame.
-            len_check = 0;
-            while (pObjectMetaList)
-            {
-                // Check for valid object data
-                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
-                
-                data_src.type = static_cast<int>(pObjectMeta->class_id); // gint 	
-                data_src.trkID = static_cast<int>(pObjectMeta->object_id); // guint64
-
-                data_src.x = pObjectMeta->rect_params.left; // float
-                data_src.y = pObjectMeta->rect_params.top; // float
-                data_src.width = pObjectMeta->rect_params.width; // float
-                data_src.height = pObjectMeta->rect_params.height; // float
-                
-                data_list.nas_inf_rec[len_check] = data_src;
-                data.infer[len_check] = data_src;
-
-                len_check += 1;   
-                pObjectMetaList = pObjectMetaList->next;
-            }
-       }
-    }
-
-    data_list.nas_int_rec_no = len_check;
-
-    int rst_put = 0;
-    int len = sizeof(len_check) + len_check * sizeof(T_NAS_INF_REC);
-    outbuff = (D__INF__NAS_INF_INFO*)malloc(len);
-    memcpy(outbuff,(D__INF__NAS_INF_INFO *)  &data_list, len);
-    rst_put = ami_put_obj(DID__INF__NAS_INF_INFO, outbuff, len);
-    if(rst_put < 0)
-    {
-        PRC("DATA PUT ERROR\n");
-    }
-
-    return DSL_PAD_PROBE_OK;
-}
-
-static void register_cli_command(void)
-{
-    ami_cli_reg_cmd("infer",cmd_infer, g_p_usage__cmd_infer);
-    ami_cli_reg_cmd("pipe",cmd_pipeline, g_p_usage__cmd_pipeline);
-}
+static void register_cli_command(void);
+uint send_data(void* buffer, void* client_data);
+void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data);
+void eos_event_listener(void* client_data);
+boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, uint source_count, void* client_data);
+void xwindow_key_event_handler(const wchar_t* in_key, void* client_data);
+void xwindow_delete_event_handler(void* client_data);
 
 int main(int argc, char** argv)
 {
@@ -544,7 +296,7 @@ int main(int argc, char** argv)
     window_width = ami_ini_s32(ini_id,"SINK","width",1920, 10); 
     window_height = ami_ini_s32(ini_id,"SINK","height",1080, 10);
 
-    DslReturnType retval = DSL_RESULT_FAILURE;
+    DslReturnType retval;
     // std::string cudaversion;
     
     ////////////// INPUT
@@ -778,11 +530,11 @@ int main(int argc, char** argv)
             retval = dsl_osd_pph_add(L"on-screen-display", L"ode-handler", DSL_PAD_SINK);
             if (retval != DSL_RESULT_SUCCESS) break;
             
-            // retval = dsl_pph_custom_new(L"send-to-medula", send_data, nullptr);
-            // if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_pph_custom_new(L"send-to-medula", send_data, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
-            // retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
-            // if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
+            if (retval != DSL_RESULT_SUCCESS) break;
         
             retval = dsl_pipeline_component_add(L"pipeline", L"on-screen-display");
             if (retval != DSL_RESULT_SUCCESS) break;
@@ -885,3 +637,242 @@ int main(int argc, char** argv)
     return 0;
 }
             
+boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
+    uint source_count, void* client_data)
+{
+    // cast the C void* client_data back to a py_object pointer and deref
+    // report_data = cast(client_data, POINTER(py_object)).contents.value
+    ReportData *report_data = static_cast<ReportData*>(client_data);
+
+    // Print header on interval
+    if (report_data->m_report_count % report_data->m_header_interval == 0) {
+        std::wstring header = L"";
+
+        for(int i=0; i<source_count; i++) {  
+            header += L"FPS ";
+            header += std::to_wstring(i);
+            header += L" (AVG)";
+        }
+        // std::wcout << header << "\n";
+    }
+    
+    // Print FPS counters
+    std::wstring counters = L"";
+
+    for(int i=0; i<source_count; i++) {
+        counters += std::to_wstring(interval_fps_averages[i]);
+        if (i==0) {
+            data.fps = interval_fps_averages[i];
+        }
+        counters += L" ";
+        counters += std::to_wstring(session_fps_averages[i]);
+    }
+
+    // std::wcout << counters << "\n";
+    // Increment reporting count
+    report_data->m_report_count += 1;
+    
+    return true;
+}
+
+// 
+// Function to be called on XWindow KeyRelease event
+// 
+void xwindow_key_event_handler(const wchar_t* in_key, void* client_data)
+{   
+    std::wstring wkey(in_key); 
+    std::string key(wkey.begin(), wkey.end());
+    std::cout << "key released = " << key << std::endl;
+    key = std::toupper(key[0]);
+    if(key == "P"){
+        dsl_pipeline_pause(L"pipeline");
+    } else if (key == "R"){
+        dsl_pipeline_play(L"pipeline");
+    } else if (key == "Q" or key == "" or key == ""){
+        std::cout << "Main Loop Quit" << std::endl;
+        dsl_pipeline_stop(L"pipeline");
+        dsl_main_loop_quit();
+    }
+}
+
+// 
+// Function to be called on XWindow Delete event
+//
+void xwindow_delete_event_handler(void* client_data)
+{
+    std::cout<<"delete window event"<<std::endl;
+    dsl_pipeline_stop(L"pipeline");
+    dsl_main_loop_quit();
+}
+    
+// 
+// Function to be called on End-of-Stream (EOS) event
+// 
+void eos_event_listener(void* client_data)
+{
+    std::cout<<"Pipeline EOS event"<<std::endl;
+    dsl_pipeline_stop(L"pipeline");
+    dsl_main_loop_quit();
+}    
+
+// 
+// Function to be called on every change of Pipeline state
+// 
+void state_change_listener(uint old_state, uint new_state, void* client_data)
+{
+    std::cout<<"previous state = " << dsl_state_value_to_string(old_state) 
+        << ", new state = " << dsl_state_value_to_string(new_state) << std::endl;
+}
+
+// 
+// Callback function for the ODE Monitor Action - illustrates how to
+// dereference the ODE "info_ptr" and access the data fields.
+// Note: you would normally use the ODE Print Action to print the info
+// to the console window if that is the only purpose of the Action.
+// 
+void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data)
+{
+    std::wcout << "Trigger Name        : " << pInfo->trigger_name << "\n";
+    std::cout << "  Unique Id         : " << pInfo->unique_ode_id << "\n";
+    std::cout << "  NTP Timestamp     : " << pInfo->ntp_timestamp << "\n";
+    std::cout << "  Source Data       : ------------------------" << "\n";
+    std::cout << "    Id              : " << pInfo->source_info.source_id << "\n";
+    std::cout << "    Batch Id        : " << pInfo->source_info.batch_id << "\n";
+    std::cout << "    Pad Index       : " << pInfo->source_info.pad_index << "\n";
+    std::cout << "    Frame           : " << pInfo->source_info.frame_num << "\n";
+    std::cout << "    Width           : " << pInfo->source_info.frame_width << "\n";
+    std::cout << "    Height          : " << pInfo->source_info.frame_height << "\n";
+    std::cout << "    Infer Done      : " << pInfo->source_info.inference_done << "\n";
+
+    if (pInfo->is_object_occurrence)
+    {
+        std::cout << "  Object Data       : ------------------------" << "\n";
+        std::cout << "    Class Id        : " << pInfo->object_info.class_id << "\n";
+        std::cout << "    Infer Comp Id   : " << pInfo->object_info.inference_component_id << "\n";
+        std::cout << "    Tracking Id     : " << pInfo->object_info.tracking_id << "\n";
+        std::cout << "    Label           : " << pInfo->object_info.label << "\n";
+        std::cout << "    Persistence     : " << pInfo->object_info.persistence << "\n";
+        std::cout << "    Direction       : " << pInfo->object_info.direction << "\n";
+        std::cout << "    Infer Conf      : " << pInfo->object_info.inference_confidence << "\n";
+        std::cout << "    Track Conf      : " << pInfo->object_info.tracker_confidence << "\n";
+        std::cout << "    Left            : " << pInfo->object_info.left << "\n";
+        std::cout << "    Top             : " << pInfo->object_info.top << "\n";
+        std::cout << "    Width           : " << pInfo->object_info.width << "\n";
+        std::cout << "    Height          : " << pInfo->object_info.height << "\n";
+    }
+    else
+    {
+        std::cout << "  Accumulative Data : ------------------------" << "\n";
+        std::cout << "    Occurrences     : " << pInfo->accumulative_info.occurrences_total << "\n";
+        std::cout << "    Occurrences In  : " << pInfo->accumulative_info.occurrences_total << "\n";
+        std::cout << "    Occurrences Out : " << pInfo->accumulative_info.occurrences_total << "\n";
+    }
+    std::cout << "  Trigger Criteria  : ------------------------" << "\n";
+    std::cout << "    Class Id        : " << pInfo->criteria_info.class_id << "\n";
+    std::cout << "    Infer Comp Id   : " << pInfo->criteria_info.inference_component_id << "\n";
+    std::cout << "    Min Infer Conf  : " << pInfo->criteria_info.min_inference_confidence << "\n";
+    std::cout << "    Min Track Conf  : " << pInfo->criteria_info.min_tracker_confidence << "\n";
+    std::cout << "    Infer Done Only : " << pInfo->criteria_info.inference_done_only << "\n";
+    std::cout << "    Min Width       : " << pInfo->criteria_info.min_width << "\n";
+    std::cout << "    Min Height      : " << pInfo->criteria_info.min_height << "\n";
+    std::cout << "    Max Width       : " << pInfo->criteria_info.max_width << "\n";
+    std::cout << "    Max Height      : " << pInfo->criteria_info.max_height << "\n";
+    std::cout << "    Interval        : " << pInfo->criteria_info.interval << "\n";
+}
+
+uint send_data(void* buffer, void* client_data)
+{
+    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
+
+    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+    
+    S__INF__NAS_INF_INFO data_list;
+    D__INF__NAS_INF_INFO *outbuff;
+    T_NAS_INF_REC data_src;
+    D__INF__NAS_INF_INFO data_get;
+    T_NAS_INF_REC data_print;
+
+    int len_check;
+    if(T_INFER_opt.infer_level == INFER_ALL)
+    {
+        PRC(" FPS: %f \n", data.fps);
+        for(int i = 0; i< data.infer_length; i++)
+        {
+            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
+            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
+            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
+        }
+        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
+    }
+    else if(T_INFER_opt.infer_level == INFER_FPS)
+    {
+        PRC(" FPS: %f \n", data.fps);
+    }
+    else if(T_INFER_opt.infer_level == INFER_INF)
+    {
+        for(int i = 0; i< data.infer_length; i++)
+        {
+            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
+            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
+            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
+        }
+    }
+    else if(T_INFER_opt.infer_level == INFER_IMU)
+    {
+        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
+    }
+
+    // For each frame in the batched meta data
+    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+    {
+        // Check for valid frame data
+        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+        if (pFrameMeta != nullptr)
+        {
+            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+
+            // For each detected object in the frame.
+            len_check = 0;
+            while (pObjectMetaList)
+            {
+                // Check for valid object data
+                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
+                
+                data_src.type = static_cast<int>(pObjectMeta->class_id); // gint 	
+                data_src.trkID = static_cast<int>(pObjectMeta->object_id); // guint64
+
+                data_src.x = pObjectMeta->rect_params.left; // float
+                data_src.y = pObjectMeta->rect_params.top; // float
+                data_src.width = pObjectMeta->rect_params.width; // float
+                data_src.height = pObjectMeta->rect_params.height; // float
+                
+                data_list.nas_inf_rec[len_check] = data_src;
+                data.infer[len_check] = data_src;
+
+                len_check += 1;   
+                pObjectMetaList = pObjectMetaList->next;
+            }
+       }
+    }
+
+    data_list.nas_int_rec_no = len_check;
+
+    int rst_put = 0;
+    int len = sizeof(len_check) + len_check * sizeof(T_NAS_INF_REC);
+    outbuff = (D__INF__NAS_INF_INFO*)malloc(len);
+    memcpy(outbuff,(D__INF__NAS_INF_INFO *)  &data_list, len);
+    rst_put = ami_put_obj(DID__INF__NAS_INF_INFO, outbuff, len);
+    if(rst_put < 0)
+    {
+        PRC("DATA PUT ERROR\n");
+    }
+
+    return DSL_PAD_PROBE_OK;
+}
+
+static void register_cli_command(void)
+{
+    ami_cli_reg_cmd("infer",cmd_infer, g_p_usage__cmd_infer);
+    ami_cli_reg_cmd("pipe",cmd_pipeline, g_p_usage__cmd_pipeline);
+}
