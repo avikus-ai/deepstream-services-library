@@ -1553,6 +1553,7 @@ namespace DSL
         
         m_ostream << pFrameMeta->frame_num << ", ";
         m_ostream << pObjectMeta->class_id << ", ";
+        m_ostream << pObjectMeta->object_id << ", ";
         m_ostream << pObjectMeta->rect_params.left << ", ";
         m_ostream << pObjectMeta->rect_params.top << ", ";
         m_ostream << pObjectMeta->rect_params.width << ", ";

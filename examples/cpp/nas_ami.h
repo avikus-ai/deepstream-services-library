@@ -21,8 +21,10 @@
 #include <iostream>
 /*==========================================================================*/
 
-#define OPT__CFG_DIR__PATH		"path to inference" //"~/aiboat/pkg"
-#define OPT__INFER_INI__FILE	"inference_option.ini"
+// #define OPT__CFG_DIR__PATH		"path to inference" //"~/aiboat/pkg"
+// #define OPT__INFER_INI__FILE	"inference_option.ini"
+#define OPT__CFG_DIR__PATH		"../pkg/data"
+#define OPT__EXAPP_INI__FILE	"exapp.ini"
 
 // TODO:: you must change 'xID_PSS__EXAPP' before execute the program
 #define xID__PSS__INFER			(0x80) // TODO:: not valid
@@ -53,7 +55,7 @@ typedef struct
 {
 	// INI parsing
 	uint32_t	exapp_ini_id;
-
+	ARGS_OPT    args_opt;
 
 } T_EXAPP_DATA;
 

@@ -56,12 +56,129 @@ boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_aver
 void xwindow_key_event_handler(const wchar_t* in_key, void* client_data);
 void xwindow_delete_event_handler(void* client_data);
 
+T_EXAPP_DATA g_exapp_data;
+
+/*-------------------------------------------------------------------------*/
+// static variables
+
+static const char *s_usage =  // TODO:: add your options
+///// DO NOT REMOVE below options (i,D,T,X,Y,C,h)
+" \
+-i --ini <file-name>       // EXAPP CONFIG file (exapp.ini)\n \
+\n \
+-D --dl <level:hexa, all>  // EXAPP debug level. 32bit\n \
+-T --tl <level:hexa, all>  // EXAPP trace level. 32bit\n \
+-X --adl <level:hexa, all> // AMI debug level. 32bit\n \
+-Y --atl <level:hexa, all> // AMI trace level. 32bit\n \
+-C --con                   // set LOG out to CONSOLE\n \
+\n \
+-h --help                  // print usage...\n \
+";
+
+static const char *short_options = "i:D:T:X:Y:Ch"; // TODO:: add your options
+static const struct option long_options[] = {
+    { "ini",        1, NULL, 'i' },
+
+	{ "dl",         1, NULL, 'D' },
+    { "tl",         1, NULL, 'T' },
+	{ "adl",        1, NULL, 'X' },
+    { "atl",        1, NULL, 'Y' },
+	{ "con",        0, NULL, 'C' },
+
+	// TODO:: add your arguments options
+    { "help",       0, NULL, 'h' }
+};
+
+/*==========================================================================*/
+
+static int proc_get_options(int ac,char *av[])
+{
+    int next_option;
+	int quit_flag=FALSE;
+    uint32_t u32;
+    //uint16_t u16;
+	//char string[AVKS_FILE_PATH_LEN];
+
+	// init 'g_exapp_data.args_opt' entry
+	memset((char *)&g_exapp_data.args_opt, 0x00, sizeof(g_exapp_data.args_opt));
+
+	sprintf(g_exapp_data.args_opt.exapp_ini, "%s/%s", OPT__CFG_DIR__PATH, OPT__EXAPP_INI__FILE);
+	// TODO:: add your code (init)
+
+    do {
+        next_option = getopt_long(ac,av,short_options,long_options,NULL);
+
+        switch (next_option)
+        {
+        case 'i': // EXAPP.INI
+            strcpy(g_exapp_data.args_opt.exapp_ini, optarg);
+            break;
+
+        case 'D':
+            u32 = (uint32_t)strtoul(optarg, NULL, 16);
+            g_exapp_data.args_opt.dl = u32;
+			g_AMI_STS.debug_level    = u32;
+            break;
+        case 'T':
+            u32 = (uint32_t)strtoul(optarg, NULL, 16);
+            g_exapp_data.args_opt.tl = u32;
+			g_AMI_STS.trace_level    = u32;
+            break;
+        case 'X':
+            u32 = (uint32_t)strtoul(optarg, NULL, 16);
+            g_exapp_data.args_opt.adl  = u32;
+			g_ami_data.ami_debug_level = u32;
+            break;
+        case 'Y':
+            u32 = (uint32_t)strtoul(optarg, NULL, 16);
+            g_exapp_data.args_opt.atl  = u32;
+			g_ami_data.ami_trace_level = u32;
+            break;
+		case 'C':
+			g_exapp_data.args_opt.con = AMI_LOG_CH__CON;
+			g_ami_data.log_channel    = AMI_LOG_CH__CON;
+			break;
+
+        case 'h': // help. print usage
+			PR("Usage:\n%s\n",s_usage);
+			quit_flag = TRUE;
+            break;
+
+        default:
+            if (next_option != -1)
+                PR("[OPT] Illegal option (%d,%x) \n", next_option,next_option);
+            break;
+        }
+    } while (next_option != -1);
+
+	// disp args
+	PR("\n=== Running Options ===\n");
+	PR(" ini  = %s\n",  g_exapp_data.args_opt.exapp_ini);
+	PR(" dl   = %08x\n",g_exapp_data.args_opt.dl);
+	PR(" tl   = %08x\n",g_exapp_data.args_opt.tl);
+	PR(" adl  = %08x\n",g_exapp_data.args_opt.adl);
+	PR(" atl  = %08x\n",g_exapp_data.args_opt.atl);
+	PR(" con  = %08x\n",g_exapp_data.args_opt.con);
+	PR("=========================\n");
+
+	// set global variables to args config
+	if (g_exapp_data.args_opt.con == AMI_LOG_CH__CON)
+		g_ami_data.console_cli = TRUE;
+
+	return (quit_flag == TRUE) ? -1 : 0;
+}
+
 int main(int argc, char** argv)
 {
     // 0.display logo
     PR("=== INFERENCE Start... ===\n");
 
     int rst_init = 0;
+
+    // 2. get options
+	if ((rst_init = proc_get_options(argc, argv)) < 0)
+		{ PR("proc_get_options() failed. err=%d\n",rst_init); return 11; }
+
     // 1.ami_init
     if ((rst_init = ami_init(xID__PSS__APP_NAS, argc, argv)) < 0)
 		{ PR("ami_init(%02x) failed. err=%d\n", xID__PSS__APP_NAS, rst_init); return 21; }
@@ -381,9 +498,17 @@ int main(int argc, char** argv)
 
             retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
             if (retval != DSL_RESULT_SUCCESS) break;
+            
+            // output file path for the MOT Challenge File Action. 
+            std::wstring file_path(L"./log.csv");
+            // DSL_EVENT_FILE_FORMAT_CSV, DSL_EVENT_FILE_FORMAT_MOTC
+            retval = dsl_ode_action_file_new(L"write-data-log", 
+                file_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
+                DSL_EVENT_FILE_FORMAT_MOTC, false);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
             if (monitor) {
-                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", L"write-data-log", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
             else {
