@@ -1552,8 +1552,6 @@ namespace DSL
             std::dynamic_pointer_cast<OdeTrigger>(pOdeTrigger);
         
         m_ostream << pFrameMeta->frame_num << ", ";
-        m_ostream << pObjectMeta->class_id << ", ";
-        m_ostream << pObjectMeta->object_id << ", ";
         m_ostream << pObjectMeta->rect_params.left << ", ";
         m_ostream << pObjectMeta->rect_params.top << ", ";
         m_ostream << pObjectMeta->rect_params.width << ", ";
@@ -2137,6 +2135,32 @@ namespace DSL
             {
                 ivec->AddMeta(displayMetaData, pFrameMeta);
             }
+        }
+    }
+
+    // ********************************************************************
+
+    RemoveObjectOdeAction::RemoveObjectOdeAction(const char* name)
+        : OdeAction(name)
+    {
+        LOG_FUNC();
+    }
+
+    RemoveObjectOdeAction::~RemoveObjectOdeAction()
+    {
+        LOG_FUNC();
+    }
+    
+    void RemoveObjectOdeAction::HandleOccurrence(DSL_BASE_PTR pOdeTrigger, 
+        GstBuffer* pBuffer, std::vector<NvDsDisplayMeta*>& displayMetaData, 
+        NvDsFrameMeta* pFrameMeta, NvDsObjectMeta* pObjectMeta)
+    {
+        LOCK_MUTEX_FOR_CURRENT_SCOPE(&m_propertyMutex);
+
+        if (m_enabled)
+        {
+            nvds_remove_obj_meta_from_frame(pFrameMeta, pObjectMeta);
+            pObjectMeta = nullptr;
         }
     }
 

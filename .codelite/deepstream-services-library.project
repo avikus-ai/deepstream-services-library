@@ -81,7 +81,6 @@
     <File Name="../src/DslSegVisualBintr.h"/>
     <File Name="../src/DslServices.h"/>
     <File Name="../src/DslServicesValidate.h"/>
-    <File Name="../src/DslSinkBintr.h"/>
     <File Name="../src/DslSourceBintr.h"/>
     <File Name="../src/DslSourceMeter.h"/>
     <File Name="../src/DslStateChange.h"/>
@@ -115,7 +114,6 @@
       <File Name="../test/api/DslComponentMgt.cpp"/>
       <File Name="../test/api/DslDisplayTypesApiTest.cpp"/>
       <File Name="../test/api/DslDisplayTypesBehaviorTest.cpp"/>
-      <File Name="../test/api/DslInferApiTest.cpp"/>
       <File Name="../test/api/DslMailerApiTest.cpp"/>
       <File Name="../test/api/DslMessageBrokerApiTest.cpp"/>
       <File Name="../test/api/DslMessageSinkBehaviorTest.cpp"/>
@@ -151,6 +149,7 @@
       <File Name="../test/api/DslOdeHeatMapperApiTest.cpp"/>
       <File Name="../test/api/DslPreprocApiText.cpp"/>
       <File Name="../test/api/DslInfoApiTest.cpp.tmp"/>
+      <File Name="../test/api/DslPphBehaviorTest.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="unit">
       <File Name="../test/unit/DslDemuxerAndTeeUnitTest.cpp"/>
@@ -206,7 +205,6 @@
     <File Name="../Makefile"/>
     <File Name="../README.md"/>
     <File Name="../.gitignore"/>
-    <File Name="../examples/cpp/Makefile"/>
   </VirtualDirectory>
   <VirtualDirectory Name="examples">
     <VirtualDirectory Name="cpp">
@@ -226,6 +224,7 @@
       <File Name="../examples/cpp/Makefile"/>
       <File Name="../examples/cpp/interpipe_single_pipeline_dynamic_switching_between_multiple_sinks.cpp"/>
       <File Name="../examples/cpp/interpipe_multiple_pipelines_listening_to_single_sink.cpp"/>
+      <File Name="../test/api/DslCrossTriggerExampleTest.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="python">
       <File Name="../examples/python/1csi_live_pgie_demuxer_osd_overlay_rtsp_h254.py"/>
@@ -282,6 +281,9 @@
       <File Name="../examples/python/1file_preproc_pgie_iou_osd_window.py"/>
       <File Name="../examples/python/interpipe_single_pipeline_dynamic_switching_between_multiple_sinks.py"/>
       <File Name="../examples/python/interpipe_multiple_pipelines_listening_to_single_sink.py"/>
+      <File Name="../examples/python/4K_input_source_slicing_with_non_maximum_merge.py"/>
+      <File Name="../test/api/DslInferApiTest.cpp"/>
+      <File Name="../src/DslSinkBintr.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="tkinter">
       <File Name="../examples/tkinter/action.py"/>
@@ -291,8 +293,6 @@
       <File Name="../examples/tkinter/tkapp.py"/>
       <File Name="../examples/tkinter/tkapp_window.py"/>
     </VirtualDirectory>
-    <File Name="../test/api/DslInfoApiTest.cpp.tmp"/>
-    <File Name="../test/api/DslCrossTriggerExampleTest.cpp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
