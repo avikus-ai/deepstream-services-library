@@ -37,6 +37,6 @@ INCLUDE_DIRECTORIES(
 ADD_SUBDIRECTORY(src/thirdparty)
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(src/nmp)
-ADD_SUBDIRECTORY(examples/cpp/yaml)
+#ADD_SUBDIRECTORY(examples/cpp/yaml)
 ADD_SUBDIRECTORY(examples/cpp)
 

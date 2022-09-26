@@ -205,7 +205,9 @@ int main(int argc, char** argv)
     ////////////// SETTING
     std::string cudaversion;
     ReportData report_data(0, 12);
-    
+    int log;
+    std::wstring log_path;
+
     ////////////// INPUT
     std::wstring input_type;
     std::wstring uri;
@@ -258,6 +260,19 @@ int main(int argc, char** argv)
         cudaversion = std::string(char_buffer);
     }
     
+    ////////////// SETTING
+    log = ami_ini_s32(ini_id,"SETTING","log",0,10);
+    if((rst_ini_parse = ami_ini_str(ini_id,"SETTING","log_path",char_buffer, 255)) < 0)
+    {
+        std::string str("log.csv");
+        log_path = std::wstring(str.begin(), str.end());
+    }
+    else
+    {
+        std::string str(char_buffer);
+        log_path = std::wstring(str.begin(), str.end());
+    }
+
     ////////////// INPUT
     if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","type",char_buffer, 255)) < 0)
     {
@@ -417,6 +432,10 @@ int main(int argc, char** argv)
     // std::string cudaversion;
     
     ////////////// INPUT
+    std::cout << "log: " << log << "\n";
+    std::wcout << "log_path: " << log_path << "\n";
+
+    ////////////// INPUT
     std::wcout << "input_type: " << input_type << "\n";
     std::wcout << "uri: " << uri << "\n";
     std::cout << "repeat: " << repeat << "\n";
@@ -460,6 +479,9 @@ int main(int argc, char** argv)
     std::cout << "window_width: " << window_width << "\n";
     std::cout << "window_height: " << window_height << "\n";
 
+
+    
+
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
     {    
@@ -499,16 +521,18 @@ int main(int argc, char** argv)
             retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
             if (retval != DSL_RESULT_SUCCESS) break;
             
-            // output file path for the MOT Challenge File Action. 
-            std::wstring file_path(L"./log.csv");
             // DSL_EVENT_FILE_FORMAT_CSV, DSL_EVENT_FILE_FORMAT_MOTC
             retval = dsl_ode_action_file_new(L"write-data-log", 
-                file_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
+                log_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
                 DSL_EVENT_FILE_FORMAT_MOTC, false);
             if (retval != DSL_RESULT_SUCCESS) break;
 
             if (monitor) {
-                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", L"write-data-log", nullptr};
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
+                retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+            }
+            else if(log) {
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", L"write-data-log", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
             else {
