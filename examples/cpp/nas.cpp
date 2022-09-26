@@ -32,7 +32,6 @@ THE SOFTWARE.
 // https://github.com/dpilger26/NumCpp/blob/master/docs/markdown/Installation.md
 #include <cstdint>
 #include <chrono>
-#include "yaml.hpp"
 
 #include "DslApi.h"
 #include "nas_ami.h"
@@ -479,9 +478,6 @@ int main(int argc, char** argv)
     std::cout << "window_width: " << window_width << "\n";
     std::cout << "window_height: " << window_height << "\n";
 
-
-    
-
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
     {    
@@ -522,19 +518,19 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
             
             // DSL_EVENT_FILE_FORMAT_CSV, DSL_EVENT_FILE_FORMAT_MOTC
-            retval = dsl_ode_action_file_new(L"write-data-log", 
-                log_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
-                DSL_EVENT_FILE_FORMAT_MOTC, false);
-            if (retval != DSL_RESULT_SUCCESS) break;
+            // retval = dsl_ode_action_file_new(L"write-data-log", 
+            //     log_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
+            //     DSL_EVENT_FILE_FORMAT_MOTC, false);
+            // if (retval != DSL_RESULT_SUCCESS) break;
 
             if (monitor) {
                 const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
-            else if(log) {
-                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", L"write-data-log", nullptr};
-                retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
-            }
+            // else if(log) {
+            //     const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", L"write-data-log", nullptr};
+            //     retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+            // }
             else {
                 const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
