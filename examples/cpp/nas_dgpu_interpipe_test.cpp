@@ -36,32 +36,157 @@ THE SOFTWARE.
 
 #include <iostream> 
 #include <glib.h>
+#include <vector>
 
 #include "DslApi.h"
+#include "yaml.hpp"
+
+class ReportData {
+public:
+    int m_report_count;
+    int m_header_interval;
+
+    ReportData(int count, int interval) : m_report_count(count), m_header_interval(interval) {}
+};
+
+boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
+    uint source_count, void* client_data)
+{
+    // cast the C void* client_data back to a py_object pointer and deref
+    // report_data = cast(client_data, POINTER(py_object)).contents.value
+    ReportData *report_data = static_cast<ReportData*>(client_data);
+
+    // Print header on interval
+    if (report_data->m_report_count % report_data->m_header_interval == 0) {
+        std::wstring header = L"";
+
+        for(int i=0; i<source_count; i++) {  
+            header += L"FPS ";
+            header += std::to_wstring(i);
+            header += L" (AVG)";
+        }
+        std::wcout << header << "\n";
+    }
+    
+    // Print FPS counters
+    std::wstring counters = L"";
+
+    for(int i=0; i<source_count; i++) {
+        counters += std::to_wstring(interval_fps_averages[i]);
+        counters += L" ";
+        counters += std::to_wstring(session_fps_averages[i]);
+    }
+
+    std::wcout << counters << "\n";
+
+    // Increment reporting count
+    report_data->m_report_count += 1;
+    
+    return true;
+}
+
+
+Yaml::Node root;
+
+std::wstring str2wstr(const std::string &key)
+{
+    auto suri = root[key].As<std::string>();
+    return std::wstring(suri.begin(), suri.end());
+}
+
+
+std::wstring file_path;
+std::wstring primary_infer_config_file_1;
+std::wstring primary_infer_config_file_2;
+std::wstring primary_model_engine_file_1;
+std::wstring primary_model_engine_file_2;
+std::wstring tracker_config_file_1;
+std::wstring tracker_config_file_2;
+std::wstring preproc_config_file_1;
+std::wstring preproc_config_file_2;
+uint class_agnostic_1;
+uint class_agnostic_2;
+uint preprocessing_1;
+uint preprocessing_2;
+uint postprocessing_1;
+uint postprocessing_2;
+std::wstring postprocess_1;
+std::wstring postprocess_2;
+std::wstring match_metric_1;
+std::wstring match_metric_2;
+float match_threshold_1;
+float match_threshold_2;
+int num_labels;
+int interval_1;
+int interval_2;
+std::wstring trk_method_1;
+std::wstring trk_method_2;
+uint sink_width;
+uint sink_height;
+int trk_width_1;
+int trk_width_2;
+int trk_height_1;
+int trk_height_2;
+int batch_size;
+uint perf;
+
+void parse_yaml(void) 
+{
+    file_path = str2wstr("file_path");
+    primary_infer_config_file_1 = str2wstr("primary_infer_config_file_1");
+    primary_infer_config_file_2 = str2wstr("primary_infer_config_file_2");
+    primary_model_engine_file_1 = str2wstr("primary_model_engine_file_1");
+    primary_model_engine_file_2 = str2wstr("primary_model_engine_file_2");
+    tracker_config_file_1 = str2wstr("tracker_config_file_1");
+    tracker_config_file_2 = str2wstr("tracker_config_file_2");
+    preproc_config_file_1 = str2wstr("preprocess_config_file_1");
+    preproc_config_file_2 = str2wstr("preprocess_config_file_2");
+    class_agnostic_1 = root["class_agnostic_1"].As<bool>();
+    class_agnostic_2 = root["class_agnostic_2"].As<bool>();
+    preprocessing_1 = root["preprocessing_1"].As<bool>();
+    preprocessing_2 = root["preprocessing_2"].As<bool>();
+    postprocessing_1 = root["postprocessing_1"].As<bool>();
+    postprocessing_2 = root["postprocessing_2"].As<bool>();
+    postprocess_1 = str2wstr("postprocess_1");
+    postprocess_2 = str2wstr("postprocess_2");
+    match_metric_1 = str2wstr("match_metric_1");
+    match_metric_2 = str2wstr("match_metric_2");
+    match_threshold_1 = root["match_threshold_1"].As<float>();
+    match_threshold_2 = root["match_threshold_2"].As<float>();
+    num_labels = root["num_labels"].As<int>();
+    interval_1 = root["interval_1"].As<int>();
+    interval_2 = root["interval_2"].As<int>();
+    trk_method_1 = str2wstr("trk_method_1");
+    trk_method_2 = str2wstr("trk_method_2");
+    sink_width = root["sink_width"].As<int>();
+    sink_height = root["sink_height"].As<int>();
+    trk_width_1 = root["trk_width_1"].As<int>();
+    trk_width_2 = root["trk_width_2"].As<int>();
+    trk_height_1 = root["trk_height_1"].As<int>();
+    trk_height_2 = root["trk_height_2"].As<int>();
+    batch_size = root["batch_size"].As<int>();
+    perf = root["perf"].As<bool>();
+}
 
 // File path for the single File Source
-static const std::wstring file_path(
-    L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_qHD.mp4");
+// static const std::wstring file_path(
+//     L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_qHD.mp4");
 
 // Filespecs for the Primary GIE
-static const std::wstring primary_infer_config_file_1(
-    L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_infer_primary_nano.txt");
-static const std::wstring primary_infer_config_file_2(
-    // L"../../test/configs/config_infer_primary_nano_nms_test.txt");
-    L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_infer_primary_nano.txt");
-    
-    
-static const std::wstring primary_model_engine_file(
-    L"/opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector_Nano/resnet10.caffemodel_b8_gpu0_fp16.engine");
-static const std::wstring tracker_config_file(
-    L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml");
+// static const std::wstring primary_infer_config_file_1(
+//     L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_infer_primary_nano.txt");
+// static const std::wstring primary_infer_config_file_2(
+//     // L"../../test/configs/config_infer_primary_nano_nms_test.txt");
+//     L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_infer_primary_nano.txt");
+     
+// static const std::wstring primary_model_engine_file(
+//     L"/opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector_Nano/resnet10.caffemodel_b8_gpu0_fp16.engine");
+// static const std::wstring tracker_config_file(
+//     L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml");
 
 // File name for .dot file output
 static const std::wstring dot_file = L"state-playing";
 
-// Window Sink Dimensions
-uint sink_width = 960;
-uint sink_height = 640;
 
 GThread* main_loop_thread_1(NULL);
 GThread* main_loop_thread_2(NULL);
@@ -79,6 +204,7 @@ struct ClientData
         pipeline = L"pipeline-" + std::to_wstring(id);
         source = L"source-" + std::to_wstring(id);    
         pgie = L"pgie-" + std::to_wstring(id);
+        preprocessor = L"preprocessor-" + std::to_wstring(id);
         tracker = L"tracker-" + std::to_wstring(id);
         osd = L"osd-" + std::to_wstring(id);
         window_sink = L"window-sink-" + std::to_wstring(id);    
@@ -86,6 +212,7 @@ struct ClientData
 
     std::wstring pipeline;
     std::wstring source;
+    std::wstring preprocessor;
     std::wstring pgie;
     std::wstring tracker;
     std::wstring osd;
@@ -286,6 +413,11 @@ int main(int argc, char** argv)
 {  
     DslReturnType retval(DSL_RESULT_SUCCESS);
 
+    Yaml::Parse(root, "nas_dgpu_interpipe_test.yml");
+    
+    parse_yaml();
+
+    
     // # Since we're not using args, we can Let DSL initialize GST on first call
     while(true)
     {
@@ -308,19 +440,59 @@ int main(int argc, char** argv)
         retval = create_pipeline(&client_data_1);
         if (retval != DSL_RESULT_SUCCESS) break;
 
+        if (preprocessing_1) {
+            // New Preprocessor component using the config filespec defined above.
+            retval = dsl_preproc_new(L"preprocessor-1", preproc_config_file_1.c_str());
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            retval = dsl_pipeline_component_add(client_data_1.pipeline.c_str(), L"preprocessor-1");
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+
         // New Primary GIE using the first config file. 
         retval = dsl_infer_gie_primary_new(client_data_1.pgie.c_str(),
-            primary_infer_config_file_1.c_str(), primary_model_engine_file.c_str(), 4);
+            primary_infer_config_file_1.c_str(), primary_model_engine_file_1.c_str(), interval_1);
         if (retval != DSL_RESULT_SUCCESS) break;
 
+        if (preprocessing_1) {
+            // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
+            // to the number of ROI's defined in the Preprocessor configuraton file.
+            retval = dsl_infer_batch_size_set(client_data_1.pgie.c_str(), batch_size);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
+            // **** IMPORTANT! we must set the input-meta-tensor setting to true when
+            // using the preprocessor, otherwise the GIE will use its own preprocessor.
+            retval = dsl_infer_gie_tensor_meta_settings_set(client_data_1.pgie.c_str(),
+                true, false);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+
         // New IOU Tracker, setting max width and height of input frame
-        retval = dsl_tracker_iou_new(client_data_1.tracker.c_str(), 
-            tracker_config_file.c_str(), 480, 272);
-        if (retval != DSL_RESULT_SUCCESS) break;
+        if(trk_method_1 == L"IOU") {
+            retval = dsl_tracker_iou_new(client_data_1.tracker.c_str(), 
+                tracker_config_file_1.c_str(), trk_width_1, trk_height_1);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        else if(trk_method_1 == L"DCF") {
+            retval = dsl_tracker_iou_new(client_data_1.tracker.c_str(), 
+                tracker_config_file_1.c_str(), trk_width_1, trk_height_1);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+
+        if (postprocessing_1) {
+            auto param1 = (postprocess_1 == L"NMM") ? DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
+            auto param2 = (match_metric_1 == L"IOS") ? DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
+            // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH). 
+            retval = dsl_pph_nmp_new(L"nmp-pph-1", nullptr, param1, param2, match_threshold_1);
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            retval = dsl_tracker_pph_add(client_data_1.tracker.c_str(), L"nmp-pph-1", DSL_PAD_SINK);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
 
         const wchar_t* additional_components_1[] = 
             {client_data_1.pgie.c_str(), client_data_1.tracker.c_str(), NULL};
-        
+
         // Add the new components to the first Pipeline
         retval = dsl_pipeline_component_add_many(client_data_1.pipeline.c_str(),
             additional_components_1);
@@ -339,16 +511,56 @@ int main(int argc, char** argv)
         retval = create_pipeline(&client_data_2);
         if (retval != DSL_RESULT_SUCCESS) break;
 
+        if (preprocessing_2) {
+            // New Preprocessor component using the config filespec defined above.
+            retval = dsl_preproc_new(L"preprocessor-2", preproc_config_file_2.c_str());
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            retval = dsl_pipeline_component_add(client_data_2.pipeline.c_str(), L"preprocessor-2");
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+
         // New Primary GIE using the second config file. 
         retval = dsl_infer_gie_primary_new(client_data_2.pgie.c_str(),
-            primary_infer_config_file_2.c_str(), primary_model_engine_file.c_str(), 4);
+            primary_infer_config_file_2.c_str(), primary_model_engine_file_2.c_str(), interval_2);
         if (retval != DSL_RESULT_SUCCESS) break;
+
+        if (preprocessing_2) {
+            // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
+            // to the number of ROI's defined in the Preprocessor configuraton file.
+            retval = dsl_infer_batch_size_set(client_data_2.pgie.c_str(), batch_size);
+            if (retval != DSL_RESULT_SUCCESS) break;
+            
+            // **** IMPORTANT! we must set the input-meta-tensor setting to true when
+            // using the preprocessor, otherwise the GIE will use its own preprocessor.
+            retval = dsl_infer_gie_tensor_meta_settings_set(client_data_2.pgie.c_str(),
+                true, false);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
 
         // New IOU Tracker, setting max width and height of input frame
-        retval = dsl_tracker_iou_new(client_data_2.tracker.c_str(), 
-            tracker_config_file.c_str(), 480, 272);
-        if (retval != DSL_RESULT_SUCCESS) break;
+        if(trk_method_2 == L"IOU") {
+            retval = dsl_tracker_iou_new(client_data_2.tracker.c_str(), 
+                tracker_config_file_2.c_str(), trk_width_2, trk_height_2);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        else if(trk_method_2 == L"DCF") {
+            retval = dsl_tracker_iou_new(client_data_2.tracker.c_str(), 
+                tracker_config_file_2.c_str(), trk_width_2, trk_height_2);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
 
+        if (postprocessing_2) {
+            auto param1 = (postprocess_2 == L"NMM") ? DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
+            auto param2 = (match_metric_2 == L"IOS") ? DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
+            // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH). 
+            retval = dsl_pph_nmp_new(L"nmp-pph-2", nullptr, param1, param2, match_threshold_2);
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            retval = dsl_tracker_pph_add(client_data_2.tracker.c_str(), L"nmp-pph-2", DSL_PAD_SINK);
+            if (retval != DSL_RESULT_SUCCESS) break;
+        }
+        
         const wchar_t* additional_components_2[] = 
             {client_data_2.pgie.c_str(), client_data_2.tracker.c_str(), NULL};
         

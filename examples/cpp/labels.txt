@@ -1,0 +1,7 @@
+buoy
+sailing_yacht
+rowing_boat
+motorboat
+vessel
+structure
+other

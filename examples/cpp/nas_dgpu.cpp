@@ -71,23 +71,6 @@ public:
     ReportData(int count, int interval) : m_report_count(count), m_header_interval(interval) {}
 };
 
-class MeasureTime {
-public:
-    int m_print_interval;
-    int m_count;
-    double m_culsum;
-
-    MeasureTime(int print_interval, int count, double culsum) : m_print_interval(print_interval), m_count(count), m_culsum(culsum) {}
-};
-
-class SendDataStruct {
-public:
-    std::vector<float> m_rect_params;
-    std::string m_obj_label;
-
-    SendDataStruct(const std::vector<float> &rect_params, const std::string &obj_label) : m_rect_params(rect_params), m_obj_label(obj_label) {}
-};
-
 boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, 
     uint source_count, void* client_data)
 {
