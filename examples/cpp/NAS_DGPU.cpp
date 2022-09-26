@@ -58,9 +58,9 @@ namespace YML_VARIABLE {
     uint perf;
     uint ode;
     uint monitoring;
-    uint send_medula;
     uint uri_cnt;
     uint repeat_video;
+    uint logging;
 }
 
 class ReportData {
@@ -229,60 +229,6 @@ void ode_occurrence_monitor(dsl_ode_occurrence_info* pInfo, void* client_data)
     std::cout << "    Interval        : " << pInfo->criteria_info.interval << "\n";
 }
 
-uint send_data(void* buffer, void* client_data)
-{
-    using namespace YML_VARIABLE;
-    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
-
-    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
-
-    // For each frame in the batched meta data
-    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
-        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
-    {
-        // Check for valid frame data
-        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
-        if (pFrameMeta != nullptr)
-        {
-            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
-            std::vector<SendDataStruct> outputs;
-            outputs.reserve(vector_reserve_size);
-
-            // For each detected object in the frame.
-            while (pObjectMetaList)
-            {
-                // Check for valid object data
-                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
-                
-                if (pObjectMeta->text_params.y_offset - 30 < 0) {
-                    pObjectMeta->text_params.y_offset = 0;
-                }
-                else {
-                    pObjectMeta->text_params.y_offset -= 30;
-                }
-                SendDataStruct output = {
-                    .rect_params = std::vector<float>{
-                                        pObjectMeta->rect_params.left,
-                                        pObjectMeta->rect_params.top,
-                                        pObjectMeta->rect_params.left + pObjectMeta->rect_params.width,
-                                        pObjectMeta->rect_params.top + pObjectMeta->rect_params.height
-                                    },
-                    // tracking_id
-                    .obj_label = std::string(pObjectMeta->obj_label)
-                };
-                
-                outputs.emplace_back(std::move(output));
-                pObjectMetaList = pObjectMetaList->next;
-            }
-
-            // write to shared memory
-
-       }
-   }
-
-   return DSL_PAD_PROBE_OK;
-}
-
 int main(int argc, char** argv)
 {
     DslReturnType retval = DSL_RESULT_FAILURE;
@@ -330,8 +276,8 @@ int main(int argc, char** argv)
     ode = root["ode"].As<bool>();
     perf = root["perf"].As<bool>();
     monitoring = root["monitoring"].As<bool>();
-    send_medula = root["send_medula"].As<bool>();
     repeat_video = root["repeat_video"].As<bool>();
+    logging = root["logging"].As<bool>();
 
     auto DSL_NMP_PROCESS_METHOD = (postprocess == L"NMM") ? 
                                     DSL_NMP_PROCESS_METHOD_MERGE : DSL_NMP_PROCESS_METHOD_SUPRESS;
@@ -350,10 +296,6 @@ int main(int argc, char** argv)
         // Create a new Non Maximum Processor (NMP) Pad Probe Handler (PPH). 
         retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
             DSL_NMP_PROCESS_METHOD, DSL_NMP_MATCH_METHOD, match_threshold);
-        if (retval != DSL_RESULT_SUCCESS) break;
-
-        retval = dsl_pph_custom_new(L"send-to-medula", 
-            send_data, nullptr);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         if (ode) {
@@ -389,15 +331,27 @@ int main(int argc, char** argv)
             retval = dsl_ode_action_monitor_new(L"every-occurrence-monitor", ode_occurrence_monitor, nullptr);
             if (retval != DSL_RESULT_SUCCESS) break;
 
-            retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
+            // retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, 0);
+            // if (retval != DSL_RESULT_SUCCESS) break;
+
+            // output file path for the MOT Challenge File Action. 
+            std::wstring file_path(L"./log.csv");
+            // DSL_EVENT_FILE_FORMAT_CSV, DSL_EVENT_FILE_FORMAT_MOTC
+            retval = dsl_ode_action_file_new(L"write-data-log", 
+                file_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
+                DSL_EVENT_FILE_FORMAT_MOTC, false);
             if (retval != DSL_RESULT_SUCCESS) break;
 
             if (monitoring) {
-                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"customize-label-action", nullptr};
+                retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+            }
+            else if (logging) {
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"write-data-log", L"customize-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
             else {
-                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", nullptr};
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
             if (retval != DSL_RESULT_SUCCESS) break;
@@ -526,11 +480,6 @@ int main(int argc, char** argv)
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
             
-            if (send_medula) {
-                retval = dsl_osd_pph_add(L"on-screen-display", L"send-to-medula", DSL_PAD_SINK);
-                if (retval != DSL_RESULT_SUCCESS) break;
-            }
-
             retval = dsl_pipeline_component_add(L"pipeline", L"on-screen-display");
             if (retval != DSL_RESULT_SUCCESS) break;
         }
@@ -548,11 +497,6 @@ int main(int argc, char** argv)
 
             if (ode) {
                 retval = dsl_tracker_pph_add(L"tracker", L"ode-handler", DSL_PAD_SRC);
-                if (retval != DSL_RESULT_SUCCESS) break;
-            }
-            
-            if (send_medula) {
-                retval = dsl_tracker_pph_add(L"tracker", L"send-to-medula", DSL_PAD_SRC);
                 if (retval != DSL_RESULT_SUCCESS) break;
             }
         }
