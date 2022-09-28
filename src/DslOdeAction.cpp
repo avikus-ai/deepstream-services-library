@@ -1558,8 +1558,8 @@ namespace DSL
         m_ostream << pObjectMeta->rect_params.top << ", ";
         m_ostream << pObjectMeta->rect_params.width << ", ";
         m_ostream << pObjectMeta->rect_params.height << ", ";
-        // m_ostream << pObjectMeta->tracker_confidence << ", ";
-        // m_ostream << "-1, -1, -1" << std::endl;
+        m_ostream << pObjectMeta->tracker_confidence << ", ";
+        m_ostream << "-1, -1, -1" << std::endl;
             
         // If we're force flushing the stream and the flush
         // handler is not currently added to the idle thread

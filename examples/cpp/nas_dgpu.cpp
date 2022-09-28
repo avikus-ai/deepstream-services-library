@@ -247,6 +247,7 @@ int main(int argc, char** argv)
     match_metric = str2wstr("match_metric");
     match_threshold = root["match_threshold"].As<float>();
     num_labels = root["num_labels"].As<int>();
+    batch_size = root["batch_size"].As<int>();
     interval = root["interval"].As<int>();
     trk = str2wstr("trk");
     trk_width = root["trk_width"].As<int>();
@@ -314,8 +315,8 @@ int main(int argc, char** argv)
             retval = dsl_ode_action_monitor_new(L"every-occurrence-monitor", ode_occurrence_monitor, nullptr);
             if (retval != DSL_RESULT_SUCCESS) break;
 
-            // retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, 0);
-            // if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_ode_action_label_offset_new(L"offset-label-action", 0, -15);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
             // output file path for the MOT Challenge File Action. 
             std::wstring file_path(L"./log.csv");
@@ -330,7 +331,7 @@ int main(int argc, char** argv)
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
             else if (logging) {
-                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"write-data-log", L"customize-label-action", nullptr};
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"write-data-log", L"customize-label-action", L"offset-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
             else {
@@ -412,8 +413,8 @@ int main(int argc, char** argv)
         if (preprocessing) {
             // **** IMPORTANT! for best performace we explicity set the GIE's batch-size 
             // to the number of ROI's defined in the Preprocessor configuraton file.
-            // retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
-            // if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_infer_batch_size_set(L"primary-gie", batch_size);
+            if (retval != DSL_RESULT_SUCCESS) break;
             
             // **** IMPORTANT! we must set the input-meta-tensor setting to true when
             // using the preprocessor, otherwise the GIE will use its own preprocessor.
