@@ -85,7 +85,7 @@ int cmd_pipeline(int ac, char *av[])
     unsigned int ini_id;
     int rst;
     char filepath[AVKS_FILE_PATH_LEN*2];
-    sprintf(filepath,"%s","option.ini");
+    sprintf(filepath,"%s","../cfg/option.ini"); // route modify
     if((rst = ami_ini_load(filepath, &ini_id)) < 0)
     {
         PRC("There isn't INI file\n");

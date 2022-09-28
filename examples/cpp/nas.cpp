@@ -186,7 +186,7 @@ int main(int argc, char** argv)
     // 3.read INI for setting
     unsigned int ini_id;
     char filepath[AVKS_FILE_PATH_LEN*2];
-    sprintf(filepath,"%s","option.ini");
+    sprintf(filepath,"%s","../cfg/option.ini"); // route modify
     int rst_ini = 0;
 
     rst_ini = ami_ini_load(filepath, &ini_id);
@@ -289,7 +289,8 @@ int main(int argc, char** argv)
 
     if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","uri",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        // std::string str("rtsp://192.168.0.40:554/h264");
+        std::string str("12345");
         uri = std::wstring(str.begin(), str.end());
     }
     else
@@ -521,19 +522,19 @@ int main(int argc, char** argv)
             if (retval != DSL_RESULT_SUCCESS) break;
             
             // DSL_EVENT_FILE_FORMAT_CSV, DSL_EVENT_FILE_FORMAT_MOTC
-            // retval = dsl_ode_action_file_new(L"write-data-log", 
-            //     log_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
-            //     DSL_EVENT_FILE_FORMAT_MOTC, false);
-            // if (retval != DSL_RESULT_SUCCESS) break;
+            retval = dsl_ode_action_file_new(L"write-data-log", 
+                log_path.c_str(), DSL_WRITE_MODE_TRUNCATE, 
+                DSL_EVENT_FILE_FORMAT_MOTC, false);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
             if (monitor) {
                 const wchar_t* actions[] = {L"format-bbox", L"format-label", L"every-occurrence-monitor", L"offset-label-action", L"customize-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
             }
-            // else if(log) {
-            //     const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", L"write-data-log", nullptr};
-            //     retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
-            // }
+            else if(log) {
+                const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", L"write-data-log", nullptr};
+                retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
+            }
             else {
                 const wchar_t* actions[] = {L"format-bbox", L"format-label", L"customize-label-action", L"offset-label-action", nullptr};
                 retval = dsl_ode_trigger_action_add_many(L"every-occurrence-trigger", actions);
@@ -951,35 +952,7 @@ uint send_data(void* buffer, void* client_data)
     T_NAS_INF_REC data_src;
 
     int len_check;
-    if(T_INFER_opt.infer_level == INFER_ALL)
-    {
-        PRC(" FPS: %f \n", data.fps);
-        for(int i = 0; i< data.infer_length; i++)
-        {
-            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
-            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
-        }
-        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
-    }
-    else if(T_INFER_opt.infer_level == INFER_FPS)
-    {
-        PRC(" FPS: %f \n", data.fps);
-    }
-    else if(T_INFER_opt.infer_level == INFER_INF)
-    {
-        for(int i = 0; i< data.infer_length; i++)
-        {
-            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
-            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
-            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
-        }
-    }
-    else if(T_INFER_opt.infer_level == INFER_IMU)
-    {
-        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
-    }
-
+ 
     // For each frame in the batched meta data
     for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
         pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
@@ -1015,6 +988,38 @@ uint send_data(void* buffer, void* client_data)
     }
 
     data_list.nas_int_rec_no = len_check;
+    data.infer_length = len_check;
+
+       if(T_INFER_opt.infer_level == INFER_ALL)
+    {
+        PRC(" FPS: %f \n", data.fps);
+
+        std::cout << "data.infer_length: " << data.infer_length << "\n";
+        for(int i = 0; i< data.infer_length; i++)
+        {
+            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
+            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
+            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
+        }
+        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
+    }
+    else if(T_INFER_opt.infer_level == INFER_FPS)
+    {
+        PRC(" FPS: %f \n", data.fps);
+    }
+    else if(T_INFER_opt.infer_level == INFER_INF)
+    {
+        for(int i = 0; i< data.infer_length; i++)
+        {
+            PRC(" Tracking ID: %d, Class: %d, x: %d, y: %d, width: %d, heigth: %d, bearing: %d \n",\ 
+            data.infer[i].trkID, data.infer[i].type, static_cast<int>(data.infer[i].x), static_cast<int>(data.infer[i].y), \
+            static_cast<int>(data.infer[i].width),static_cast<int>(data.infer[i].height), static_cast<int>(data.infer[i].bearing));
+        }
+    }
+    else if(T_INFER_opt.infer_level == INFER_IMU)
+    {
+        PRC("Roll: %d, Pitch: %d, Yaw: %d", static_cast<int>(data.roll), static_cast<int>(data.pitch), static_cast<int>(data.yaw));
+    }
 
     int rst_put = 0;
     int len = sizeof(len_check) + len_check * sizeof(T_NAS_INF_REC);
