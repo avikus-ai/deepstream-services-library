@@ -152,7 +152,7 @@ void eos_event_listener(void* client_data)
 // 
 void state_change_listener(uint old_state, uint new_state, void* client_data)
 {
-    std::cout<<"previous state = " << dsl_state_value_to_string(old_state) 
+    std::wcout<<"previous state = " << dsl_state_value_to_string(old_state) 
         << ", new state = " << dsl_state_value_to_string(new_state) << std::endl;
 }
 
@@ -512,7 +512,12 @@ int main(int argc, char** argv)
             retval = dsl_pipeline_component_add(L"pipeline", L"fake-sink");
             if (retval != DSL_RESULT_SUCCESS) break;
         }
- 
+
+        // Add the listener callback functions defined above
+        retval = dsl_pipeline_state_change_listener_add(L"pipeline",
+            state_change_listener, NULL);
+        if (retval != DSL_RESULT_SUCCESS) return retval;
+        
         // Play the pipeline
         retval = dsl_pipeline_play(L"pipeline");
         if (retval != DSL_RESULT_SUCCESS) break;

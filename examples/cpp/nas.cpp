@@ -54,6 +54,7 @@ void eos_event_listener(void* client_data);
 boolean dsl_pph_meter_cb(double* session_fps_averages, double* interval_fps_averages, uint source_count, void* client_data);
 void xwindow_key_event_handler(const wchar_t* in_key, void* client_data);
 void xwindow_delete_event_handler(void* client_data);
+void state_change_listener(uint old_state, uint new_state, void* client_data);
 
 T_EXAPP_DATA g_exapp_data;
 
@@ -174,17 +175,14 @@ int main(int argc, char** argv)
 
     int rst_init = 0;
 
-    // 2. get options
+    // 1. get options
 	if ((rst_init = proc_get_options(argc, argv)) < 0)
 		{ PR("proc_get_options() failed. err=%d\n",rst_init); return 11; }
 
-    // 1.ami_init
+    // 2. ami_init
     if ((rst_init = ami_init(xID__PSS__APP_NAS, argc, argv)) < 0)
 		{ PR("ami_init(%02x) failed. err=%d\n", xID__PSS__APP_NAS, rst_init); return 21; }
 
-    // 2.Register command
-    register_cli_command();
-    
     // 3.read INI for setting
     unsigned int ini_id;
     char filepath[AVKS_FILE_PATH_LEN*2];
@@ -199,6 +197,11 @@ int main(int argc, char** argv)
     else{
         PR("Success load INI file\n");
     }
+
+    // 4. CLI command
+    register_cli_command();
+
+    
 
     char char_buffer[255];
     ////////////// SETTING
@@ -648,8 +651,8 @@ int main(int argc, char** argv)
                 auto DSL_NMP_MATCH_METHOD = (postproc_match_metric == L"IOS") ? 
                                                 DSL_NMP_MATCH_METHOD_IOS : DSL_NMP_MATCH_METHOD_IOU;
 
-                std::cout << "DSL_NMP_PROCESS_METHOD: " <<DSL_NMP_PROCESS_METHOD << "\n";
-                std::cout << "DSL_NMP_MATCH_METHOD: " <<DSL_NMP_MATCH_METHOD << "\n";
+                std::cout << "DSL_NMP_PROCESS_METHOD: " << DSL_NMP_PROCESS_METHOD << "\n";
+                std::cout << "DSL_NMP_MATCH_METHOD: " << DSL_NMP_MATCH_METHOD << "\n";
                 
                 if (class_agnostic) {
                     retval = dsl_pph_nmp_new(L"nmp-pph", nullptr,
@@ -762,7 +765,12 @@ int main(int argc, char** argv)
 
             PR("fake-sink component add\n");
         }
- 
+
+        // Add the listener callback functions defined above
+        retval = dsl_pipeline_state_change_listener_add(L"pipeline",
+            state_change_listener, NULL);
+        if (retval != DSL_RESULT_SUCCESS) return retval;
+
         // Play the pipeline
         retval = dsl_pipeline_play(L"pipeline");
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -865,8 +873,15 @@ void eos_event_listener(void* client_data)
 // 
 void state_change_listener(uint old_state, uint new_state, void* client_data)
 {
-    std::cout<<"previous state = " << dsl_state_value_to_string(old_state) 
+    std::wcout<<"previous state = " << dsl_state_value_to_string(old_state) 
         << ", new state = " << dsl_state_value_to_string(new_state) << std::endl;
+
+    int rst_init;
+
+    if (new_state == DSL_STATE_PLAYING) {
+        if ((rst_init = ami_reg_init_done(xID__PSS__APP_NAS)) < 0)
+        { PR("ami_reg_init_done() failed. err=%d\n", rst_init); /*return 91;*/ }
+    }
 }
 
 // 
@@ -934,8 +949,6 @@ uint send_data(void* buffer, void* client_data)
     S__INF__NAS_INF_INFO data_list;
     D__INF__NAS_INF_INFO *outbuff;
     T_NAS_INF_REC data_src;
-    D__INF__NAS_INF_INFO data_get;
-    T_NAS_INF_REC data_print;
 
     int len_check;
     if(T_INFER_opt.infer_level == INFER_ALL)
