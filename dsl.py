@@ -228,6 +228,8 @@ DSL_STATUS_BROKER_NOT_SUPPORTED = 3
 
 DSL_NMS_MATCH_METHOD_IOU = 0
 DSL_NMS_MATCH_METHOD_IOS = 1
+DSL_NMP_PROCESS_METHOD_SUPRESS = 0
+DSL_NMP_PROCESS_METHOD_MERGE = 1
 
 class dsl_coordinate(Structure):
     _fields_ = [
@@ -2931,6 +2933,17 @@ def dsl_source_image_stream_new(name, file_path, is_live, fps_n, fps_d, timeout)
     global _dsl
     result = _dsl.dsl_source_image_stream_new(name, file_path, is_live, fps_n, fps_d, timeout)
     return int(result)
+
+##
+## dsl_source_image_multi_new()
+##
+_dsl.dsl_source_image_multi_new.argtypes = [c_wchar_p, c_wchar_p, c_uint, c_uint]
+_dsl.dsl_source_image_multi_new.restype = c_uint
+def dsl_source_image_multi_new(name, file_path, fps_n, fps_d):
+    global _dsl
+    result = _dsl.dsl_source_image_multi_new(name, file_path, fps_n, fps_d)
+    return int(result)
+
 
 ##
 ## dsl_source_image_stream_timeout_get()
