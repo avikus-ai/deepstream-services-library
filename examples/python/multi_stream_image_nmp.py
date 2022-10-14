@@ -110,8 +110,6 @@ def osd_sink_pad_buffer_probe(buffer, user_data):
                 obj_coco_format
             )
             
-            print(obj_coco_format)
-            
             try: 
                 l_obj=l_obj.next
             except StopIteration:
@@ -145,7 +143,7 @@ def main(args):
         # Step 1: We build the (final stage) Inference Pipeline with an Image-Source,
         # Preprocessor, Primary GIE, IOU Tracker, On-Screen Display, and Window Sink.
          
-        retval = dsl_source_image_multi_new('multi-image-source', multi_image_source_dir, 1, 30)
+        retval = dsl_source_image_multi_new('multi-image-source', multi_image_source_dir, 120, 1)
         if retval != DSL_RETURN_SUCCESS:
             break
             
@@ -227,9 +225,9 @@ def main(args):
     # Print out the final result
     print(dsl_return_value_to_string(retval))
     
-#     save_dir = Path('.')
-#     save_path = str(save_dir / "result.json")
-#     save_json(save_path)
+    save_dir = Path('.')
+    save_path = str(save_dir / "result.json")
+    save_json(save_path)
     
     dsl_pipeline_delete_all()
     dsl_component_delete_all()
