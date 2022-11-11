@@ -1,0 +1,4 @@
+buoy
+boat
+channel marker
+speed warning sign

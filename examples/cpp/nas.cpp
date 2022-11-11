@@ -32,6 +32,7 @@ THE SOFTWARE.
 // https://github.com/dpilger26/NumCpp/blob/master/docs/markdown/Installation.md
 #include <cstdint>
 #include <chrono>
+#include <algorithm>
 
 #include "DslApi.h"
 #include "nas_ami.h"
@@ -186,7 +187,7 @@ int main(int argc, char** argv)
     // 3.read INI for setting
     unsigned int ini_id;
     char filepath[AVKS_FILE_PATH_LEN*2];
-    sprintf(filepath,"%s","../cfg/option.ini"); // route modify
+    sprintf(filepath,"%s","../cfg/nas.ini"); // route modify
     int rst_ini = 0;
 
     rst_ini = ami_ini_load(filepath, &ini_id);
@@ -278,7 +279,7 @@ int main(int argc, char** argv)
     ////////////// INPUT
     if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","type",char_buffer, 255)) < 0)
     {
-        std::string str("video");
+        std::string str("rtsp");
         input_type = std::wstring(str.begin(), str.end());
     }
     else
@@ -289,8 +290,7 @@ int main(int argc, char** argv)
 
     if((rst_ini_parse = ami_ini_str(ini_id,"INPUT","uri",char_buffer, 255)) < 0)
     {
-        // std::string str("rtsp://192.168.0.40:554/h264");
-        std::string str("12345");
+        std::string str("rtsp://192.168.0.40:554/h264");
         uri = std::wstring(str.begin(), str.end());
     }
     else
@@ -302,13 +302,14 @@ int main(int argc, char** argv)
     repeat = ami_ini_s32(ini_id,"INPUT","repeat",0,10);
     uri_cnt = ami_ini_s32(ini_id,"INPUT","uri_cnt",1,10);
     drop_frame_interval = ami_ini_s32(ini_id,"INPUT","drop_frame_interval",0,10);
+
     ////////////// PREPOCESS
     preproc_enable = ami_ini_s32(ini_id,"PREPROCESS","enable",1,10);
     batch_size = ami_ini_s32(ini_id,"PREPROCESS","batch_size",1,10);
 
     if((rst_ini_parse = ami_ini_str(ini_id,"PREPROCESS","config",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        std::string str("nas_data/FLL/");
         preproc_config = std::wstring(str.begin(), str.end());
     }
     else
@@ -320,7 +321,7 @@ int main(int argc, char** argv)
     ////////////// INFER
     if((rst_ini_parse = ami_ini_str(ini_id,"INFER","config",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        std::string str("nas_data/FLL/");
         infer_config = std::wstring(str.begin(), str.end());
     }
     else
@@ -347,7 +348,7 @@ int main(int argc, char** argv)
 
     if((rst_ini_parse = ami_ini_str(ini_id,"TRACKER","method",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        std::string str("nas_data/FLL/");
         trk_method = std::wstring(str.begin(), str.end());
     }
     else
@@ -358,7 +359,7 @@ int main(int argc, char** argv)
 
     if((rst_ini_parse = ami_ini_str(ini_id,"TRACKER","config",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        std::string str("nas_data/FLL/");
         trk_config = std::wstring(str.begin(), str.end());
     }
     else
@@ -376,7 +377,7 @@ int main(int argc, char** argv)
 
     if((rst_ini_parse = ami_ini_str(ini_id,"POSTPROCESS","method",char_buffer, 255)) < 0)
      {
-        std::string str("");
+        std::string str("NMM");
         postproc_method = std::wstring(str.begin(), str.end());
     }
     else
@@ -387,7 +388,7 @@ int main(int argc, char** argv)
 
     if((rst_ini_parse = ami_ini_str(ini_id,"POSTPROCESS","match_metric",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        std::string str("IOS");
         postproc_match_metric = std::wstring(str.begin(), str.end());
     }
     else
@@ -400,7 +401,7 @@ int main(int argc, char** argv)
     
     if((rst_ini_parse = ami_ini_str(ini_id,"POSTPROCESS","label_file",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        std::string str("nas_labels.txt");
         label_file = std::wstring(str.begin(), str.end());
     }
     else
@@ -419,7 +420,7 @@ int main(int argc, char** argv)
     ////////////// SINK
     if((rst_ini_parse = ami_ini_str(ini_id,"SINK","method",char_buffer, 255)) < 0)
     {
-        std::string str("");
+        std::string str("fake");
         sink_method = std::wstring(str.begin(), str.end());
     }
     else
@@ -568,7 +569,7 @@ int main(int argc, char** argv)
 
             PR("file-source component add\n");
         }
-        else {
+        else { // RTSP
             // # For each camera, create a new RTSP Source for the specific RTSP URI    
             retval = dsl_source_rtsp_new(L"rtsp-source", uri.c_str(), DSL_RTP_ALL,     
                 false, drop_frame_interval, 100, 2);
@@ -951,10 +952,14 @@ uint send_data(void* buffer, void* client_data)
     D__INF__NAS_INF_INFO *outbuff;
     T_NAS_INF_REC data_src;
 
-    int len_check;
- 
+    int len_check = 0;
+    int window_width = 1920;
+    int grid;
+    int grid_cnt = 10;
+    std::vector<std::pair<T_NAS_INF_REC, float>> obj_list[10]; 
+
     // For each frame in the batched meta data
-    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list; 
+    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list;
         pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
     {
         // Check for valid frame data
@@ -964,33 +969,71 @@ uint send_data(void* buffer, void* client_data)
             NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
 
             // For each detected object in the frame.
-            len_check = 0;
             while (pObjectMetaList)
             {
+                // int grid;
                 // Check for valid object data
                 NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
                 
                 data_src.type = static_cast<int>(pObjectMeta->class_id); // gint 	
                 data_src.trkID = static_cast<int>(pObjectMeta->object_id); // guint64
-
-                data_src.x = pObjectMeta->rect_params.left; // float
-                data_src.y = pObjectMeta->rect_params.top; // float
-                data_src.width = pObjectMeta->rect_params.width; // float
-                data_src.height = pObjectMeta->rect_params.height; // float
                 
+                // channel marker
+                if (data_src.type == 2) {
+                    auto scale_left = pObjectMeta->rect_params.left - pObjectMeta->rect_params.width * 0.25;
+                    auto scale_top = pObjectMeta->rect_params.top - pObjectMeta->rect_params.height * 0.25;
+                    auto scale_width = pObjectMeta->rect_params.width * 1.5;
+                    auto scale_height = pObjectMeta->rect_params.height * 1.5;
+                    
+                    if (scale_left < 0)
+                        scale_left = 0;
+                    if (scale_top < 0)
+                        scale_top = 0;
+
+                    data_src.x = scale_left; // float
+                    data_src.y = scale_top; // float
+                    data_src.width = scale_width; // float
+                    data_src.height = scale_height; // float
+                }
+                else {
+                    data_src.x = pObjectMeta->rect_params.left; // float
+                    data_src.y = pObjectMeta->rect_params.top; // float
+                    data_src.width = pObjectMeta->rect_params.width; // float
+                    data_src.height = pObjectMeta->rect_params.height; // float
+                }
+
+                // grid = ((data_src.x+data_src.width)/2) / window_width * grid_cnt;
+
+                // std::cout << "center x: " << ((data_src.x+data_src.width)/2) << ", grid" << grid << "\n";
+                // obj_list[grid].push_back(std::make_pair(data_src, pObjectMeta->confidence));
+
                 data_list.nas_inf_rec[len_check] = data_src;
                 data.infer[len_check] = data_src;
+                len_check += 1;  
 
-                len_check += 1;   
                 pObjectMetaList = pObjectMetaList->next;
             }
        }
     }
 
+    // for(int grid_cell = 0; grid_cell < grid_cnt; grid_cell++) {
+    //     if(obj_list[grid_cell].size() > 0) {
+    //         std::sort(obj_list[grid_cell].begin(), 
+    //                   obj_list[grid_cell].end(),
+    //                 [](const std::pair<T_NAS_INF_REC, float> &x, const std::pair<T_NAS_INF_REC, float> &y){
+    //                     return x.second > y.second;
+    //                 });
+            
+    //         data_list.nas_inf_rec[len_check] = obj_list[grid_cell].front().first;
+    //         data.infer[len_check] = obj_list[grid_cell].front().first;
+    //         len_check += 1;
+    //     }
+    // }
+
     data_list.nas_int_rec_no = len_check;
     data.infer_length = len_check;
 
-       if(T_INFER_opt.infer_level == INFER_ALL)
+    if(T_INFER_opt.infer_level == INFER_ALL)
     {
         PRC(" FPS: %f \n", data.fps);
 
