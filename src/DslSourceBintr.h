@@ -224,22 +224,44 @@ namespace DSL
         ~CsiSourceBintr();
 
         /**
-         * @brief Links all Child Elementrs owned by this Source Bintr
+         * @brief Links all Child Elementrs owned by this CsiSourceBintr
          * @return True success, false otherwise
          */
         bool LinkAll();
         
         /**
-         * @brief Unlinks all Child Elementrs owned by this Source Bintr
+         * @brief Unlinks all Child Elementrs owned by this CsiSourceBintr
          */
         void UnlinkAll();
         
+        /**
+         * @brief Gets the current sensor-id for the CsiSourceBintr
+         * @return current unqiue sensor-id starting with 0
+         */
+        uint GetSensorId();
+        
+        /**
+         * @brief Sets the sensor-id
+         * @param[in] sensorId new sensor-id for the CsiSourceBintr
+         * @return true if successfull, false otherwise.
+         */
+        bool SetSensorId(uint sensorId);
+        
     private:
+
+        /**
+         * @brief static list of unique sersor IDs to be used/recycled by all
+         * CsiSourceBintrs
+         */
+        static std::list<uint> s_uniqueSensorIds;
     
+        /**
+         * @brief unique sensorId for the CsiSourceBintr starting with 0
+         */
         uint m_sensorId;
         
         /**
-         * @brief
+         * @brief Caps Filter for the CsiSourceBintr
          */
         DSL_ELEMENT_PTR m_pCapsFilter;
     };    
@@ -268,6 +290,19 @@ namespace DSL
          * @brief Unlinks all Child Elementrs owned by this Source Bintr
          */
         void UnlinkAll();
+
+        /**
+         * @brief Gets the current device location setting for the Source Bintr
+         * @return current device location. Default = /dev/video0
+         */
+        const char* GetDeviceLocation();
+        
+        /**
+         * @brief Sets the device location setting for the Source Bintr.
+         * @param[in] new device location for the Source Bintr to use.
+         * @return true if successfully set, false otherwise.
+         */
+        bool SetDeviceLocation(const char* deviceLocation);
         
         /**
          * @brief Sets the GPU ID for all Elementrs
@@ -278,22 +313,40 @@ namespace DSL
     private:
 
         /**
-         * @brief Unique sensor ID for this USB Source
+         * @brief static list of unique device IDs to be used/recycled by all
+         * UsbSourceBintrs
          */
-        uint m_sensorId;
+        static std::list<uint> s_uniqueDeviceIds;
+
+        /**
+         * @brief static list of unique device locations to be used/recycled by all
+         * UsbSourceBintrs
+         */
+        static std::list<std::string> s_deviceLocations;
         
         /**
-         * @brief
+         * @brief unique device-id for the UsbSourceBintr starting with 0. The
+         * device-id is used as the numeric sufix for the device-location.
+         */
+        uint m_deviceId;
+        
+        /**
+         * @brief current device location for the USB Source
+         */
+        std::string m_deviceLocation;
+
+        /**
+         * @brief Caps Filter for the USB Source
          */
         DSL_ELEMENT_PTR m_pCapsFilter;
         
         /**
-         * @brief
+         * @brief Video converter, first of two, for the USB Source
          */
         DSL_ELEMENT_PTR m_pVidConv1;
 
         /**
-         * @brief
+         * @brief Video converter, second of two, for the USB Source
          */
         DSL_ELEMENT_PTR m_pVidConv2;
     }; 
@@ -596,7 +649,7 @@ namespace DSL
     public: 
     
         /**
-         * @brief ctor for the MultiImageSourceBintr
+         * @brief ctor for the ImageSourceBintr
          * @param[in] name unique name for the Image Source
          * @param[in] uri relative or absolute path to the input file source.
          * @param[in] type on of the DSL_IMAGE_TYPE_* constants
@@ -608,26 +661,12 @@ namespace DSL
          */
         ~ImageSourceBintr();
 
-        /**
-         * @brief Links all Child Elementrs owned by this Source Bintr
-         * @return True success, false otherwise
-         */
-        bool LinkAll();
-        
-        /**
-         * @brief Unlinks all Child Elementrs owned by this Source Bintr
-         */
-        void UnlinkAll();
-
     protected:
         /**
          * @brief one of the DSL_IMAGE_EXTENTION_* constants
          */
         std::string m_ext;
 
-
-    private:
-    
         /**
          * @brief one of the DSL_IMAGE_FORMAT_* constants
          */
@@ -656,7 +695,7 @@ namespace DSL
     public: 
     
         /**
-         * @brief ctor for the MultiImageSourceBintr
+         * @brief ctor for the SingleImageSourceBintr
          * @param[in] name unique name for the Image Source
          * @param[in] uri relative or absolute path to the input file source.
          */
@@ -666,6 +705,17 @@ namespace DSL
          * @brief dtor for the ImageSourceBintr
          */
         ~SingleImageSourceBintr();
+
+        /**
+         * @brief Links all Child Elementrs owned by this Source Bintr
+         * @return True success, false otherwise
+         */
+        bool LinkAll();
+        
+        /**
+         * @brief Unlinks all Child Elementrs owned by this Source Bintr
+         */
+        void UnlinkAll();
 
         /**
          * @brief Sets the URIs for ImageFrameSourceBintr 
@@ -698,19 +748,86 @@ namespace DSL
             const char* uri, uint fpsN, uint fpsD);
         
         /**
-         * @brief dtor for the ImageSourceBintr
+         * @brief dtor for the MultiImageSourceBintr
          */
         ~MultiImageSourceBintr();
 
         /**
-         * @brief Sets the URIs for MultiImageFrameSourceBintr 
+         * @brief Links all Child Elementrs owned by this Source Bintr
+         * @return True success, false otherwise.
+         */
+        bool LinkAll();
+        
+        /**
+         * @brief Unlinks all Child Elementrs owned by this Source Bintr.
+         */
+        void UnlinkAll();
+        
+        /**
+         * @brief Sets the URIs for MultiImageSourceBintr 
          * @param uri relative or absolute path to the input file source.
          */
         bool SetUri(const char* uri);
         
-    private:
+        /**
+         * @brief Gets the current loop-enabled setting for the 
+         * MultiImageSourceBintr.
+         * @return true if loop is enabled, false otherwise.
+         */
+        bool GetLoopEnabled();
+        
+        /**
+         * @brief Sets the loop-enabled setting for the MultiImageSourceBintr.
+         * @param[in] loopEnabled set to true to enable, false otherwise.
+         * @return true on successful update, false otherwise.
+         */
+        bool SetLoopEnabled(bool loopEnabled);
 
-    };
+        /**
+         * @brief Gets the current start and stop index settings for the
+         * MultiImageSourceBintr
+         * @param[out] startIndex zero-based index to start on. Default = 0
+         * @param[out] stopIndex index to stop on. -1 = no stop, default.
+         */
+        void GetIndices(int* startIndex, int* stopIndex);
+        
+        /**
+         * @brief Sets the start and stop index settings for the
+         * MultiImageSourceBintr
+         * @param[in] startIndex zero-based index to start on.
+         * @param[in] stopIndex index to stop on. set to -1 for no stop.
+         */
+        bool SetIndices(int startIndex, int stopIndex);
+        
+    private:
+    
+        /**
+         * @brief Current loop-enabled setting for the MultiImageSourceBintr
+         */
+        bool m_loopEnabled;
+
+        /**
+         * @brief Current start index for the MultiImageSourceBintr
+         * Zero-base, default = 0
+         */
+        int m_startIndex;
+
+        /**
+         * @brief Current stop index for the MultiImageSourceBintr
+         * Default = -1, no stop.
+         */
+        int m_stopIndex;
+
+        /**
+         * @brief Caps Filter for the MultiImageSourceBintr
+         */
+        DSL_ELEMENT_PTR m_pCapsFilter;
+
+        /**
+         * @brief videorate element for the MultiImageSourceBintr
+         */
+        DSL_ELEMENT_PTR m_pVideoRate;
+};
 
     //*********************************************************************************
 

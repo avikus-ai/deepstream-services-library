@@ -49,6 +49,8 @@ static std::wstring defConfigFile(
 static std::wstring uri(L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h265.mp4");
 static std::wstring image_path(L"/opt/nvidia/deepstream/deepstream/samples/streams/sample_720p.jpg");
 
+static std::wstring jpeg_file_path_multi(L"./test/streams/sample_720p.%d.jpg");
+
 static uint protocol(DSL_RTP_ALL);
 static uint latency(100);
 static uint timeout(0);
@@ -59,6 +61,9 @@ static uint interval(0);
 static std::wstring rtsp_uri(L"rtsp://username:password@192.168.0.14:554");
 
 static boolean is_live(false);
+
+static std::wstring def_device_location(L"/dev/video0");
+
 
 SCENARIO( "The Components container is updated correctly on new source", "[source-api]" )
 {
@@ -185,6 +190,37 @@ SCENARIO( "A new CSI Camera Source returns the correct attribute values", "[sour
     }
 }    
 
+SCENARIO( "A new CIS Camera Source set/get its sensor-id correctly", "[source-api]" )
+{
+    GIVEN( "An empty list of Components" ) 
+    {
+        REQUIRE( dsl_component_list_size() == 0 );
+
+        REQUIRE( dsl_source_csi_new(source_name.c_str(), width, height, fps_n, fps_d) == DSL_RESULT_SUCCESS );
+
+        WHEN( "The USB Source's device-location is set" ) 
+        {
+            // Check default first
+            uint sensor_id;
+            REQUIRE( dsl_source_csi_sensor_id_get(source_name.c_str(), 
+                &sensor_id) == DSL_RESULT_SUCCESS );
+            REQUIRE( sensor_id == 0 );
+            
+            uint new_sensor_id(5);
+            REQUIRE( dsl_source_csi_sensor_id_set(source_name.c_str(), 
+                new_sensor_id) == DSL_RESULT_SUCCESS );
+
+            THEN( "The correct updated value is returned on get" ) 
+            {
+                REQUIRE( dsl_source_csi_sensor_id_get(source_name.c_str(), 
+                    &sensor_id) == DSL_RESULT_SUCCESS );
+                REQUIRE( sensor_id == new_sensor_id );
+                REQUIRE( dsl_component_delete_all() == DSL_RESULT_SUCCESS );
+            }
+        }
+    }
+}    
+
 SCENARIO( "A new USB Camera Source returns the correct attribute values", "[source-api]" )
 {
     GIVEN( "An empty list of Components" ) 
@@ -198,14 +234,54 @@ SCENARIO( "A new USB Camera Source returns the correct attribute values", "[sour
             THEN( "The list size and contents are updated correctly" ) 
             {
                 uint ret_width(0), ret_height(0), ret_fps_n(0), ret_fps_d(0);
-                REQUIRE( dsl_source_dimensions_get(source_name.c_str(), &ret_width, &ret_height) == DSL_RESULT_SUCCESS );
-                REQUIRE( dsl_source_frame_rate_get(source_name.c_str(), &ret_fps_n, &ret_fps_d) == DSL_RESULT_SUCCESS );
+                const wchar_t* device_location;
+                REQUIRE( dsl_source_usb_device_location_get(source_name.c_str(), 
+                    &device_location) == DSL_RESULT_SUCCESS );
+                std::wstring ret_device_location(device_location);
+                REQUIRE( ret_device_location == def_device_location );
+                REQUIRE( dsl_source_dimensions_get(source_name.c_str(), 
+                    &ret_width, &ret_height) == DSL_RESULT_SUCCESS );
+                REQUIRE( dsl_source_frame_rate_get(source_name.c_str(), 
+                    &ret_fps_n, &ret_fps_d) == DSL_RESULT_SUCCESS );
                 REQUIRE( ret_width == width );
                 REQUIRE( ret_height == height );
                 REQUIRE( ret_fps_n == fps_n );
                 REQUIRE( ret_fps_d == fps_d );
                 REQUIRE( dsl_source_is_live(source_name.c_str()) == 0 );
 
+                REQUIRE( dsl_component_delete_all() == DSL_RESULT_SUCCESS );
+            }
+        }
+    }
+}    
+
+SCENARIO( "A new USB Camera Source set/get its device location correctly", "[source-api]" )
+{
+    GIVEN( "An empty list of Components" ) 
+    {
+        REQUIRE( dsl_component_list_size() == 0 );
+
+        REQUIRE( dsl_source_usb_new(source_name.c_str(), width, height, fps_n, fps_d) == DSL_RESULT_SUCCESS );
+
+        WHEN( "The USB Source's device-location is set" ) 
+        {
+            // Check default first
+            const wchar_t* device_location;
+            REQUIRE( dsl_source_usb_device_location_get(source_name.c_str(), 
+                &device_location) == DSL_RESULT_SUCCESS );
+            std::wstring ret_device_location(device_location);
+            REQUIRE( ret_device_location == def_device_location );
+            
+            std::wstring new_device_location(L"/dev/video1");
+            REQUIRE( dsl_source_usb_device_location_set(source_name.c_str(), 
+                new_device_location.c_str()) == DSL_RESULT_SUCCESS );
+
+            THEN( "The correct updated value is returned on get" ) 
+            {
+                REQUIRE( dsl_source_usb_device_location_get(source_name.c_str(), 
+                    &device_location) == DSL_RESULT_SUCCESS );
+                ret_device_location = device_location;
+                REQUIRE( ret_device_location == new_device_location );
                 REQUIRE( dsl_component_delete_all() == DSL_RESULT_SUCCESS );
             }
         }
@@ -719,8 +795,84 @@ SCENARIO( "A File Source Component can Set/Get its Repeat Enabled setting", "[so
     }
 }
 
+SCENARIO( "A Multi-Image Source returns the correct attribute values", "[source-api]" )
+{
+    GIVEN( "Attributes for a new Multi Image Source" ) 
+    {
+        REQUIRE( dsl_component_list_size() == 0 );
 
-SCENARIO( "A new Image Source returns the correct attribute values", "[source-api]" )
+        WHEN( "A new Multi Image Source is created" ) 
+        {
+            REQUIRE( dsl_source_image_multi_new(source_name.c_str(), 
+                jpeg_file_path_multi.c_str(), fps_n, fps_d) == DSL_RESULT_SUCCESS );
+
+            THEN( "The list size and contents are updated correctly" ) 
+            {
+                boolean loop_enabled(true);
+
+                REQUIRE( dsl_source_image_multi_loop_enabled_get(source_name.c_str(), 
+                    &loop_enabled) == DSL_RESULT_SUCCESS );
+                REQUIRE( loop_enabled == false );
+
+                int start_index(99), stop_index(99);
+                REQUIRE( dsl_source_image_multi_indices_get(source_name.c_str(), 
+                    &start_index, &stop_index) == DSL_RESULT_SUCCESS );
+                REQUIRE( start_index == 0 );
+                REQUIRE( stop_index == -1 );
+                
+                REQUIRE( dsl_source_is_live(source_name.c_str()) == false );
+
+                REQUIRE( dsl_component_delete_all() == DSL_RESULT_SUCCESS );
+            }
+        }
+    }
+}    
+
+SCENARIO( "A Multi Image Source Component can Set/Get its settings correctly", "[source-api]" )
+{
+    GIVEN( "A new Multi-Image Source" )
+    {
+        REQUIRE( dsl_source_image_multi_new(source_name.c_str(), 
+            jpeg_file_path_multi.c_str(), fps_n, fps_d) == DSL_RESULT_SUCCESS );
+
+        WHEN( "The Source's loop-enabled setting is set" ) 
+        {
+            boolean new_loop_enabled(true);
+            REQUIRE( dsl_source_image_multi_loop_enabled_set(source_name.c_str(), 
+                new_loop_enabled) == DSL_RESULT_SUCCESS );
+
+            THEN( "The correct value is returned on get" )
+            {
+                boolean ret_loop_enabled(false);
+
+                REQUIRE( dsl_source_image_multi_loop_enabled_get(source_name.c_str(), 
+                    &ret_loop_enabled) == DSL_RESULT_SUCCESS );
+                REQUIRE( ret_loop_enabled == new_loop_enabled );
+                    
+                REQUIRE( dsl_component_delete_all() == DSL_RESULT_SUCCESS );
+            }
+        }
+        WHEN( "The Source's start and stop index setting is set" ) 
+        {
+            int new_start_index(4), new_stop_index(5);
+            REQUIRE( dsl_source_image_multi_indices_set(source_name.c_str(), 
+                new_start_index, new_stop_index) == DSL_RESULT_SUCCESS );
+
+            THEN( "The correct value is returned on get" )
+            {
+                int ret_start_index(99), ret_stop_index(99);
+                REQUIRE( dsl_source_image_multi_indices_get(source_name.c_str(), 
+                    &ret_start_index, &ret_stop_index) == DSL_RESULT_SUCCESS );
+                REQUIRE( ret_start_index == new_start_index );
+                REQUIRE( ret_stop_index == new_stop_index );
+                    
+                REQUIRE( dsl_component_delete_all() == DSL_RESULT_SUCCESS );
+            }
+        }
+    }
+}
+
+SCENARIO( "A new Image Stream Source returns the correct attribute values", "[source-api]" )
 {
     GIVEN( "Attributes for a new Image Source" ) 
     {
@@ -753,7 +905,7 @@ SCENARIO( "A new Image Source returns the correct attribute values", "[source-ap
     }
 }    
 
-SCENARIO( "A Image Source Component can Set/Get its Display Timeout setting", "[source-api]" )
+SCENARIO( "A Image Stream Source Component can Set/Get its Display Timeout setting", "[source-api]" )
 {
     GIVEN( "A new File Source" )
     {
@@ -788,38 +940,69 @@ SCENARIO( "The Source API checks for NULL input parameters", "[source-api]" )
     GIVEN( "An empty list of Components" ) 
     {
         REQUIRE( dsl_component_list_size() == 0 );
+        
+        int start_index(0);
 
         WHEN( "When NULL pointers are used as input" ) 
         {
             THEN( "The API returns DSL_RESULT_INVALID_INPUT_PARAM in all cases" ) 
             {
-                REQUIRE( dsl_source_csi_new( NULL, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_usb_new( NULL, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_uri_new( NULL, NULL, false, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_uri_new( source_name.c_str(), NULL, false, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_rtsp_new( NULL, NULL, 0, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_rtsp_new( source_name.c_str(), NULL, 0, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_file_new( NULL, NULL, false) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_csi_new(NULL, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_csi_sensor_id_get(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_csi_sensor_id_get(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_csi_sensor_id_set(NULL, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
+
+                REQUIRE( dsl_source_usb_new(NULL, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_usb_device_location_get(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_usb_device_location_get(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_usb_device_location_set(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_usb_device_location_set(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                
+                REQUIRE( dsl_source_uri_new(NULL, NULL, false, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_uri_new(source_name.c_str(), NULL, false, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_rtsp_new(NULL, NULL, 0, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_rtsp_new(source_name.c_str(), NULL, 0, 0, 0, 0, 0) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_file_new(NULL, NULL, false) == DSL_RESULT_INVALID_INPUT_PARAM );
                 // Note NULL file_path is valid for File and Image Sources
 
-                REQUIRE( dsl_source_dimensions_get( NULL, &width, &height ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_frame_rate_get( NULL, &fps_n, &fps_d ) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_dimensions_get(NULL, &width, &height) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_frame_rate_get(NULL, &fps_n, &fps_d) == DSL_RESULT_INVALID_INPUT_PARAM );
 
-                REQUIRE( dsl_source_decode_uri_get( NULL, NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_decode_uri_get( source_name.c_str(), NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_decode_uri_set( NULL, NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_decode_uri_set( source_name.c_str(), NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_decode_uri_get(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_decode_uri_get(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_decode_uri_set(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_decode_uri_set(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
 
-                REQUIRE( dsl_source_decode_dewarper_add( NULL, NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_decode_dewarper_add( source_name.c_str(), NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_decode_dewarper_remove( NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_decode_dewarper_add(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_decode_dewarper_add(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_decode_dewarper_remove(NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
 
-                REQUIRE( dsl_source_rtsp_tap_add( NULL, NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_rtsp_tap_add( source_name.c_str(), NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_rtsp_tap_remove( NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_rtsp_tap_add(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_rtsp_tap_add(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_rtsp_tap_remove(NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
 
-                REQUIRE( dsl_source_pause( NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
-                REQUIRE( dsl_source_resume( NULL ) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_image_multi_new(NULL, 
+                    NULL, fps_n, fps_d) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_image_multi_new(source_name.c_str(), 
+                    NULL, fps_n, fps_d) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_image_multi_loop_enabled_get(NULL, 
+                    NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_image_multi_loop_enabled_get(source_name.c_str(), 
+                    NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_image_multi_loop_enabled_set(NULL, 
+                    false) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_image_multi_indices_get(NULL, 
+                    NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_image_multi_indices_get(source_name.c_str(), 
+                    &start_index, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+
+                REQUIRE( dsl_source_pause(NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_resume(NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                
+                REQUIRE( dsl_source_pph_add(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_pph_add(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_pph_remove(NULL, NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
+                REQUIRE( dsl_source_pph_remove(source_name.c_str(), NULL) == DSL_RESULT_INVALID_INPUT_PARAM );
 
                 REQUIRE( dsl_component_list_size() == 0 );
             }

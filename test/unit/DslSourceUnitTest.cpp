@@ -48,7 +48,7 @@ static std::string jpgFilePath1("/opt/nvidia/deepstream/deepstream/samples/strea
 static std::string jpgFilePath2("/opt/nvidia/deepstream/deepstream/samples/streams/yoga.jpg");
 static std::string multJpgFilePath("./test/streams/sample_720p.%04d.mjpeg");
 
-static uint width(1920), height(1080), fpsN(30), fpsD(1);
+static uint width(1920), height(1080), fps_n(30), fps_d(1);
 
 using namespace DSL;
 
@@ -60,7 +60,7 @@ SCENARIO( "A new CsiSourceBintr is created correctly",  "[SourceBintr]" )
         {
         
             DSL_CSI_SOURCE_PTR pSourceBintr = DSL_CSI_SOURCE_NEW(
-                sourceName.c_str(), width, height, fpsN, fpsD);
+                sourceName.c_str(), width, height, fps_n, fps_d);
 
             THEN( "All memeber variables are initialized correctly" )
             {
@@ -68,6 +68,7 @@ SCENARIO( "A new CsiSourceBintr is created correctly",  "[SourceBintr]" )
                 REQUIRE( pSourceBintr->m_nvbufMemType == 0 );
                 REQUIRE( pSourceBintr->GetGstObject() != NULL );
                 REQUIRE( pSourceBintr->GetId() == 0 );
+                REQUIRE( pSourceBintr->GetSensorId() == 0 );
                 REQUIRE( pSourceBintr->IsInUse() == false );
                 REQUIRE( pSourceBintr->IsLive() == true );
                 
@@ -76,8 +77,70 @@ SCENARIO( "A new CsiSourceBintr is created correctly",  "[SourceBintr]" )
                 pSourceBintr->GetFrameRate(&retFpsN, &retFpsD);
                 REQUIRE( width == retWidth );
                 REQUIRE( height == retHeight );
-                REQUIRE( fpsN == retFpsN );
-                REQUIRE( fpsD == retFpsD );
+                REQUIRE( fps_n == retFpsN );
+                REQUIRE( fps_d == retFpsD );
+            }
+        }
+    }
+}
+
+SCENARIO( "Unique sensor-ids are managed by CsiSourceBintrs correctly",  "[SourceBintr]" )
+{
+    GIVEN( "A name for a new CsiSourceBintr" ) 
+    {
+        std::string sourceName1("test-source-1");
+        std::string sourceName2("test-source-2");
+        std::string sourceName3("test-source-3");
+        
+        WHEN( "Three CsiSourceBintrs are created " )
+        {
+            DSL_CSI_SOURCE_PTR pSourceBintr1 = DSL_CSI_SOURCE_NEW(
+                sourceName1.c_str(), width, height, fps_n, fps_d);
+
+            DSL_CSI_SOURCE_PTR pSourceBintr2 = DSL_CSI_SOURCE_NEW(
+                sourceName2.c_str(), width, height, fps_n, fps_d);
+
+            DSL_CSI_SOURCE_PTR pSourceBintr3 = DSL_CSI_SOURCE_NEW(
+                sourceName3.c_str(), width, height, fps_n, fps_d);
+
+            THEN( "Their sensor-id values are assigned correctly" )
+            {
+                REQUIRE( pSourceBintr1->GetSensorId() == 0 );
+                REQUIRE( pSourceBintr2->GetSensorId() == 1 );
+                REQUIRE( pSourceBintr3->GetSensorId() == 2 );
+            }
+        }
+        WHEN( "Three CsiSourceBintrs are created with sernsor id updates" )
+        {
+            DSL_CSI_SOURCE_PTR pSourceBintr1 = DSL_CSI_SOURCE_NEW(
+                sourceName1.c_str(), width, height, fps_n, fps_d);
+                
+            REQUIRE( pSourceBintr1->SetSensorId(1) == true );
+            
+            DSL_CSI_SOURCE_PTR pSourceBintr2 = DSL_CSI_SOURCE_NEW(
+                sourceName2.c_str(), width, height, fps_n, fps_d);
+
+            DSL_CSI_SOURCE_PTR pSourceBintr3 = DSL_CSI_SOURCE_NEW(
+                sourceName3.c_str(), width, height, fps_n, fps_d);
+
+            THEN( "Their sensor-id values are assigned correctly" )
+            {
+                REQUIRE( pSourceBintr1->GetSensorId() == 1 );
+                REQUIRE( pSourceBintr2->GetSensorId() == 0 );
+                REQUIRE( pSourceBintr3->GetSensorId() == 2 );
+            }
+        }
+        WHEN( "A non unique sernsor id is used on set" )
+        {
+            DSL_CSI_SOURCE_PTR pSourceBintr1 = DSL_CSI_SOURCE_NEW(
+                sourceName1.c_str(), width, height, fps_n, fps_d);
+            
+            DSL_CSI_SOURCE_PTR pSourceBintr2 = DSL_CSI_SOURCE_NEW(
+                sourceName2.c_str(), width, height, fps_n, fps_d);
+
+            THEN( "The SetSensorId call fails" )
+            {
+                REQUIRE( pSourceBintr1->SetSensorId(1) == false );
             }
         }
     }
@@ -87,13 +150,6 @@ SCENARIO( "A CsiSourceBintr can LinkAll child Elementrs correctly",  "[SourceBin
 {
     GIVEN( "A new CsiSourceBintr in memory" ) 
     {
-        uint width(1280);
-        uint height(720);
-        uint fps_n(30);
-        uint fps_d(1);
-        std::string sourceName("test-csi-source");
-        int sensorId = 1;
-
         DSL_CSI_SOURCE_PTR pSourceBintr = DSL_CSI_SOURCE_NEW(
             sourceName.c_str(), width, height, fps_n, fps_d);
 
@@ -113,12 +169,6 @@ SCENARIO( "A CsiSourceBintr can UnlinkAll all child Elementrs correctly",  "[Sou
 {
     GIVEN( "A new, linked CsiSourceBintr " ) 
     {
-        uint width(1280);
-        uint height(720);
-        uint fps_n(30);
-        uint fps_d(1);
-        std::string sourceName("test-csi-source");
-
         DSL_CSI_SOURCE_PTR pSourceBintr = DSL_CSI_SOURCE_NEW(
             sourceName.c_str(), width, height, fps_n, fps_d);
 
@@ -141,17 +191,14 @@ SCENARIO( "A new UsbSourceBintr is created correctly",  "[SourceBintr]" )
 {
     GIVEN( "A name for a new UsbSourceBintr" ) 
     {
-        uint width(1280);
-        uint height(720);
-        uint fpsN(30);
-        uint fpsD(1);
-        std::string sourceName("usb-source");
+
+        static std::string defDeviceLocation("/dev/video0");
 
         WHEN( "The UsbSourceBintr is created " )
         {
         
             DSL_USB_SOURCE_PTR pSourceBintr = DSL_USB_SOURCE_NEW(
-                sourceName.c_str(), width, height, fpsN, fpsD);
+                sourceName.c_str(), width, height, fps_n, fps_d);
 
             THEN( "All memeber variables are initialized correctly" )
             {
@@ -160,13 +207,99 @@ SCENARIO( "A new UsbSourceBintr is created correctly",  "[SourceBintr]" )
                 REQUIRE( pSourceBintr->IsInUse() == false );
                 REQUIRE( pSourceBintr->IsLive() == true );
                 
+                std::string retDeviceLocaton = pSourceBintr->GetDeviceLocation();
+                REQUIRE( retDeviceLocaton == defDeviceLocation );
+                
                 uint retWidth, retHeight, retFpsN, retFpsD;
                 pSourceBintr->GetDimensions(&retWidth, &retHeight);
                 pSourceBintr->GetFrameRate(&retFpsN, &retFpsD);
                 REQUIRE( width == retWidth );
                 REQUIRE( height == retHeight );
-                REQUIRE( fpsN == retFpsN );
-                REQUIRE( fpsD == retFpsD );
+                REQUIRE( fps_n == retFpsN );
+                REQUIRE( fps_d == retFpsD );
+            }
+        }
+    }
+}
+
+SCENARIO( "Unique device-locations are managed by UsbSourceBintrs correctly",  "[SourceBintr]" )
+{
+    GIVEN( "A names for new UsbSourceBintr" ) 
+    {
+        std::string sourceName1("test-source-1");
+        std::string sourceName2("test-source-2");
+        std::string sourceName3("test-source-3");
+        
+        WHEN( "Three UsbSourceBintrs are created " )
+        {
+            DSL_USB_SOURCE_PTR pSourceBintr1 = DSL_USB_SOURCE_NEW(
+                sourceName1.c_str(), width, height, fps_n, fps_d);
+
+            DSL_USB_SOURCE_PTR pSourceBintr2 = DSL_USB_SOURCE_NEW(
+                sourceName2.c_str(), width, height, fps_n, fps_d);
+
+            DSL_USB_SOURCE_PTR pSourceBintr3 = DSL_USB_SOURCE_NEW(
+                sourceName3.c_str(), width, height, fps_n, fps_d);
+
+            THEN( "Their device-location values are assigned correctly" )
+            {
+                std::string retDeviceLocaton = pSourceBintr1->GetDeviceLocation();
+                REQUIRE( retDeviceLocaton == "/dev/video0" );
+                
+                retDeviceLocaton = pSourceBintr2->GetDeviceLocation();
+                REQUIRE( retDeviceLocaton == "/dev/video1" );
+                
+                retDeviceLocaton = pSourceBintr3->GetDeviceLocation();
+                REQUIRE( retDeviceLocaton == "/dev/video2" );
+            }
+        }
+        WHEN( "Three UsbSourceBintrs are created with sernsor id updates" )
+        {
+            DSL_USB_SOURCE_PTR pSourceBintr1 = DSL_USB_SOURCE_NEW(
+                sourceName1.c_str(), width, height, fps_n, fps_d);
+                
+            REQUIRE( pSourceBintr1->SetDeviceLocation("/dev/video1") == true );
+            
+            DSL_USB_SOURCE_PTR pSourceBintr2 = DSL_USB_SOURCE_NEW(
+                sourceName2.c_str(), width, height, fps_n, fps_d);
+
+            DSL_USB_SOURCE_PTR pSourceBintr3 = DSL_USB_SOURCE_NEW(
+                sourceName3.c_str(), width, height, fps_n, fps_d);
+
+            THEN( "Their device-location values are assigned correctly" )
+            {
+                std::string retDeviceLocaton = pSourceBintr1->GetDeviceLocation();
+                REQUIRE( retDeviceLocaton == "/dev/video1" );
+                
+                retDeviceLocaton = pSourceBintr2->GetDeviceLocation();
+                REQUIRE( retDeviceLocaton == "/dev/video0" );
+                
+                retDeviceLocaton = pSourceBintr3->GetDeviceLocation();
+                REQUIRE( retDeviceLocaton == "/dev/video2" );
+            }
+        }
+        WHEN( "A non unique device-location is used on set" )
+        {
+            DSL_USB_SOURCE_PTR pSourceBintr1 = DSL_USB_SOURCE_NEW(
+                sourceName1.c_str(), width, height, fps_n, fps_d);
+            
+            DSL_USB_SOURCE_PTR pSourceBintr2 = DSL_USB_SOURCE_NEW(
+                sourceName2.c_str(), width, height, fps_n, fps_d);
+
+            THEN( "The SetDeviceLocation call fails" )
+            {
+                REQUIRE( pSourceBintr1->SetDeviceLocation("/dev/video1") == false );
+            }
+        }
+        WHEN( "Invalid device location strings are used" )
+        {
+            DSL_USB_SOURCE_PTR pSourceBintr1 = DSL_USB_SOURCE_NEW(
+                sourceName1.c_str(), width, height, fps_n, fps_d);
+
+            THEN( "The SetDeviceLocation call fails" )
+            {
+                REQUIRE( pSourceBintr1->SetDeviceLocation("/invalid/string") == false );
+                REQUIRE( pSourceBintr1->SetDeviceLocation("/dev/videokk") == false );
             }
         }
     }
@@ -964,7 +1097,7 @@ SCENARIO( "A new SingleImageSourceBintr is created correctly",  "[SourceBintr]" 
         char absolutePath[PATH_MAX+1];
         std::string fullFillPath = realpath(jpgFilePath1.c_str(), absolutePath);
 
-        WHEN( "The MultiImageSourceBintr is created " )
+        WHEN( "The SingleImageSourceBintr is created " )
         {
             DSL_SINGLE_IMAGE_SOURCE_PTR pSourceBintr = DSL_SINGLE_IMAGE_SOURCE_NEW(
                 sourceName.c_str(), jpgFilePath1.c_str());
@@ -1047,6 +1180,13 @@ SCENARIO( "A new MultiImageSourceBintr is created correctly",  "[SourceBintr]" )
                 
                 // Must reflect use of file stream
                 REQUIRE( pSourceBintr->IsLive() == false );
+
+                REQUIRE( pSourceBintr->GetLoopEnabled() == false );
+                int startIndex(99), stopIndex(99);
+
+                pSourceBintr->GetIndices(&startIndex, &stopIndex);
+                REQUIRE( startIndex == 0 );
+                REQUIRE( stopIndex == -1 );
                 
                 std::string returnedFilePath = pSourceBintr->GetUri();
                 REQUIRE( returnedFilePath == multJpgFilePath );

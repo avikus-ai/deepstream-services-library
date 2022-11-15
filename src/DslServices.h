@@ -324,6 +324,12 @@ namespace DSL {
 
         DslReturnType OdeTriggerInstanceNew(const char* name, 
             const char* source, uint classId, uint limit);
+            
+        DslReturnType OdeTriggerInstanceCountSettingsGet(const char* name,
+            uint* instanceCount, uint* suppressionCount);
+        
+        DslReturnType OdeTriggerInstanceCountSettingsSet(const char* name,
+            uint instanceCount, uint suppressionCount);
         
         DslReturnType OdeTriggerIntersectionNew(const char* name, 
             const char* source, uint classIdA, uint classIdB, uint limit);
@@ -617,6 +623,12 @@ namespace DSL {
         DslReturnType PphNmpMatchSettingsSet(const char* name, 
             uint matchMethod, float matchThreshold);
         
+        DslReturnType PphBufferTimeoutNew(const char* name,
+            uint timeout, dsl_pph_buffer_timeout_handler_cb handler, void* clientData);
+    
+        DslReturnType PphEosNew(const char* name,
+            dsl_pph_eos_handler_cb handler, void* clientData);
+    
         DslReturnType PphEnabledGet(const char* name, boolean* enabled);
         
         DslReturnType PphEnabledSet(const char* name, boolean enabled);
@@ -629,9 +641,21 @@ namespace DSL {
         
         DslReturnType SourceCsiNew(const char* name, 
             uint width, uint height, uint fpsN, uint fpsD);
+            
+        DslReturnType SourceCsiSensorIdGet(const char* name, 
+            uint* sensorId);
+        
+        DslReturnType SourceCsiSensorIdSet(const char* name, 
+            uint sensorId);
         
         DslReturnType SourceUsbNew(const char* name, 
             uint width, uint height, uint fpsN, uint fpsD);
+
+        DslReturnType SourceUsbDeviceLocationGet(const char* name, 
+            const char** deviceLocation);
+        
+        DslReturnType SourceUsbDeviceLocationSet(const char* name, 
+            const char* deviceLocation);
         
         DslReturnType SourceUriNew(const char* name, const char* uri, 
             boolean isLive, uint intraDecode, uint dropFrameInterval);
@@ -652,6 +676,18 @@ namespace DSL {
 
         DslReturnType SourceImageMultiNew(const char* name, 
             const char* filePath, uint fpsN, uint fpsD);
+            
+        DslReturnType SourceImageMultiLoopEnabledGet(const char* name,
+            boolean* enabled);
+        
+        DslReturnType SourceImageMultiLoopEnabledSet(const char* name,
+            boolean enabled);
+        
+        DslReturnType SourceImageMultiIndicesGet(const char* name,
+            int* startIndex, int* stopIndex);
+        
+        DslReturnType SourceImageMultiIndicesSet(const char* name,
+            int startIndex, int stopIndex);
 
         DslReturnType SourceImageStreamNew(const char* name, const char* filePath, 
             boolean isLive, uint fpsN, uint fpsD, uint timeout);
@@ -675,6 +711,10 @@ namespace DSL {
             
         DslReturnType SourceRtspNew(const char* name, const char* uri, uint protocol, 
             uint intraDecode, uint dropFrameInterval, uint latency, uint timeout);
+
+        DslReturnType SourcePphAdd(const char* name, const char* handler);
+
+        DslReturnType SourcePphRemove(const char* name, const char* handler);
             
         DslReturnType SourceDimensionsGet(const char* name, uint* width, uint* height);
         

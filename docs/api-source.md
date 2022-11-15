@@ -2,7 +2,7 @@
 Sources are the head components for all DSL Pipelines. Pipelines must have at least one source in use - among other components - to transition to a state of playing. DSL supports 8 types of Sources, two Camera, three Decode, three Image, and an Interpipe:
 
 ### Camera Sources:
-* Camera Serial Interface ( CSI )
+* Camera Serial Interface ( CSI ) - Jetson platform only.
 * Universal Serial Bus ( USB )
 
 ### Decode Sources:
@@ -16,14 +16,14 @@ Sources are the head components for all DSL Pipelines. Pipelines must have at le
 * Streaming Image ( single image streamed at a given frame rate )
 
 ### Interpipe Source:
-* Interpipe - requires additional install/build steps for the RidgeRun `gst-interpipe` plugins. Refer to the [Inpterpipe Services](/docs/overview.md#interpipe-services) overview for more information.
+* Interpipe - requires additional install/build steps for the RidgeRun `gst-interpipe` plugins. Refer to the [Interpipe Services](/docs/overview.md#interpipe-services) overview for more information.
 
 #### Source Construction and Destruction
 Sources are created using one of six type-specific [constructors](#constructors). As with all components, Streaming Sources must be uniquely named from all other Pipeline components created.
 
 Sources are added to a Pipeline by calling [dsl_pipeline_component_add](api-pipeline.md#dsl_pipeline_component_add) or [dsl_pipeline_component_add_many](api-pipeline.md]#dsl_pipeline_component_add_many) and removed with [dsl_pipeline_component_remove](api-pipeline.md#dsl_pipeline_component_remove), [dsl_pipeline_component_remove_many](api-pipeline.md#dsl_pipeline_component_remove_many), or [dsl_pipeline_component_remove_all]((api-pipeline.md)#dsl_pipeline_component_remove_all).
 
-When adding multiple sources to a Pipeline, all must have the same `is_live` setting; `true` or `false`. The add services will fail on first exception.
+When adding multiple sources to a Pipeline, all must have the same `is_live` setting; `true` or `false`. The add services will fail on the first exception.
 
 The relationship between Pipelines and Sources is one-to-many. Once added to a Pipeline, a Source must be removed before it can be used with another. All sources are deleted by calling [dsl_component_delete](api-component.md#dsl_component_delete), [dsl_component_delete_many](api-component.md#dsl_component_delete_many), or [dsl_component_delete_all](api-component.md#dsl_component_delete_all). Calling a delete service on a Source `in-use` by a Pipeline will fail.
 
@@ -40,7 +40,7 @@ The maximum number of `in-use` Sources is set to `DSL_DEFAULT_SOURCE_IN_USE_MAX`
 **Typedefs**
 * [dsl_rtsp_connection_data](#dsl_rtsp_connection_data)
 
-**Client CallBack Typedefs**
+**Client Callback Typedefs**
 * [dsl_state_change_listener_cb](#dsl_state_change_listener_cb)
 
 **Constructors:**
@@ -55,6 +55,10 @@ The maximum number of `in-use` Sources is set to `DSL_DEFAULT_SOURCE_IN_USE_MAX`
 * [dsl_source_interpipe_new](#dsl_source_interpipe_new)
 
 **methods:**
+* [dsl_source_csi_sensor_id_get](#dsl_source_csi_sensor_id_get)
+* [dsl_source_csi_sensor_id_set](#dsl_source_csi_sensor_id_set)
+* [dsl_source_usb_device_location_get](#dsl_source_usb_device_location_get)
+* [dsl_source_usb_device_location_set](#dsl_source_usb_device_location_set)
 * [dsl_source_decode_uri_get](#dsl_source_decode_uri_get)
 * [dsl_source_decode_uri_set](#dsl_source_decode_uri_set)
 * [dsl_source_decode_drop_farme_interval_get](#dsl_source_decode_drop_farme_interval_get)
@@ -75,6 +79,10 @@ The maximum number of `in-use` Sources is set to `DSL_DEFAULT_SOURCE_IN_USE_MAX`
 * [dsl_source_file_path_set](#dsl_source_file_path_set)
 * [dsl_source_file_repeat_enabled_get](#dsl_source_file_repeat_enabled_get)
 * [dsl_source_file_repeat_enabled_set](#dsl_source_file_repeat_enabled_set)
+* [dsl_source_image_multi_loop_enabled_get](#dsl_source_image_multi_loop_enabled_get)
+* [dsl_source_image_multi_loop_enabled_set](#dsl_source_image_multi_loop_enabled_set)
+* [dsl_source_image_multi_indices_get](#dsl_source_image_multi_indices_get)
+* [dsl_source_image_multi_indices_set](#dsl_source_image_multi_indices_set)
 * [dsl_source_image_stream_timeout_get](#dsl_source_image_stream_timeout_get)
 * [dsl_source_image_stream_timeout_set](#dsl_source_image_stream_timeout_get)
 * [dsl_source_interpipe_listen_to_get](#dsl_source_interpipe_listen_to_get)
@@ -86,6 +94,8 @@ The maximum number of `in-use` Sources is set to `DSL_DEFAULT_SOURCE_IN_USE_MAX`
 * [dsl_source_is_live](#dsl_source_is_live)
 * [dsl_source_pause](#dsl_source_pause)
 * [dsl_source_resume](#dsl_source_resume)
+* [dsl_source_pph_add](#dsl_source_pph_add)
+* [dsl_source_pph_remove](#dsl_source_pph_remove)
 * [dsl_source_num_in_use_get](#dsl_source_num_in_use_get)
 * [dsl_source_num_in_use_max_get](#dsl_source_num_in_use_max_get)
 * [dsl_source_num_in_use_max_set](#dsl_source_num_in_use_max_set)
@@ -105,14 +115,18 @@ Streaming Source Methods use the following return codes, in addition to the gene
 #define DSL_RESULT_SOURCE_NOT_IN_PAUSE                              0x00020009
 #define DSL_RESULT_SOURCE_FAILED_TO_CHANGE_STATE                    0x0002000A
 #define DSL_RESULT_SOURCE_CODEC_PARSER_INVALID                      0x0002000B
+#define DSL_RESULT_SOURCE_CODEC_PARSER_INVALID                      0x0002000B
 #define DSL_RESULT_SOURCE_DEWARPER_ADD_FAILED                       0x0002000C
 #define DSL_RESULT_SOURCE_DEWARPER_REMOVE_FAILED                    0x0002000D
 #define DSL_RESULT_SOURCE_TAP_ADD_FAILED                            0x0002000E
 #define DSL_RESULT_SOURCE_TAP_REMOVE_FAILED                         0x0002000F
 #define DSL_RESULT_SOURCE_COMPONENT_IS_NOT_SOURCE                   0x00020010
-#define DSL_RESULT_SOURCE_CALLBACK_ADD_FAILED                       0x00020011
-#define DSL_RESULT_SOURCE_CALLBACK_REMOVE_FAILED                    0x00020012
-#define DSL_RESULT_SOURCE_SET_FAILED                                0x00020013
+#define DSL_RESULT_SOURCE_COMPONENT_IS_NOT_DECODE_SOURCE            0x00020011
+#define DSL_RESULT_SOURCE_COMPONENT_IS_NOT_FILE_SOURCE              0x00020012
+#define DSL_RESULT_SOURCE_CALLBACK_ADD_FAILED                       0x00020013
+#define DSL_RESULT_SOURCE_CALLBACK_REMOVE_FAILED                    0x00020014
+#define DSL_RESULT_SOURCE_SET_FAILED                                0x00020015
+#define DSL_RESULT_SOURCE_CSI_NOT_SUPPORTED                         0x00020016
 ```
 
 ## DSL State Values
@@ -161,13 +175,13 @@ typedef struct dsl_rtsp_connection_data
 
 **Fields**
 * `is_connected` true if the RTSP Source is currently in a connected state, false otherwise
-* `first_connected` - epoc time in seconds for the first successful connection, or when the stats were last cleared
-* `last_connected`- epoc time in seconds for the last successful connection, or when the stats were last cleared
-* `last_disconnected` - epoc time in seconds for the last disconnection, or when the stats were last cleared
-* `count` - the number of succesful connections from the start of Pipeline play, or from when the stats were last cleared
-* `is_in_reconnect` - true if the RTSP Source is currently in a re-connection cycle, false otherwise.
+* `first_connected` - epoch time in seconds for the first successful connection, or when the stats were last cleared
+* `last_connected`- epoch time in seconds for the last successful connection, or when the stats were last cleared
+* `last_disconnected` - epoch time in seconds for the last disconnection, or when the stats were last cleared
+* `count` - the number of successful connections from the start of Pipeline play, or from when the stats were last cleared
+* `is_in_reconnect` - true if the RTSP Source is currently in a reconnection cycle, false otherwise.
 * `retries` - number of re-connection retries for either the current cycle, if `is_in_reconnect` is true, or the last connection if `is_in_reconnect` is false`.
-* `sleep` - current setting for the time to sleep between re-connection attempts after failure.
+* `sleep` - current setting for the time to sleep between reconnection attempts after failure.
 * `is_connect` - true if the RTSP Source is currently in a connected state, false otherwise.
 * `timeout` - current setting for the maximum time to wait for an asynchronous state change to complete before resetting the source and then retrying again after the next sleep period.
 
@@ -210,7 +224,9 @@ Callback typedef for a client state-change listener. Functions of this type are 
 DslReturnType dsl_source_csi_new(const wchar_t* source,
     uint width, uint height, uint fps_n, uint fps_d);
 ```
-Creates a new, uniquely named CSI Camera Source object.
+Creates a new, uniquely named CSI Camera Source component.
+
+**Important:** A unique sensor-id is assigned to each CSI Source on creation, starting with 0. The default setting can be overridden by calling [dsl_source_decode_uri_set](#dsl_source_decode_uri_set). The call will fail if the given sensor-id is not unique. If a source is deleted, the sensor-id will be re-assigned to a new CSI Source if one is created.
 
 **Parameters**
 * `source` - [in] unique name for the new Source
@@ -234,7 +250,9 @@ retval = dsl_source_csi_new('my-csi-source', 1280, 720, 30, 1)
 DslReturnType dsl_source_usb_new(const wchar_t* name,
     uint width, uint height, uint fps_n, uint fps_d);
 ```
-Creates a new, uniquely named USB Camera Source object.
+Creates a new, uniquely named USB Camera Source component.
+
+**Important:** A unique device-location is assigned to each USB Source on creation, starting with `/dev/video0`, followed by `/dev/video1`, and so on. The default assignment can be overridden by calling [dsl_source_usb_device_location_set](#dsl_source_usb_device_location_set). The call will fail if the given device-location is not unique. If a source is deleted, the device-location will be re-assigned to a new USB Source if one is created.
 
 **Parameters**
 * `source` - [in] unique name for the new Source
@@ -357,7 +375,7 @@ DslReturnType dsl_source_image_multi_new(const wchar_t* name,
 ```
 This service creates a new, uniquely named Multi Image Source component that decodes multiple images specified by a folder/filename-pattern using the printf style %d.
 
-Eample: `./my_images/image.%d04.mjpg`, where the files in "./my_images/" are named `image.0000.mjpg`, `image.0001.mjpg`, `image.0002.mjpg` etc.
+Example: `./my_images/image.%d04.mjpg`, where the files in "./my_images/" are named `image.0000.mjpg`, `image.0001.mjpg`, `image.0002.mjpg` etc.
 
 The images are streamed one per frame at the specified framerate. A final EOS event occurs once all images have been played.
 
@@ -405,13 +423,13 @@ retval = dsl_source_image_stream_new('my-image-stream-source', './streams/image4
 
 ### *dsl_source_interpipe_new*
 ```C
-DslReturnType dsl_source_interpipe_new(const wchar_t* name, 
-    const wchar_t* listen_to, boolean is_live, 
+DslReturnType dsl_source_interpipe_new(const wchar_t* name,
+    const wchar_t* listen_to, boolean is_live,
     boolean accept_eos, boolean accept_events);
 ```
 This service creates a new, uniquely named Interpipe Source component to listen to an Interpipe Sink Component. The Sink to `listen_to` can be updated dynamically while in a playing state.
 
-Refer to the [Inpterpipe Services](/docs/overview.md#interpipe-services) overview for more information.
+Refer to the [Interpipe Services](/docs/overview.md#interpipe-services) overview for more information.
 
 **Parameters**
 * `name` - [in] unique name for the new Source
@@ -432,19 +450,102 @@ retval = dsl_source_interpipe_new('my-interpipe-source', 'my-interpipe-sink',
 <br>
 
 ## Destructors
-As with all Pipeline components, Sources are deleted by calling [dsl_component_delete](api-component.md#dsl_component_delete), [dsl_component_delete_many](api-component.md#dsl_component_delete_many), or [dsl_component_delete_all](api-component.md#dsl_component_delete_all)
+As with all Pipeline components, Sources are deleted by calling [dsl_component_delete](/docs/api-component.md#dsl_component_delete), [dsl_component_delete_many](/docs/api-component.md#dsl_component_delete_many), or [dsl_component_delete_all](/docs/api-component.md#dsl_component_delete_all)
 
 ## Methods
+
+### *dsl_source_csi_sensor_id_get*
+```C
+DslReturnType dsl_source_csi_sensor_id_get(const wchar_t* name,
+    uint* sensor_id);
+```
+This service gets the sensor-id setting for the named CSI Source. A unique sensor-id is assigned to each CSI Source on creation, starting with 0. The default setting can be overridden by calling [dsl_source_decode_uri_set](#dsl_source_decode_uri_set). The call will fail if the given sensor-id is not unique. If a source is deleted, the sensor-id will be re-assigned to a new CSI Source if one is created.
+
+**Parameters**
+* `name` - [in] unique name of the Source to query.
+* `sensor_id` - [out] unique sensor-id in use.
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful query. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval, sensor_id = dsl_source_csi_sensor_id_get('my-csi-source')
+```
+<br>
+
+### *dsl_source_csi_sensor_id_set*
+```C
+DslReturnType dsl_source_csi_sensor_id_set(const wchar_t* name,
+    uint sensor_id);
+```
+This service sets the sensor-id setting for the named CSI Source to use. A unique sensor-id is assigned to each CSI Source on creation, starting with 0. This service will fail if the given sensor-id is not unique. If a source is deleted, the sensor-id will be re-assigned to a new CSI Source if one is created.
+
+**Parameters**
+* `name` - [in] unique name of the Source to update.
+* `sensor_id` - [in] unique sensor-id for the Source to use.
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful update. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval = dsl_source_csi_sensor_id_set('my-csi-source', 1)
+```
+
+<br>
+
+### *dsl_source_usb_device_location_get*
+```C
+DslReturnType dsl_source_usb_device_location_get(const wchar_t* name,
+    const wchar_t** device_location);
+```
+This service gets the device-location setting for the named USB Source. A unique device-location is assigned to each USB Source on creation, starting with `/dev/video0`, followed by `/dev/video1`, and so on. The default assignment can be overridden by calling [dsl_source_usb_device_location_set](#dsl_source_usb_device_location_set). The call will fail if the given device-location is not unique. If a source is deleted, the device-location will be re-assigned to a new USB Source if one is created.
+
+
+**Parameters**
+* `name` - [in] unique name of the Source to query.
+* `device_location` - [out] device location string in use.
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful query. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval, device_location = dsl_source_usb_device_location_get()
+```
+<br>
+
+### *dsl_source_usb_device_location_set*
+```C
+DslReturnType dsl_source_usb_device_location_set(const wchar_t* name,
+    const wchar_t* device_location);
+```
+This service sets the sensor-id setting for the named CSI Source to use.  A unique device-location is assigned to each USB Source on creation, starting with `/dev/video0`, followed by `/dev/video1`, and so on. This service will fail if the given device-location is not unique. If a source is deleted, the device-location will be re-assigned to a new USB Source if one is created.
+
+**Parameters**
+* `name` - [in] unique name of the Source to update.
+* `device_location` - [in] unique device-location for the Source to use.
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful update. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval = dsl_source_usb_device_location_set('my-usb-source', '/dev/video1')
+```
+
+<br>
 
 ### *dsl_source_decode_uri_get*
 ```C
 DslReturnType dsl_source_decode_uri_get(const wchar_t* name, const wchar_t** uri);
 ```
-This service gets the current URI in use for the named URI or RTSP source
+This service gets the current URI in use for the named URI or RTSP source.
 
 **Parameters**
-* `name` - [in] unique name of the Source to update
-* `uri` - [out] unique resource identifier in use
+* `name` - [in] unique name of the Source to query.
+* `uri` - [out] unique resource identifier in use.
 
 **Returns**
 * `DSL_RESULT_SUCCESS` on successful query. One of the [Return Values](#return-values) defined above on failure.
@@ -462,8 +563,8 @@ DslReturnType dsl_source_decode_uri_set(const wchar_t* name, const wchar_t* uri)
 This service sets the URI to use by the named URI or RTSP source.
 
 **Parameters**
-* `name` - [in] unique name of the Source to update
-* `uri` - [out] unique resouce identifier in use
+* `name` - [in] unique name of the Source to update.
+* `uri` - [in] unique resource identifier for the Source to use.
 
 **Returns**
 * `DSL_RESULT_SUCCESS` on successful update. One of the [Return Values](#return-values) defined above on failure.
@@ -477,7 +578,8 @@ retval = dsl_source_decode_uri_set('my-uri-source', '../../test/streams/sample_1
 
 ### *dsl_source_decode_drop_farme_interval_get*
 ```C
-DslReturnType dsl_source_decode_drop_farme_interval_get(const wchar_t* name, uint* interval)
+DslReturnType dsl_source_csi_sensor_id_set(const wchar_t* name,
+    uint sensor_id);
 ```
 This service gets the current drop frame interval in use by the named URI or RTSP source
 
@@ -617,7 +719,7 @@ DslReturnType dsl_source_rtsp_reconnection_params_get(const wchar_t* name, uint*
 ```
 This service sets the reconnection params for the named RTSP Source. The parameters are set to DSL_RTSP_RECONNECT_SLEEP_TIME_MS and DSL_RTSP_RECONNECT_TIMEOUT_MS on Source creation.
 
-**Note:** both `sleep_ms` and `time_out` must be greater than 10 ms. `time_out` must be >= `sleep_ms` and should be set as a multiple of. Calling this service during an active "reconnection-cycle" will terminate the current attempt with a new cycle started using the new parameters. The current number of retries will not be reset.
+**Note:** Both `sleep_ms` and `time_out` must be greater than 10 ms. `time_out` must be >= `sleep_ms` and should be set as a multiple of. Calling this service during an active "reconnection-cycle" will terminate the current attempt with a new cycle started using the new parameters. The current number of retries will not be reset.
 
 **Parameters**
  * `name` - [in] unique name of the Source to query
@@ -637,7 +739,7 @@ retval = dsl_source_rtsp_reconnection_params_get('my-rtsp-source', sleep_ms, tim
 ```C
 DslReturnType dsl_source_rtsp_connection_data_get(const wchar_t* name, dsl_rtsp_connection_data* data);
 ```
-This service gets the current connection setting add stats for the named RTSP Source.
+This service gets the current connection stats for the named RTSP Source.
 
 **Parameters**
  * `name` - [in] unique name of the Source to query
@@ -839,6 +941,129 @@ retval = dsl_source_file_repeat_enabled_set('my-file-source', True)
 
 <br>
 
+### *dsl_source_image_multi_loop_enabled_get*
+```C
+DslReturnType dsl_source_image_multi_loop_enabled_get(const wchar_t* name,
+    boolean* enabled);
+```
+This service gets the current loop-enabled setting for the named Multi-Image source.
+
+**Parameters**
+* `name` - [in] unique name of the Source to query
+* `enabled` - [out] if true, the Multi-Image source will loop to the `start_index` (default=0) when the last image is played. The Source will stop on the last image if false (default).
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful query. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval, loop_enabled = dsl_source_image_multi_loop_enabled_get('my-multi-image-source')
+```
+<br>
+
+### *dsl_source_image_multi_loop_enabled_set*
+```C
+DslReturnType dsl_source_image_multi_loop_enabled_set(const wchar_t* name,
+    boolean enabled);
+```
+This service sets the loop-enabled setting for the named Multi-Image Source to use.
+
+**Parameters**
+* `name` - [in] unique name of the Source to update
+* `enabled` - [in] if true, the Multi-Image source will loop to the `start_index` (default=0) when the last image is played. The Source will stop on the last image if false (default).
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful update. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval = dsl_source_image_multi_loop_enabled_set('my-multi-image-source', True)
+```
+
+<br>
+
+### *dsl_source_image_multi_indices_get*
+```C
+DslReturnType dsl_source_image_multi_indices_get(const wchar_t* name,
+    int* start_index, int* stop_index);
+```
+This service gets the current start and stop index settings for the named Multi-Image source.
+
+**Parameters**
+* `name` - [in] unique name of the Source to query
+* `start_index` - [out] index to start with. When the end of the loop is reached, the current index will be set to the start-index. Default = 0.
+* `stop_index` - [out] index to stop on, Default = -1 (no stop).
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful query. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval, start_index, stop_index = dsl_source_image_multi_indices_get('my-multi-image-source')
+```
+<br>
+
+### *dsl_source_image_multi_indices_set*
+```C
+DslReturnType dsl_source_image_multi_indices_set(const wchar_t* name,
+    int start_index, int stop_index);
+```
+This service sets the start and stop index settings for the named Multi-Image Source to use.
+
+**Parameters**
+* `name` - [in] unique name of the Source to update
+* `start_index` - [in] index to start with. When the end of the loop is reached, the current index will be set to the start-index. Default = 0.
+* `stop_index` - [in] index to stop on, Default = -1 (no stop).
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful update. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval = dsl_source_image_multi_indices_set('my-multi-image-source', 10, -1)
+```
+
+<br>
+
+### *dsl_source_image_stream_timeout_get*
+```C
+DslReturnType dsl_source_image_stream_timeout_get(const wchar_t* name, uint* timeout);
+```
+This service gets the current timeout setting in use for the named Streaming Image source
+
+**Parameters**
+* `name` - [in] unique name of the Image Source to query
+* `timeout` - [out] current timeout setting in units of seconds. 0 = no timeout.
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful query. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval, timeout = dsl_source_image_stream_timeout_get('my-image-source')
+```
+<br>
+
+### *dsl_source_image_multi_loop_enabled_set*
+```C
+DslReturnType dsl_source_image_multi_loop_enabled_set(const wchar_t* name,
+    boolean enabled);
+```
+This service sets the loop-enabled setting for the named Multi-Image Source to use.
+
+**Parameters**
+* `name` - [in] unique name of the Source to update
+* `enabled` - [in] if true, the Multi-Image source will loop to the `start_index` (default=0) when the last image is played. The Source will stop on the last image if false (default).
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful update. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval = dsl_source_image_multi_loop_enabled_set('my-multi-image-source', True)
+```
+
+<br>
 ### *dsl_source_image_stream_timeout_get*
 ```C
 DslReturnType dsl_source_image_stream_timeout_get(const wchar_t* name, uint* timeout);
@@ -880,7 +1105,7 @@ retval = dsl_source_image_stream_timeout_set('my-image-source', 30)
 
 ### *dsl_source_interpipe_listen_to_get*
 ```C
-DslReturnType dsl_source_interpipe_listen_to_get(const wchar_t* name, 
+DslReturnType dsl_source_interpipe_listen_to_get(const wchar_t* name,
     const wchar_t** listen_to);
 ```
 This service gets the name of the Interpipe Sink the named Interpipe Source component is currently listening to.
@@ -900,7 +1125,7 @@ retval, listen_to = dsl_source_interpipe_listen_to_get('my-interpipe-source')
 
 ### *dsl_source_interpipe_listen_to_set*
 ```C
-DslReturnType dsl_source_interpipe_listen_to_get(const wchar_t* name, 
+DslReturnType dsl_source_interpipe_listen_to_get(const wchar_t* name,
     const wchar_t* listen_to);
 ```
 This service sets the name of the Interpipe Sink to listen to for the name Interpipe Source.
@@ -958,7 +1183,7 @@ This service sets the accept settings for the named Interpipe Source to use.
 **Python Example**
 ```Python
 retval = dsl_source_interpipe_accept_settings_get('my-interpipe-source',
-    ture, true)
+    True, True)
 ```
 <br>
 
@@ -1008,7 +1233,7 @@ retval, fps_n, fps_d = dsl_source_dimensions_get('my-uri-source')
 ```C
 DslReturnType dsl_source_is_live(const wchar_t* name, boolean* is_live);
 ```
-Returns `true` if the Source component's stream is live. CSI and USB Camera sources will always be return `True`.
+Returns `true` if the Source component's stream is live. CSI and USB Camera sources will always return `True`.
 
 **Parameters**
 * `name` - [in] unique name of the Source to query
@@ -1061,6 +1286,50 @@ state to `DSL_STATE_PLAYING`. An individual Source, once playing, can be paused 
 **Python Example**
 ```Python
 retval = dsl_source_resume('my-source')
+```
+
+<br>
+
+### *dsl_source_pph_add*
+```C++
+DslReturnType dsl_source_pph_add(const wchar_t* name, const wchar_t* handler);
+```
+
+This service adds a [Pad Probe Handler](/docs/api-pph.md) -- typically a [New Buffer Timeout PPH](/docs/api-pph.md#dsl_pph_buffer_timeout_new) --- to the Source pad (only) of the named Source Component. 
+
+**Important Note** Adding an [Object Detection Event PPH](/docs/api-pph.md#dsl_pph_ode_new) or an [Non-Maximum Processor PPH](/docs/api-pph.md#dsl_pph_nmp_new) will result in a NOP as there is no batch-metadata attached to the buffers for these PPHs to process. The initial frame level batch-metadata is added to the buffers by the Pipelines's Stream-muxer downstream of the Source. 
+
+**Parameters**
+* `name` - [in] unique name of the Source Component to update.
+* `handler` - [in] unique name of Pad Probe Handler to add
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful add. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+
+```Python
+retval = dsl_source_pph_add('my-csi-source-1', 'my-buffer-timeout-pph-1')
+```
+
+<br>
+
+### *dsl_source_pph_remove*
+```C++
+DslReturnType dsl_source_pph_remove(const wchar_t* name, const wchar_t* handler);
+```
+This service removes a [Pad Probe Handler](/docs/api-pph.md) from the Source pad of the named Source Component. The service will fail if the named handler is not owned by the named source.
+
+**Parameters**
+* `name` - [in] unique name of the Source Component to update.
+* `handler` - [in] unique name of Pad Probe Handler to remove
+
+**Returns**
+* `DSL_RESULT_SUCCESS` on successful remove. One of the [Return Values](#return-values) defined above on failure.
+
+**Python Example**
+```Python
+retval = dsl_source_pph_remove('my-csi-source-1', 'my-buffer-timeout-pph-1')
 ```
 
 <br>

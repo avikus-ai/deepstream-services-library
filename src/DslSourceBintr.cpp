@@ -119,6 +119,8 @@ namespace DSL
     }
 
     //*********************************************************************************
+    // Initilize the unique id list for all CsiSourceBintrs 
+    std::list<uint> CsiSourceBintr::s_uniqueSensorIds;
 
     CsiSourceBintr::CsiSourceBintr(const char* name, 
         guint width, guint height, guint fpsN, guint fpsD)
@@ -131,23 +133,30 @@ namespace DSL
         m_height = height;
         m_fpsN = fpsN;
         m_fpsD = fpsD;
+
+        // Find the first available unique sensor-id
+        while(std::find(s_uniqueSensorIds.begin(), s_uniqueSensorIds.end(), 
+            m_sensorId) != s_uniqueSensorIds.end())
+        {
+            m_sensorId++;
+        }
+        s_uniqueSensorIds.push_back(m_sensorId);
+        LOG_INFO("Setting sensor-id = " << m_sensorId 
+            << " for CsiSourceBintr '" << name << "'");
         
         m_pSourceElement = DSL_ELEMENT_NEW("nvarguscamerasrc", name);
         m_pCapsFilter = DSL_ELEMENT_NEW("capsfilter", name);
 
-        // aarch64
-        if (m_cudaDeviceProp.integrated)
-        {
-            m_pSourceElement->SetAttribute("sensor-id", m_sensorId);
-            m_pSourceElement->SetAttribute("bufapi-version", TRUE);
-        }
+        m_pSourceElement->SetAttribute("sensor-id", m_sensorId);
+        m_pSourceElement->SetAttribute("bufapi-version", TRUE);
         
         GstCaps * pCaps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12",
             "width", G_TYPE_INT, m_width, "height", G_TYPE_INT, m_height, 
             "framerate", GST_TYPE_FRACTION, m_fpsN, m_fpsD, NULL);
         if (!pCaps)
         {
-            LOG_ERROR("Failed to create new Simple Capabilities for '" << name << "'");
+            LOG_ERROR("Failed to create new Simple Capabilities for '" 
+                << name << "'");
             throw;  
         }
 
@@ -163,11 +172,17 @@ namespace DSL
         AddChild(m_pCapsFilter);
         
         m_pCapsFilter->AddGhostPadToParent("src");
+
+        std::string padProbeName = GetName() + "-src-pad-probe";
+        m_pSrcPadProbe = DSL_PAD_BUFFER_PROBE_NEW(padProbeName.c_str(), 
+            "src", m_pCapsFilter);
     }
 
     CsiSourceBintr::~CsiSourceBintr()
     {
         LOG_FUNC();
+        
+        s_uniqueSensorIds.remove(m_sensorId);
     }
     
     bool CsiSourceBintr::LinkAll()
@@ -197,13 +212,58 @@ namespace DSL
         m_pSourceElement->UnlinkFromSink();
         m_isLinked = false;
     }
+    
+    uint CsiSourceBintr::GetSensorId()
+    {
+        LOG_FUNC();
+
+        return m_sensorId;
+    }
+
+    bool CsiSourceBintr::SetSensorId(uint sensorId)
+    {
+        LOG_FUNC();
+        
+        if (m_isLinked)
+        {
+            LOG_ERROR("Can't set sensor-id for CsiSourceBintr '" << GetName() 
+                << "' as it is currently in a linked state");
+            return false;
+        }
+        if (m_sensorId == sensorId)
+        {
+            LOG_WARN("sensor-id for CsiSourceBintr '" << GetName()
+                << "' is already set to " << sensorId);
+        }
+        // Ensure that the sensor-id is unique.
+        if(std::find(s_uniqueSensorIds.begin(), s_uniqueSensorIds.end(), 
+            sensorId) != s_uniqueSensorIds.end())
+        {
+            LOG_ERROR("Can't set sensor-id = " << sensorId 
+                << " for CsiSourceBintr '" << GetName() 
+                << "'. The id is not unqiue");
+            return false;
+        }
+
+        // remove the old sensor-id from the uiniue id list before updating
+        s_uniqueSensorIds.remove(m_sensorId);
+
+        m_sensorId = sensorId;
+        s_uniqueSensorIds.push_back(m_sensorId);
+        m_pSourceElement->SetAttribute("sensor-id", m_sensorId);
+        
+        return true;
+    }
 
     //*********************************************************************************
+    // Initilize the unique device id list for all UsbSourceBintrs 
+    std::list<uint> UsbSourceBintr::s_uniqueDeviceIds;
+    std::list<std::string> UsbSourceBintr::s_deviceLocations;
 
     UsbSourceBintr::UsbSourceBintr(const char* name, 
         guint width, guint height, guint fpsN, guint fpsD)
         : SourceBintr(name)
-        , m_sensorId(0)
+        , m_deviceId(0)
     {
         LOG_FUNC();
 
@@ -214,6 +274,23 @@ namespace DSL
         
         m_pSourceElement = DSL_ELEMENT_NEW("v4l2src", name);
         m_pCapsFilter = DSL_ELEMENT_NEW("capsfilter", name);
+
+        // Find the first available unique device-id
+        while(std::find(s_uniqueDeviceIds.begin(), s_uniqueDeviceIds.end(), 
+            m_deviceId) != s_uniqueDeviceIds.end())
+        {
+            m_deviceId++;
+        }
+        s_uniqueDeviceIds.push_back(m_deviceId);
+        
+        // create the device-location by adding the device-id as suffex to /dev/video
+        m_deviceLocation = "/dev/video" + std::to_string(m_deviceId);
+        s_deviceLocations.push_back(m_deviceLocation);
+        
+        LOG_INFO("Setting device-location = '" << m_deviceLocation 
+            << "' for UsbSourceBintr '" << name << "'");
+
+        m_pSourceElement->SetAttribute("device", m_deviceLocation.c_str());
 
         if (!m_cudaDeviceProp.integrated)
         {
@@ -247,11 +324,20 @@ namespace DSL
         AddChild(m_pVidConv2);
         
         m_pCapsFilter->AddGhostPadToParent("src");
+
+        std::string padProbeName = GetName() + "-src-pad-probe";
+        m_pSrcPadProbe = DSL_PAD_BUFFER_PROBE_NEW(padProbeName.c_str(), 
+            "src", m_pCapsFilter);
     }
 
     UsbSourceBintr::~UsbSourceBintr()
     {
         LOG_FUNC();
+        
+        // remove from lists so values can be reused by next
+        // new USB Source
+        s_uniqueDeviceIds.remove(m_deviceId);
+        s_deviceLocations.remove(m_deviceLocation);
     }
 
     bool UsbSourceBintr::LinkAll()
@@ -305,6 +391,69 @@ namespace DSL
         m_pVidConv2->UnlinkFromSink();
         m_pSourceElement->UnlinkFromSink();
         m_isLinked = false;
+    }
+
+    const char* UsbSourceBintr::GetDeviceLocation()
+    {
+        LOG_FUNC();
+
+        return m_deviceLocation.c_str();
+    }
+    
+    bool UsbSourceBintr::SetDeviceLocation(const char* deviceLocation)
+    {
+        LOG_FUNC();
+
+        if (m_isLinked)
+        {
+            LOG_ERROR("Can't set device-location for UsbSourceBintr '" << GetName() 
+                << "' as it is currently in a linked state");
+            return false;
+        }
+        
+        // Ensure that the device-location is unique.
+        std::string newLocation(deviceLocation);
+        
+        if (newLocation.find("/dev/video") == std::string::npos)
+        {
+            LOG_ERROR("Can't set device-location = '" << deviceLocation 
+                << "' for UsbSourceBintr '" << GetName() 
+                << "'. The string is invalid");
+            return false;
+        }
+        uint newDeviceId(0);
+        try
+        {
+            newDeviceId = std::stoi(newLocation.substr(10, 
+                newLocation.size()-10));
+        }
+        catch(...)
+        {
+            LOG_ERROR("Can't set device-location = '" << deviceLocation 
+                << "' for UsbSourceBintr '" << GetName() 
+                << "'. The string is invalid");
+            return false;
+        }
+        
+        if(std::find(s_uniqueDeviceIds.begin(), s_uniqueDeviceIds.end(), 
+            newDeviceId) != s_uniqueDeviceIds.end())
+        {
+            LOG_ERROR("Can't set device-location = '" << deviceLocation 
+                << "' for UsbSourceBintr '" << GetName() 
+                << "'. The location string is not unqiue");
+            return false;
+        }
+        // remove the old device-id and location before updating
+        s_uniqueDeviceIds.remove(m_deviceId);
+        s_deviceLocations.remove(m_deviceLocation);
+
+        m_deviceId = newDeviceId;
+        m_deviceLocation = deviceLocation;
+        s_uniqueDeviceIds.push_back(m_deviceId);
+        s_deviceLocations.push_back(m_deviceLocation);
+        
+        m_pSourceElement->SetAttribute("device", deviceLocation);
+        return true;
     }
     
     bool UsbSourceBintr::SetGpuId(uint gpuId)
@@ -672,6 +821,10 @@ namespace DSL
         
         // Source Ghost Pad for Source Queue
         m_pSourceQueue->AddGhostPadToParent("src");
+
+        std::string padProbeName = GetName() + "-src-pad-probe";
+        m_pSrcPadProbe = DSL_PAD_BUFFER_PROBE_NEW(padProbeName.c_str(), 
+            "src", m_pSourceQueue);
     }
 
     UriSourceBintr::~UriSourceBintr()
@@ -933,9 +1086,10 @@ namespace DSL
             AddChild(m_pDecoder);
             AddChild(m_pParser);
             
-            // Source Ghost Pad for JPEG image sources
-            m_pDecoder->AddGhostPadToParent("src");
-            
+            std::string padProbeName = GetName() + "-src-pad-probe";
+            m_pSrcPadProbe = DSL_PAD_BUFFER_PROBE_NEW(padProbeName.c_str(), 
+                "src", m_pDecoder);
+
             // If it's an MJPG file or Multi JPG files
             if (m_uri.find("mjpeg") != std::string::npos or
                 m_uri.find("mjpg") != std::string::npos or
@@ -966,46 +1120,71 @@ namespace DSL
         LOG_FUNC();
     }
 
-    bool ImageSourceBintr::LinkAll()
+    //*********************************************************************************
+
+    SingleImageSourceBintr::SingleImageSourceBintr(const char* name, const char* uri)
+        : ImageSourceBintr(name, uri, DSL_IMAGE_TYPE_SINGLE)
+    {
+        LOG_FUNC();
+        
+        m_pSourceElement = DSL_ELEMENT_NEW("filesrc", name);
+        
+        if (!SetUri(uri))
+        {
+            throw;
+        }
+        AddChild(m_pSourceElement);
+
+        m_pDecoder->AddGhostPadToParent("src");
+    }
+    
+    SingleImageSourceBintr::~SingleImageSourceBintr()
+    {
+        LOG_FUNC();
+    }
+
+    bool SingleImageSourceBintr::LinkAll()
     {
         LOG_FUNC();
 
         if (m_isLinked)
         {
-            LOG_ERROR("ImageSourceBintr '" << GetName() << "' is already in a linked state");
+            LOG_ERROR("SingleImageSourceBintr '" << GetName() 
+                << "' is already in a linked state");
             return false;
         }
         if (!IsLinkable())
         {
-            LOG_ERROR("Unable to Link ImageSourceBintr '" << GetName() 
+            LOG_ERROR("Unable to Link SingleImageSourceBintr '" << GetName() 
                 << "' as its uri has not been set");
             return false;
         }
-//        if (m_format == DSL_IMAGE_FORMAT_JPG)
-//        {
+        if (m_format == DSL_IMAGE_FORMAT_JPG)
+        {
             if (!m_pSourceElement->LinkToSink(m_pParser) or
                 !m_pParser->LinkToSink(m_pDecoder))
             {
-                LOG_ERROR("ImageSourceBintr '" << GetName() << "' failed to LinkAll");
+                LOG_ERROR("SingleImageSourceBintr '" << GetName() 
+                    << "' failed to LinkAll");
                 return false;
             }
-//        }
-//        else
-//        {
-//            // TODO
-//        }
+        }
+        else
+        {
+            // TODO
+        }
         m_isLinked = true;
         
         return true;
     }
 
-    void ImageSourceBintr::UnlinkAll()
+    void SingleImageSourceBintr::UnlinkAll()
     {
         LOG_FUNC();
 
         if (!m_isLinked)
         {
-            LOG_ERROR("ImageSourceBintr '" << GetName() 
+            LOG_ERROR("SingleImageSourceBintr '" << GetName() 
                 << "' is not in a linked state");
             return;
         }
@@ -1015,7 +1194,7 @@ namespace DSL
             if (!m_pSourceElement->UnlinkFromSink() or
                 !m_pParser->UnlinkFromSink())
             {
-                LOG_ERROR("ImageSourceBintr '" << GetName() 
+                LOG_ERROR("SingleImageSourceBintr '" << GetName() 
                     << "' failed to UnlinkAll");
                 return;
             }    
@@ -1025,28 +1204,6 @@ namespace DSL
             // TODO
         }
         m_isLinked = false;
-    }
-
-    //*********************************************************************************
-
-    SingleImageSourceBintr::SingleImageSourceBintr(const char* name, const char* uri)
-        : ImageSourceBintr(name, uri, DSL_IMAGE_TYPE_SINGLE)
-    {
-        LOG_FUNC();
-        
-        m_pSourceElement = DSL_ELEMENT_NEW("filesrc", name);
-        AddChild(m_pSourceElement);
-        
-        if (!SetUri(uri))
-        {
-            throw;
-        }
-
-    }
-    
-    SingleImageSourceBintr::~SingleImageSourceBintr()
-    {
-        LOG_FUNC();
     }
 
     bool SingleImageSourceBintr::SetUri(const char* uri)
@@ -1096,6 +1253,9 @@ namespace DSL
     MultiImageSourceBintr::MultiImageSourceBintr(const char* name, 
         const char* uri, uint fpsN, uint fpsD)
         : ImageSourceBintr(name, uri, DSL_IMAGE_TYPE_MULTI)
+        , m_loopEnabled(false)
+        , m_startIndex(0)
+        , m_stopIndex(-1)
     {
         LOG_FUNC();
         
@@ -1104,36 +1264,108 @@ namespace DSL
         m_fpsD = fpsD;
 
         m_pSourceElement = DSL_ELEMENT_NEW("multifilesrc", name);
-        AddChild(m_pSourceElement);
+        m_pCapsFilter = DSL_ELEMENT_NEW("capsfilter", name);
+        m_pVideoRate = DSL_ELEMENT_NEW("videorate", name);
 
         if (!SetUri(uri))
         {
             throw;
         }
 
-//        GstCaps * pCaps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12",
-//            "width", G_TYPE_INT, m_width, "height", G_TYPE_INT, m_height, 
-//            "framerate", GST_TYPE_FRACTION, m_fpsN, m_fpsD, NULL);
-//        GstCaps * pCaps = gst_caps_new_simple("image/jpeg", "framerate", 
-//            GST_TYPE_FRACTION, m_fpsN, m_fpsD, NULL);
-//        if (!pCaps)
-//        {
-//            LOG_ERROR("Failed to create new Simple Capabilities for '" << name << "'");
-//            throw;  
-//        }
+        GstCaps * pCaps = gst_caps_new_simple("image/jpeg", "framerate", 
+            GST_TYPE_FRACTION, m_fpsN, m_fpsD, NULL);
+        if (!pCaps)
+        {
+            LOG_ERROR("Failed to create new Simple Capabilities for '" << name << "'");
+            throw;  
+        }
 
-//        GstCapsFeatures *feature = NULL;
-//        feature = gst_caps_features_new("memory:NVMM", NULL);
-//        gst_caps_set_features(pCaps, 0, feature);
+        m_pSourceElement->SetAttribute("caps", pCaps);
+        m_pSourceElement->SetAttribute("loop", m_loopEnabled);
+        m_pSourceElement->SetAttribute("start-index", m_startIndex);
+        m_pSourceElement->SetAttribute("stop-index", m_stopIndex);
+        
+        m_pCapsFilter->SetAttribute("caps", pCaps);
+        
+        gst_caps_unref(pCaps);        
 
-//        m_pSourceElement->SetAttribute("caps", pCaps);
-//        
-//        gst_caps_unref(pCaps);        
+        AddChild(m_pSourceElement);
+        AddChild(m_pCapsFilter);
+        AddChild(m_pVideoRate);
+        
+        m_pVideoRate->AddGhostPadToParent("src");
     }
     
     MultiImageSourceBintr::~MultiImageSourceBintr()
     {
         LOG_FUNC();
+    }
+
+    bool MultiImageSourceBintr::LinkAll()
+    {
+        LOG_FUNC();
+
+        if (m_isLinked)
+        {
+            LOG_ERROR("MultiImageSourceBintr '" << GetName() 
+                << "' is already in a linked state");
+            return false;
+        }
+        if (!IsLinkable())
+        {
+            LOG_ERROR("Unable to Link MultiImageSourceBintr '" << GetName() 
+                << "' as its uri has not been set");
+            return false;
+        }
+        if (m_format == DSL_IMAGE_FORMAT_JPG)
+        {
+            if (!m_pSourceElement->LinkToSink(m_pCapsFilter) or
+                !m_pCapsFilter->LinkToSink(m_pParser) or
+                !m_pParser->LinkToSink(m_pDecoder) or
+                !m_pDecoder->LinkToSink(m_pVideoRate))
+            {
+                LOG_ERROR("MultiImageSourceBintr '" << GetName() 
+                    << "' failed to LinkAll");
+                return false;
+            }
+        }
+        else
+        {
+            // TODO
+        }
+        m_isLinked = true;
+        
+        return true;
+    }
+
+    void MultiImageSourceBintr::UnlinkAll()
+    {
+        LOG_FUNC();
+
+        if (!m_isLinked)
+        {
+            LOG_ERROR("MultiImageSourceBintr '" << GetName() 
+                << "' is not in a linked state");
+            return;
+        }
+        
+        if (m_format == DSL_IMAGE_FORMAT_JPG)
+        {
+            if (!m_pSourceElement->UnlinkFromSink() or
+                !m_pCapsFilter->UnlinkFromSink() or
+                !m_pParser->UnlinkFromSink() or
+                !m_pDecoder->UnlinkFromSink())
+            {
+                LOG_ERROR("MultiImageSourceBintr '" << GetName() 
+                    << "' failed to UnlinkAll");
+                return;
+            }    
+        }
+        else
+        {
+            // TODO
+        }
+        m_isLinked = false;
     }
 
     bool MultiImageSourceBintr::SetUri(const char* uri)
@@ -1142,7 +1374,7 @@ namespace DSL
         
         if (IsLinked())
         {
-            LOG_ERROR("Unable to set File Path for ImageFrameSourceBintr '" 
+            LOG_ERROR("Unable to set File Path for MultiImageSourceBintr '" 
                 << GetName() << "' as it's currently linked");
             return false;
         }
@@ -1150,29 +1382,11 @@ namespace DSL
         std::string pathString(uri);
         if (pathString.empty())
         {
-            LOG_INFO("File Path for ImageFrameSourceBintr '" << GetName() 
+            LOG_INFO("File Path for MultiImageSourceBintr '" << GetName() 
                 << "' is empty. Source is in a non playable state");
             return true;
         }
         
-//        if (m_type == DSL_IMAGE_TYPE_SINGLE)
-//        {
-//            std::ifstream streamUriFile(uri);
-//            if (!streamUriFile.good())
-//            {
-//                LOG_ERROR("Image Source'" << uri << "' Not found");
-//                return false;
-//            }
-//            // File source, not live - setup full path
-//            char absolutePath[PATH_MAX+1];
-//            m_uri.assign(realpath(uri, absolutePath));
-//
-//            // Use OpenCV to determine the new image dimensions
-//            cv::Mat image = imread(m_uri, cv::IMREAD_COLOR);
-//            cv::Size imageSize = image.size();
-//            m_width = imageSize.width;
-//            m_height = imageSize.height;
-//        }
         m_uri.assign(uri);
         // Set the filepath for the File Source Elementr
         m_pSourceElement->SetAttribute("location", m_uri.c_str());
@@ -1181,6 +1395,53 @@ namespace DSL
             
     }
 
+    bool MultiImageSourceBintr::GetLoopEnabled()
+    {
+        LOG_FUNC();
+        
+        return m_loopEnabled;
+    }
+    
+    bool MultiImageSourceBintr::SetLoopEnabled(bool loopEnabled)
+    {
+        LOG_FUNC();
+        
+        if (IsLinked())
+        {
+            LOG_ERROR("Unable to set loop-enabled for MultiImageSourceBintr '" 
+                << GetName() << "' as it's currently linked");
+            return false;
+        }
+        m_loopEnabled = loopEnabled;
+        m_pSourceElement->SetAttribute("loop", m_loopEnabled);
+        return true;
+    }
+
+    void MultiImageSourceBintr::GetIndices(int* startIndex, int* stopIndex)
+    {
+        LOG_FUNC();
+        
+        *startIndex = m_startIndex;
+        *stopIndex = m_stopIndex;
+    }
+    
+    bool MultiImageSourceBintr::SetIndices(int startIndex, int stopIndex)
+    {
+        LOG_FUNC();
+        
+        if (IsLinked())
+        {
+            LOG_ERROR("Unable to set indicies for MultiImageSourceBintr '" 
+                << GetName() << "' as it's currently linked");
+            return false;
+        }
+        m_startIndex = startIndex;
+        m_stopIndex = stopIndex;
+        m_pSourceElement->SetAttribute("start-index", m_startIndex);
+        m_pSourceElement->SetAttribute("stop-index", m_stopIndex);
+        return true;
+    }
+        
     //*********************************************************************************
 
     ImageStreamSourceBintr::ImageStreamSourceBintr(const char* name, 
@@ -1236,6 +1497,10 @@ namespace DSL
         
         // Source Ghost Pad for ImageStreamSourceBintr
         m_pCapsFilter->AddGhostPadToParent("src");
+
+        std::string padProbeName = GetName() + "-src-pad-probe";
+        m_pSrcPadProbe = DSL_PAD_BUFFER_PROBE_NEW(padProbeName.c_str(), 
+            "src", m_pCapsFilter);
 
         g_mutex_init(&m_timeoutTimerMutex);
 
@@ -1426,7 +1691,11 @@ namespace DSL
         AddChild(m_pSourceElement);
         
         m_pSourceElement->AddGhostPadToParent("src");
-    }
+        
+        std::string padProbeName = GetName() + "-src-pad-probe";
+        m_pSrcPadProbe = DSL_PAD_BUFFER_PROBE_NEW(padProbeName.c_str(), 
+            "src", m_pSourceElement);
+}
     
     InterpipeSourceBintr::~InterpipeSourceBintr()
     {

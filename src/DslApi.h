@@ -86,7 +86,9 @@ THE SOFTWARE.
 #define DSL_RESULT_SOURCE_CALLBACK_ADD_FAILED                       0x00020013
 #define DSL_RESULT_SOURCE_CALLBACK_REMOVE_FAILED                    0x00020014
 #define DSL_RESULT_SOURCE_SET_FAILED                                0x00020015
-
+#define DSL_RESULT_SOURCE_CSI_NOT_SUPPORTED                         0x00020016
+#define DSL_RESULT_SOURCE_HANDLER_ADD_FAILED                        0x00020017
+#define DSL_RESULT_SOURCE_HANDLER_REMOVE_FAILED                     0x00020018
 
 /**
  * Dewarper API Return Values
@@ -1540,6 +1542,27 @@ typedef void (*dsl_message_broker_send_result_listener_cb)(void* client_data,
  */
 typedef void (*dsl_display_type_rgba_color_provider_cb)(double* red, 
     double* green, double* blue, double* alpha, void* client_data);
+    
+/**
+ * @brief callback typedef for a client handler function to be used with a
+ * Buffer Timeout Pad Probe Handler (PPH). Once the PPH is added to a Component's
+ * Pad, the client callback will be called if a new buffer is not received within 
+ * a configurable amount of time.
+ * @param[in] timeout the timeout value that was exceeded, in units of seconds.
+ * @param[in] client_data opaque pointer to client's data
+ */
+typedef void (*dsl_pph_buffer_timeout_handler_cb)(uint timeout, void* client_data);
+    
+/**
+ * @brief callback typedef for a client handler function to be used with a
+ * End of Stream (EOS) Pad Probe Handler (PPH). Once the PPH is added to a 
+ * Component's Pad, the client callback will be called if an End-of-Stream 
+ * event is received on the Pad.
+ * @param[in] client_data opaque pointer to client's data
+ * @return GST_PAD_PROBE_DROP to drop/consume the event, GST_PAD_PROBE_OK to  
+ * allow the event to continue to the next component. 
+ */
+typedef uint (*dsl_pph_eos_handler_cb)(void* client_data);
 
 // -----------------------------------------------------------------------------------
 // Start of DSL Services 
@@ -2614,8 +2637,8 @@ DslReturnType dsl_ode_trigger_count_range_set(const wchar_t* name,
     uint minimum, uint maximum);
 
 /**
- * @brief Occurence trigger that checks for a new instance of an Object for a 
- * specified source and object class_id. Instance identification is based on Tracking Id
+ * @brief Instance trigger that checks for new instancec of Objects for a specified
+ * source and object class_id. Instance identification is based on Tracking Id.
  * @param[in] name unique name for the ODE Trigger
  * @param[in] source unique source name filter for the ODE Trigger, NULL = ANY_SOURCE
  * @param[in] class_id class id filter for this ODE Trigger
@@ -2624,6 +2647,34 @@ DslReturnType dsl_ode_trigger_count_range_set(const wchar_t* name,
  */
 DslReturnType dsl_ode_trigger_instance_new(const wchar_t* name, 
     const wchar_t* source, uint class_id, uint limit);
+
+/**
+ * @brief Gets the current instance and suppression count settings for the named 
+ * ODE Instance Trigger.
+ * @param name unique name of the ODE Instance Trigger to query.
+ * @param instance_count[out] the number of consecutive instances to trigger ODE
+ * occurrence. Default = 1.
+ * @param suppression_count[out] the number of consecutive instances to suppress
+ * ODE occurrence once the instance_count has been reached. Default = 0 (suppress 
+ * indefinitely).
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_ODE_TRIGGER_RESULT otherwise.
+ */
+DslReturnType dsl_ode_trigger_instance_count_settings_get(const wchar_t* name,
+    uint* instance_count, uint* suppression_count);
+
+/**
+ * @brief Sets the instance and suppression count settings for the named 
+ * ODE Instance Trigger to use.
+ * @param name unique name of the ODE Instance Trigger to query.
+ * @param instance_count[in] the number of consecutive instances to trigger ODE
+ * occurrence. Default = 1.
+ * @param suppression_count[in] the number of consecutive instances to suppress
+ * ODE occurrence once the instance_count has been reached. Default = 0 (suppress 
+ * indefinitely).
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_ODE_TRIGGER_RESULT otherwise.
+ */
+DslReturnType dsl_ode_trigger_instance_count_settings_set(const wchar_t* name,
+    uint instance_count, uint suppression_count);
 
 /**
  * @brief Intersection trigger that checks for the intersection of detected Objects 
@@ -3890,6 +3941,34 @@ DslReturnType dsl_pph_nmp_match_settings_set(const wchar_t* name,
     uint match_method, float match_threshold);
 
 /**
+ * @brief Creates a new, uniquely named Buffer Timeout Pad Probe Handler (PPH). 
+ * Once the PPH is added to a Component's Pad, the client callback will be called 
+ * if a new buffer is not received within configurable amount of time.
+ * @param[in] name unique name for the new Pad Probe Handler.
+ * @param[in] timeout maximum time to wait for a new buffer before calling
+ * the handler function. In units of seconds.
+ * @param[in] handler function to be called on new buffer timeout.
+ * @param[in] client_data opaque pointer to client data to be passed back
+ * into the handler function. 
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_PPH_RESULT otherwise.
+ */
+DslReturnType dsl_pph_buffer_timeout_new(const wchar_t* name,
+    uint timeout, dsl_pph_buffer_timeout_handler_cb handler, void* client_data);
+    
+/**
+ * @brief Creates a new, uniquely named End of Stream (EOS) Pad Probe Handler (PPH).
+ * Once the PPH is added to a Component's Pad, the client callback will be called 
+ * if an end of stream event is received on the Pad.
+ * @param[in] name unique name for the new Pad Probe Handler.
+ * @param[in] handler function to be called on EOS event.
+ * @param[in] client_data opaque pointer to client data to be passed back
+ * into the handler function. 
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_PPH_RESULT otherwise.
+ */
+DslReturnType dsl_pph_eos_new(const wchar_t* name,
+    dsl_pph_eos_handler_cb handler, void* client_data);
+    
+/**
  * @brief gets the current enabled setting for the named Pad Probe Handler
  * @param[in] name unique name of the Handler to query
  * @param[out] enabled true if the Handler is enabled, false otherwise
@@ -3936,7 +4015,11 @@ DslReturnType dsl_pph_delete_all();
 uint dsl_pph_list_size();
 
 /**
- * @brief creates a new, uniquely named CSI Camera Source component
+ * @brief creates a new, uniquely named CSI Camera Source component. A unique 
+ * sensor-id is assigned to each CSI Source on creation, starting with 0. The 
+ * default setting can be overridden by calling dsl_source_decode_uri_set. The 
+ * call will fail if the given sensor-id is not unique. If a source is deleted, 
+ * the sensor-id will be re-assigned to a new CSI Source if one is created.
  * @param[in] name unique name for the new Source
  * @param[in] width width of the source in pixels
  * @param[in] height height of the source in pixels
@@ -3948,7 +4031,37 @@ DslReturnType dsl_source_csi_new(const wchar_t* name,
     uint width, uint height, uint fps_n, uint fps_d);
 
 /**
- * @brief creates a new, uniquely named USB Camera Source component
+ * @brief Gets the sensor-id setting for the named CSI Source. A unique 
+ * sensor-id is assigned to each CSI Source on creation, starting with 0. The 
+ * default setting can be overridden by calling dsl_source_decode_uri_set. The 
+ * call will fail if the given sensor-id is not unique. If a source is deleted, 
+ * the sensor-id will be re-assigned to a new CSI Source if one is created.
+ * @param[in] name unique name of the CSI Source to query.
+ * @param[out] sensor_id current sensor-id setting. Default: 0.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_csi_sensor_id_get(const wchar_t* name,
+    uint* sensor_id);
+    
+/**
+ * @brief Sets the sensor-id setting for the named CSI Source. A unique 
+ * sensor-id is assigned to each CSI Source on creation, starting with 0. This 
+ * service will fail if the given sensor-id is not unique. If a source is deleted, 
+ * the sensor-id will be re-assigned to a new CSI Source if one is created.
+ * @param[in] name unique name of the CSI Source to update.
+ * @param[in] sensor_id new sensor-id setting to use.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_csi_sensor_id_set(const wchar_t* name,
+    uint sensor_id);
+
+/**
+ * @brief creates a new, uniquely named USB Camera Source component.  A unique 
+ * device-location is assigned to each USB Source on creation, starting with 
+ * "/dev/video0", followed by "/dev/video1", and so on. The default assignment 
+ * can be overridden by calling dsl_source_usb_device_location_set. The call 
+ * will fail if the given device-location is not unique. If a source is deleted, 
+ * the device-location will be re-assigned to a new USB Source if one is created.
  * @param[in] name unique name for the new Source
  * @param[in] width width of the source in pixels
  * @param[in] height height of the source in pixels
@@ -3958,6 +4071,33 @@ DslReturnType dsl_source_csi_new(const wchar_t* name,
  */
 DslReturnType dsl_source_usb_new(const wchar_t* name,
     uint width, uint height, uint fps_n, uint fps_d);
+
+/**
+ * @brief Gets the device location setting for the named USB Source. A unique 
+ * device-location is assigned to each USB Source on creation, starting with 
+ * "/dev/video0", followed by "/dev/video1", and so on. The default assignment 
+ * can be overridden by calling dsl_source_usb_device_location_set. The call 
+ * will fail if the given device-location is not unique. If a source is deleted, 
+ * the device-location will be re-assigned to a new USB Source if one is created.
+ * @param[in] name unique name of the USB Source to query.
+ * @param[out] device_location current device location setting. Default: /dev/video0.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_usb_device_location_get(const wchar_t* name,
+    const wchar_t** device_location);
+    
+/**
+ * @brief Sets the device location setting for the named USB Source. A unique 
+ * device-location is assigned to each USB Source on creation, starting with 
+ * "/dev/video0", followed by "/dev/video1", and so on. The service will 
+ * fail if the given device-location is not unique. If a source is deleted, 
+ * the device-location will be re-assigned to a new USB Source if one is created.
+ * @param[in] name unique name of the USB Source to update.
+ * @param[in] device_location new device location setting to use.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_usb_device_location_set(const wchar_t* name,
+    const wchar_t* device_location);
 
 /**
  * @brief creates a new, uniquely named URI Source component
@@ -4037,6 +4177,51 @@ DslReturnType dsl_source_image_new(const wchar_t* name,
 DslReturnType dsl_source_image_multi_new(const wchar_t* name, 
     const wchar_t* file_path, uint fps_n, uint fps_d);
 
+/**
+ * @brief Gets the current loop-enabled setting for the named Multi Image 
+ * Source component.
+ * @param name unique name of the Multi-Image Source to query
+ * @param[out] enabled true if the loop is enabled, false otherwise.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_image_multi_loop_enabled_get(const wchar_t* name, 
+    boolean* enabled);
+
+/**
+ * @brief Sets the loop-enabled setting for the named Multi Image Source component.
+ * @param name unique name of the Multi-Image Source to update
+ * @param[in] enabled set to true to enable, false otherwise.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_image_multi_loop_enabled_set(const wchar_t* name, 
+    boolean enabled);
+
+/**
+ * @brief Gets the current start and stop index settings for the named Multi Image 
+ * Source component.
+ * @param name unique name of the Multi-Image Source to query.
+ * @param[out] start_index index to start with. When the end of the loop is reached, 
+ * the current index will be set to the start-index
+ * will be reset to the start index. Default = 0.
+ * @param[out] stop_index index to stop on, Default = -1 (no stop)
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_image_multi_indices_get(const wchar_t* name, 
+    int* start_index, int* stop_index);
+    
+/**
+ * @brief Sets the start and stop index settings for the named Multi Image 
+ * Source component.
+ * @param name unique name of the Multi-Image Source to update.
+ * @param[in] start_index zero-based index to start with. 
+ * Note, the current index will be set to the start-index when the end of the 
+ * loop is reached if the loop setting is enabled. Default = 0.
+ * @param[in] stop_index index to stop on, Set to -1 for no stop.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_SOURCE_RESULT otherwise.
+ */
+DslReturnType dsl_source_image_multi_indices_set(const wchar_t* name, 
+    int start_index, int stop_index);
+    
 /**
  * @brief creates a new, uniquely named Image Stream Source component that
  * streams an image at a specified framerate
@@ -4140,9 +4325,25 @@ DslReturnType dsl_source_rtsp_new(const wchar_t* name, const wchar_t* uri, uint 
     uint intra_decode, uint drop_frame_interval, uint latency, uint timeout);
 
 /**
+ * @brief Adds a pad-probe-handler to the Source Pad of a named Source. 
+ * @param[in] name unique name of the Source to update
+ * @param[in] handler unique name of the pad probe handler to add,
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_INFER_RESULT otherwise
+ */
+DslReturnType dsl_source_pph_add(const wchar_t* name, const wchar_t* handler);
+
+/**
+ * @brief Removes a pad-probe-handler from the Source Pad of a named Source.
+ * @param[in] name unique name of the Source to update.
+ * @param[in] handler unique name of pad-probe-handler to remove.
+ * @return DSL_RESULT_SUCCESS on success, DSL_RESULT_INFER_RESULT otherwise
+ */
+DslReturnType dsl_source_pph_remove(const wchar_t* name, const wchar_t* handler);
+    
+/**
  * @brief returns the frame rate of the name source as a fraction
  * Camera sources will return the value used on source creation
- * URL and RTPS sources will return 0 until prior entering a state of play
+ * URL and RTPS sources will return 0 prior to entering a state of play
  * @param[in] name unique name of the source to query
  * @param[out] width of the source in pixels
  * @param[out] height of the source in pixels

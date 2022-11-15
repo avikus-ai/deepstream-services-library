@@ -329,6 +329,7 @@ class dsl_ode_occurrence_info(Structure):
 ##
 ## Pointer Typedefs
 ##
+DSL_INT_P = POINTER(c_int)
 DSL_UINT_P = POINTER(c_uint)
 DSL_UINT64_P = POINTER(c_uint64)
 DSL_UINT64_PP = POINTER(DSL_UINT64_P)
@@ -434,6 +435,14 @@ DSL_MESSAGE_BROKER_SEND_RESULT_LISTENER = \
 # dsl_display_type_rgba_color_provider_cb
 DSL_DISPLAY_TYPE_RGBA_COLOR_PROVIDER = \
     CFUNCTYPE(None, DSL_DOUBLE_P, DSL_DOUBLE_P, DSL_DOUBLE_P, DSL_DOUBLE_P, c_void_p)
+
+# dsl_pph_buffer_timeout_handler_cb
+DSL_PPH_BUFFER_TIMEOUT_HANDLER = \
+    CFUNCTYPE(None, c_uint, c_void_p)
+
+# dsl_eos_listener_cb
+DSL_EOS_HANDLER = \
+    CFUNCTYPE(c_uint, c_void_p)
 
 ##
 ## TODO: CTYPES callback management needs to be completed before any of
@@ -1449,6 +1458,33 @@ _dsl.dsl_ode_trigger_instance_new.restype = c_uint
 def dsl_ode_trigger_instance_new(name, source, class_id, limit):
     global _dsl
     result =_dsl.dsl_ode_trigger_instance_new(name, source, class_id, limit)
+    return int(result)
+
+##
+## dsl_ode_trigger_instance_count_settings_get()
+##
+_dsl.dsl_ode_trigger_instance_count_settings_get.argtypes = [c_wchar_p, 
+    POINTER(c_uint), POINTER(c_uint)]
+_dsl.dsl_ode_trigger_instance_count_settings_get.restype = c_uint
+def dsl_ode_trigger_instance_count_settings_get(name):
+    global _dsl
+    instance_count = c_uint(0)
+    suppression_count = c_uint(0)
+    result =_dsl.dsl_ode_trigger_instance_count_settings_get(name, 
+        DSL_UINT_P(instance_count), DSL_UINT_P(suppression_count))
+    return int(result), instance_count.value, suppression_count.value
+
+##
+## dsl_ode_trigger_instance_count_settings_set()
+##
+_dsl.dsl_ode_trigger_instance_count_settings_set.argtypes = [c_wchar_p, 
+    c_uint, c_uint]
+_dsl.dsl_ode_trigger_instance_count_settings_set.restype = c_uint
+def dsl_ode_trigger_instance_count_settings_set(name, 
+    instance_count, suppression_count):
+    global _dsl
+    result =_dsl.dsl_ode_trigger_instance_count_settings_set(name, 
+        instance_count, suppression_count)
     return int(result)
 
 ##
@@ -2769,6 +2805,38 @@ def dsl_pph_nmp_process_method_set(name, process_mode):
     return int(result)
 
 ##
+## dsl_pph_buffer_timeout_new()
+##
+_dsl.dsl_pph_buffer_timeout_new.argtypes = [c_wchar_p, 
+    c_uint, DSL_PPH_BUFFER_TIMEOUT_HANDLER, c_void_p]
+_dsl.dsl_pph_buffer_timeout_new.restype = c_uint
+def dsl_pph_buffer_timeout_new(name, timeout, handler, client_data):
+    global _dsl
+    handler_cb = DSL_PPH_BUFFER_TIMEOUT_HANDLER(client_handler)
+    callbacks.append(handler_cb)
+    c_client_data=cast(pointer(py_object(client_data)), c_void_p)
+    clientdata.append(c_client_data)
+    result =_dsl.dsl_pph_buffer_timeout_new(name, 
+        timeout, handler_cb, c_client_data)
+    return int(result)
+
+##
+## dsl_pph_eos_new()
+##
+_dsl.dsl_pph_eos_new.argtypes = [c_wchar_p, 
+    DSL_EOS_HANDLER, c_void_p]
+_dsl.dsl_pph_eos_new.restype = c_uint
+def dsl_pph_eos_new(name, handler, client_data):
+    global _dsl
+    handler_cb = DSL_EOS_HANDLER(client_handler)
+    callbacks.append(handler_cb)
+    c_client_data=cast(pointer(py_object(client_data)), c_void_p)
+    clientdata.append(c_client_data)
+    result =_dsl.dsl_pph_eos_new(name, 
+        handler_cb, c_client_data)
+    return int(result)
+
+##
 ## dsl_pph_enabled_get()
 ##
 _dsl.dsl_pph_enabled_get.argtypes = [c_wchar_p, POINTER(c_bool)]
@@ -2851,6 +2919,27 @@ def dsl_source_usb_new(name, width, height, fps_n, fps_d):
     return int(result)
 
 ##
+## dsl_source_usb_device_location_get()
+##
+_dsl.dsl_source_usb_device_location_get.argtypes = [c_wchar_p, POINTER(c_wchar_p)]
+_dsl.dsl_source_usb_device_location_get.restype = c_uint
+def dsl_source_usb_device_location_get(name):
+    global _dsl
+    device_location = c_wchar_p(0)
+    result = _dsl.dsl_source_usb_device_location_get(name, DSL_WCHAR_PP(device_location))
+    return int(result), device_location.value 
+
+##
+## dsl_source_usb_device_location_set()
+##
+_dsl.dsl_source_usb_device_location_set.argtypes = [c_wchar_p, c_wchar_p]
+_dsl.dsl_source_usb_device_location_set.restype = c_uint
+def dsl_source_usb_device_location_set(name, device_location):
+    global _dsl
+    result = _dsl.dsl_source_usb_device_location_set(name, device_location)
+    return int(result)
+
+##
 ## dsl_source_uri_new()
 ##
 _dsl.dsl_source_uri_new.argtypes = [c_wchar_p, c_wchar_p, c_bool, c_uint, c_uint]
@@ -2901,7 +2990,7 @@ _dsl.dsl_source_file_repeat_enabled_get.restype = c_uint
 def dsl_source_file_repeat_enabled_get(name):
     global _dsl
     enabled = c_bool(False)
-    result = _dsl.dsl_source_decode_repeat_enabled_get(name, DSL_BOOL_P(enabled))
+    result = _dsl.dsl_source_file_repeat_enabled_get(name, DSL_BOOL_P(enabled))
     return int(result), enabled.value 
 
 ##
@@ -2922,6 +3011,62 @@ _dsl.dsl_source_image_new.restype = c_uint
 def dsl_source_image_new(name, file_path):
     global _dsl
     result = _dsl.dsl_source_image_new(name, file_path)
+    return int(result)
+
+##
+## dsl_source_image_multi_new()
+##
+_dsl.dsl_source_image_multi_new.argtypes = [c_wchar_p, c_wchar_p, c_uint, c_uint]
+_dsl.dsl_source_image_multi_new.restype = c_uint
+def dsl_source_image_multi_new(name, file_path, fps_n, fps_d):
+    global _dsl
+    result = _dsl.dsl_source_image_multi_new(name, file_path, fps_n, fps_d)
+    return int(result)
+
+##
+## dsl_source_image_multi_loop_enabled_get()
+##
+_dsl.dsl_source_image_multi_loop_enabled_get.argtypes = [c_wchar_p, POINTER(c_bool)]
+_dsl.dsl_source_image_multi_loop_enabled_get.restype = c_uint
+def dsl_source_image_multi_loop_enabled_get(name):
+    global _dsl
+    enabled = c_bool(False)
+    result = _dsl.dsl_source_image_multi_loop_enabled_get(name, DSL_BOOL_P(enabled))
+    return int(result), enabled.value 
+
+##
+## dsl_source_image_multi_loop_enabled_set()
+##
+_dsl.dsl_source_image_multi_loop_enabled_set.argtypes = [c_wchar_p, c_bool]
+_dsl.dsl_source_image_multi_loop_enabled_set.restype = c_uint
+def dsl_source_image_multi_loop_enabled_set(name, enabled):
+    global _dsl
+    result = _dsl.dsl_source_image_multi_loop_enabled_set(name, enabled)
+    return int(result)
+
+##
+## dsl_source_image_multi_indices_get()
+##
+_dsl.dsl_source_image_multi_indices_get.argtypes = [c_wchar_p, 
+    POINTER(c_int), POINTER(c_int)]
+_dsl.dsl_source_image_multi_indices_get.restype = c_uint
+def dsl_source_image_multi_indices_get(name):
+    global _dsl
+    start_index = c_int(0)
+    stop_index = c_int(0)
+    result = _dsl.dsl_source_image_multi_indices_get(name, 
+        DSL_INT_P(stop_index), DSL_INT_P(stop_index))
+    return int(result), start_index.value, stop_index.value 
+
+##
+## dsl_source_image_multi_indices_set()
+##
+_dsl.dsl_source_image_multi_indices_set.argtypes = [c_wchar_p, c_int, c_int]
+_dsl.dsl_source_image_multi_indices_set.restype = c_uint
+def dsl_source_image_multi_indices_set(name, start_index, stop_index):
+    global _dsl
+    result = _dsl.dsl_source_image_multi_indices_set(name, 
+        start_index, stop_index)
     return int(result)
 
 ##
@@ -3049,6 +3194,26 @@ def dsl_source_name_get(source_id):
     name = c_wchar_p(0)
     result = _dsl.dsl_source_name_get(source_id, DSL_WCHAR_PP(name))
     return int(result), name.value 
+
+##
+## dsl_source_pph_add()
+##
+_dsl.dsl_source_pph_add.argtypes = [c_wchar_p, c_wchar_p]
+_dsl.dsl_source_pph_add.restype = c_uint
+def dsl_source_pph_add(name, handler):
+    global _dsl
+    result = _dsl.dsl_source_pph_add(name, handler)
+    return int(result)
+
+##
+## dsl_source_pph_remove()
+##
+_dsl.dsl_source_pph_remove.argtypes = [c_wchar_p, c_wchar_p]
+_dsl.dsl_source_pph_remove.restype = c_uint
+def dsl_source_pph_remove(name, handler):
+    global _dsl
+    result = _dsl.dsl_source_pph_remove(name, handler)
+    return int(result)
 
 ##
 ## dsl_source_dimensions_get()
