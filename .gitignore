@@ -63,7 +63,7 @@
 # Directories
 
 ## ignore file list
-Makefile
+#Makefile
 cmake_install.cmake
 cMakeCache.txt
 .cmake
