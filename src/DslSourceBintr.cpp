@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include "DslPipelineBintr.h"
 #include "DslSurfaceTransform.h"
 #include <nvdsgstutils.h>
+#include <gst/app/gstappsrc.h>
 
 #define N_DECODE_SURFACES 16
 #define N_EXTRA_SURFACES 1
@@ -39,6 +40,7 @@ namespace DSL
         : Bintr(name)
         , m_cudaDeviceProp{0}
         , m_isLive(true)
+        , m_doTimestamp(TRUE)
         , m_width(0)
         , m_height(0)
         , m_fpsN(0)
@@ -102,6 +104,29 @@ namespace DSL
             RemoveSourceBintr(std::dynamic_pointer_cast<SourceBintr>(shared_from_this()));
     }
 
+    boolean SourceBintr::GetDoTimestamp()
+    {
+        LOG_FUNC();
+        
+        return m_doTimestamp;
+    }
+
+    bool SourceBintr::SetDoTimestamp(boolean doTimestamp)
+    {
+        LOG_FUNC();
+
+        if (m_isLinked)
+        {
+            LOG_ERROR("Can't set block-enabled for SourceBintr '" 
+                << GetName() << "' as it's currently in a linked state");
+            return false;
+        }
+
+        m_doTimestamp = doTimestamp;
+        m_pSourceElement->SetAttribute("do-timestamp", m_doTimestamp);
+        return true;
+    }
+
     void SourceBintr::GetDimensions(uint* width, uint* height)
     {
         LOG_FUNC();
@@ -118,6 +143,461 @@ namespace DSL
         *fpsD = m_fpsD;
     }
 
+    //*********************************************************************************
+    AppSourceBintr::AppSourceBintr(const char* name, bool isLive, 
+            uint streamFormat, uint width, uint height, uint fpsN, uint fpsD)
+        : SourceBintr(name)
+        , m_streamFormat(streamFormat)
+        , m_needDataHandler(NULL)
+        , m_enoughDataHandler(NULL)
+        , m_clientData(NULL)
+        , m_maxBytes(0)
+        , m_bufferFormat(0)
+// TODO support GST 1.20 properties        
+//        , m_maxBuffers(0)
+//        , m_maxTime(0)
+//        , m_leakyType(0)
+    {
+        LOG_FUNC();
+
+        m_isLive = isLive;
+        m_width = width;
+        m_height = height;
+        m_fpsN = fpsN;
+        m_fpsD = fpsD;
+
+        std::string streamFormatStr;
+        
+        switch (m_streamFormat)
+        {
+        case DSL_STREAM_FORMAT_RGBA:
+            streamFormatStr = "RGBA";
+            break;
+        case DSL_STREAM_FORMAT_NV12:
+            streamFormatStr = "NV12";
+            break;
+        case DSL_STREAM_FORMAT_I420:
+            streamFormatStr = "I420";
+            break;
+        default:
+            LOG_ERROR("Invalid format attribute for AppSourceBintr '" 
+                << GetName() << "'");
+            throw;
+        }
+        
+        // ---- Source Element Setup
+
+        m_pSourceElement = DSL_ELEMENT_NEW("appsrc", name);
+        
+        GstCaps * pCaps = gst_caps_new_simple("video/x-raw",
+            "format", G_TYPE_STRING, streamFormatStr.c_str(),
+            "width", G_TYPE_INT, m_width,
+            "height", G_TYPE_INT, m_height,
+            "framerate", GST_TYPE_FRACTION, m_fpsN, m_fpsD, NULL);
+        if (!pCaps)
+        {
+            LOG_ERROR("Failed to create new Simple Capabilities for '" 
+                << name << "'");
+            throw;  
+        }
+        m_pSourceElement->SetAttribute("caps", pCaps);
+        gst_caps_unref(pCaps);        
+            
+        // emit-signals are disabled by default... need to enable
+        m_pSourceElement->SetAttribute("emit-signals", true);
+        
+        // register the data callbacks with the appsrc element
+        g_signal_connect(m_pSourceElement->GetGObject(), "need-data", 
+            G_CALLBACK(on_need_data_cb), this);
+        g_signal_connect(m_pSourceElement->GetGObject(), "enough-data", 
+            G_CALLBACK(on_enough_data_cb), this);
+
+        // get the property defaults
+        m_pSourceElement->GetAttribute("do-timestamp", &m_doTimestamp);
+        m_pSourceElement->GetAttribute("format", &m_bufferFormat);
+        m_pSourceElement->GetAttribute("block", &m_blockEnabled);
+        m_pSourceElement->GetAttribute("max-bytes", &m_maxBytes);
+
+        LOG_INFO("Default properties for AppSourceBintr '" << name << "'");
+        LOG_INFO("  do-timestamp  : " << m_doTimestamp);
+        LOG_INFO("  buffer-format : " << m_bufferFormat);
+        LOG_INFO("  block-enabled : " << m_blockEnabled);
+        LOG_INFO("  max-bytes     : " << m_maxBytes);
+        LOG_INFO("  stream-format : " << streamFormatStr);
+        LOG_INFO("  width         : " << m_width);
+        LOG_INFO("  height        : " << m_height);
+        LOG_INFO("  fps-n         : " << m_fpsN);
+        LOG_INFO("  fps-d         : " << m_fpsD);
+
+        // TODO support GST 1.20 properties
+        // m_pSourceElement->GetAttribute("max-buffers", &m_maxBuffers);
+        // m_pSourceElement->GetAttribute("max-time", &m_maxTime);
+        // m_pSourceElement->GetAttribute("leaky-type", &m_leakyType);
+        //
+        // LOG_INFO("max-buffers = " << m_maxBuffers);
+        // LOG_INFO("max-time    = " << m_maxTime);
+        // LOG_INFO("leaky-type  = " << m_leakyType);
+        
+        // ---- Video Converter Setup
+        
+        m_pVidConv = DSL_ELEMENT_NEW("nvvideoconvert", name);
+        
+        if (!m_cudaDeviceProp.integrated)
+        {
+            m_pVidConv->SetAttribute("nvbuf-memory-type", DSL_NVBUF_MEM_TYPE_UNIFIED);
+        }
+        
+        // ---- Caps Filter Setup
+
+        m_pCapsFilter = DSL_ELEMENT_NEW("capsfilter", name);
+        
+        // All sources output "I420" by default
+        pCaps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING,
+            "I420", NULL);
+            
+        if (!pCaps)
+        {
+            LOG_ERROR("Failed to create new Simple Capabilities for '" 
+                << name << "'");
+            throw;  
+        }
+
+        GstCapsFeatures *feature = NULL;
+        feature = gst_caps_features_new("memory:NVMM", NULL);
+        gst_caps_set_features(pCaps, 0, feature);
+
+        m_pCapsFilter->SetAttribute("caps", pCaps);
+        
+        gst_caps_unref(pCaps);        
+
+        // add all elementrs as childer to this Bintr
+        AddChild(m_pSourceElement);
+        AddChild(m_pVidConv);
+        AddChild(m_pCapsFilter);
+        
+        m_pCapsFilter->AddGhostPadToParent("src");
+
+        std::string padProbeName = GetName() + "-src-pad-probe";
+        m_pSrcPadProbe = DSL_PAD_BUFFER_PROBE_NEW(padProbeName.c_str(), 
+            "src", m_pCapsFilter);
+
+        g_mutex_init(&m_dataHandlerMutex);
+    }
+
+    AppSourceBintr::~AppSourceBintr()
+    {
+        LOG_FUNC();
+        
+        g_mutex_clear(&m_dataHandlerMutex);
+    }
+    
+    bool AppSourceBintr::LinkAll()
+    {
+        LOG_FUNC();
+
+        if (m_isLinked)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' is already in a linked state");
+            return false;
+        }
+        if (!m_pSourceElement->LinkToSink(m_pVidConv) or
+            !m_pVidConv->LinkToSink(m_pCapsFilter))
+        {
+            return false;
+        }
+        
+        m_isLinked = true;
+        
+        return true;
+    }
+
+    void AppSourceBintr::UnlinkAll()
+    {
+        LOG_FUNC();
+
+        if (!m_isLinked)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' is not in a linked state");
+            return;
+        }
+        m_pSourceElement->UnlinkFromSink();
+        m_pVidConv->UnlinkFromSink();
+        m_isLinked = false;
+    }
+
+    bool AppSourceBintr::AddDataHandlers(
+        dsl_source_app_need_data_handler_cb needDataHandler, 
+        dsl_source_app_enough_data_handler_cb enoughDataHandler, 
+        void* clientData)
+    {
+        LOG_FUNC();
+        LOCK_MUTEX_FOR_CURRENT_SCOPE(&m_dataHandlerMutex);
+
+        if (m_needDataHandler)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' already has data-handler callbacks");
+            return false;
+        }
+        m_needDataHandler = needDataHandler;
+        m_enoughDataHandler = enoughDataHandler;
+        m_clientData = clientData;
+        return true;
+    }
+        
+    bool AppSourceBintr::RemoveDataHandlers()
+    {
+        LOG_FUNC();
+        LOCK_MUTEX_FOR_CURRENT_SCOPE(&m_dataHandlerMutex);
+
+        if (!m_needDataHandler)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' does not have data-handler callbacks to remove");
+            return false;
+        }
+        m_needDataHandler = NULL;
+        m_enoughDataHandler = NULL;
+        m_clientData = NULL;
+        return true;
+    }
+    
+    bool AppSourceBintr::PushBuffer(void* buffer)
+    {
+        // Do not log function entry/exit for performance
+        
+        if (!m_isLinked)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' is not in a linked state");
+            return false;
+        }
+        
+        // Push the buffer to the App Source element.
+        
+        GstFlowReturn retVal = gst_app_src_push_buffer(
+            (GstAppSrc*)m_pSourceElement->GetGObject(), (GstBuffer*)buffer);
+        if (retVal != GST_FLOW_OK)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' returned " << retVal << " on push-buffer");
+            return false;
+        }
+            
+        return true;
+    }
+
+    bool AppSourceBintr::PushSample(void* sample)
+    {
+        // Do not log function entry/exit for performance
+        
+        if (!m_isLinked)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' is not in a linked state");
+            return false;
+        }
+        
+        // Push the sample to the App Source element.
+        
+        GstFlowReturn retVal = gst_app_src_push_sample(
+            (GstAppSrc*)m_pSourceElement->GetGObject(), (GstSample*)sample);
+        if (retVal != GST_FLOW_OK)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' returned " << retVal << " on push-sample");
+            return false;
+        }
+            
+        return true;
+    }
+
+    bool AppSourceBintr::Eos()
+    {
+        LOG_FUNC();
+
+        if (!m_isLinked)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' is not in a linked state");
+            return false;
+        }
+        GstFlowReturn retVal = gst_app_src_end_of_stream(
+            (GstAppSrc*)m_pSourceElement->GetGObject());
+        if (retVal != GST_FLOW_OK)
+        {
+            LOG_ERROR("AppSourceBintr '" << GetName() 
+                << "' returned " << retVal << " on end-of-stream");
+            return false;
+        }
+            
+        return true;
+    }
+
+    void AppSourceBintr::HandleNeedData(uint length)
+    {
+        LOCK_MUTEX_FOR_CURRENT_SCOPE(&m_dataHandlerMutex);
+
+        if (m_needDataHandler)
+        {
+            try
+            {
+                // call the client handler with the length hint.
+                m_needDataHandler(length, m_clientData);
+            }
+            catch(...)
+            {
+                LOG_ERROR("AppSourceBintr '" << GetName() 
+                    << "' threw exception calling client handler function \
+                        for 'need-data'");
+            }
+        }
+    }
+    
+    void AppSourceBintr::HandleEnoughData()
+    {
+        LOCK_MUTEX_FOR_CURRENT_SCOPE(&m_dataHandlerMutex);
+
+        if (m_enoughDataHandler)
+        {
+            try
+            {
+                // call the client handler with the buffer and process.
+                m_enoughDataHandler(m_clientData);
+            }
+            catch(...)
+            {
+                LOG_ERROR("AppSourceBintr '" << GetName() 
+                    << "' threw exception calling client handler function \
+                        for 'enough-data'");
+            }
+        }
+    }
+
+    boolean AppSourceBintr::GetBlockEnabled()
+    {
+        LOG_FUNC();
+        
+        return m_blockEnabled;
+    }
+    
+    bool AppSourceBintr::SetBlockEnabled(boolean enabled)
+    {
+        LOG_FUNC();
+
+        if (m_isLinked)
+        {
+            LOG_ERROR("Can't set block-enabled for AppSourceBintr '" 
+                << GetName() << "' as it's currently in a linked state");
+            return false;
+        }
+
+        m_blockEnabled = enabled;
+        m_pSourceElement->SetAttribute("block", m_blockEnabled);
+        return true;
+    }
+    
+    uint AppSourceBintr::GetBufferFormat()
+    {
+        LOG_FUNC();
+        
+        return m_bufferFormat;
+    }
+    
+    bool AppSourceBintr::SetBufferFormat(uint bufferFormat)
+    {
+        LOG_FUNC();
+
+        if (m_isLinked)
+        {
+            LOG_ERROR("Can't set buffer-format for AppSourceBintr '" 
+                << GetName() << "' as it's currently in a linked state");
+            return false;
+        }
+
+        m_bufferFormat = bufferFormat;
+        m_pSourceElement->SetAttribute("format", m_bufferFormat);
+        return true;
+    }
+    
+    uint64_t AppSourceBintr::GetCurrentLevelBytes()
+    {
+        // do not log function entry/exit for performance reasons
+        
+        uint64_t currentLevel(0);
+        
+        m_pSourceElement->GetAttribute("current-level-bytes", 
+            &currentLevel);
+
+        return currentLevel;
+    }
+    
+    uint64_t AppSourceBintr::GetMaxLevelBytes()
+    {
+        LOG_FUNC();
+
+        m_pSourceElement->GetAttribute("max-bytes", 
+            &m_maxBytes);
+
+        return m_maxBytes;
+    }
+    
+    bool AppSourceBintr::SetMaxLevelBytes(uint64_t level)
+    {
+        LOG_FUNC();
+
+        if (m_isLinked)
+        {
+            LOG_ERROR("Can't set max-level for AppSourceBintr '" 
+                << GetName() << "' as it's currently in a linked state");
+            return false;
+        }
+        m_maxBytes = level;
+        m_pSourceElement->SetAttribute("max-bytes", m_maxBytes);
+
+        return true;
+    }
+    
+//    uint AppSourceBintr::GetLeakyType()
+//    {
+//        LOG_FUNC();
+//        
+//        return m_leakyType;
+//    }
+//    
+//    bool AppSourceBintr::SetLeakyType(uint leakyType)
+//    {
+//        LOG_FUNC();
+//
+//        if (m_isLinked)
+//        {
+//            LOG_ERROR("Can't set leaky-type for AppSourceBintr '" 
+//                << GetName() << "' as it's currently in a linked state");
+//            return false;
+//        }
+//
+//        m_leakyType = leakyType;
+//        m_pSourceElement->SetAttribute("leaky-type", m_leakyType);
+//        return true;
+//    }
+
+
+    static void on_need_data_cb(GstElement source, uint length,
+        gpointer pAppSrcBintr)
+    {
+        static_cast<AppSourceBintr*>(pAppSrcBintr)->
+            HandleNeedData(length);
+    }
+        
+    static void on_enough_data_cb(GstElement source, 
+        gpointer pAppSrcBintr)
+    {
+        static_cast<AppSourceBintr*>(pAppSrcBintr)->
+            HandleEnoughData();
+    }
+        
     //*********************************************************************************
     // Initilize the unique id list for all CsiSourceBintrs 
     std::list<uint> CsiSourceBintr::s_uniqueSensorIds;
@@ -1801,7 +2281,6 @@ namespace DSL
         // New RTSP Specific Elementrs for this Source
         m_pPreDecodeTee = DSL_ELEMENT_NEW("tee", name);
         m_pPreDecodeQueue = DSL_ELEMENT_EXT_NEW("queue", name, "decodebin");
-        m_pDecodeBin = DSL_ELEMENT_NEW("decodebin", name);
         m_pSourceQueue = DSL_ELEMENT_EXT_NEW("queue", name, "src");
 
         m_pSourceElement->SetAttribute("latency", m_latency);
@@ -1815,15 +2294,8 @@ namespace DSL
         g_signal_connect(m_pSourceElement->GetGObject(), "pad-added", 
             G_CALLBACK(RtspSourceElementOnPadAddedCB), this);
 
-        // Connect Decode Setup Callbacks
-        g_signal_connect(m_pDecodeBin->GetGObject(), "pad-added", 
-            G_CALLBACK(RtspDecodeElementOnPadAddedCB), this);
-        g_signal_connect(m_pDecodeBin->GetGObject(), "child-added", 
-            G_CALLBACK(OnChildAddedCB), this);
-
         AddChild(m_pPreDecodeTee);
         AddChild(m_pPreDecodeQueue);
-        AddChild(m_pDecodeBin);
         AddChild(m_pSourceQueue);
 
         // Source Ghost Pad for Source Queue as src pad to connect to streammuxer
@@ -1895,10 +2367,6 @@ namespace DSL
             {
                 return false;
             }
-        }
-        if (!m_pPreDecodeQueue->LinkToSink(m_pDecodeBin))
-        {
-            return false;
         }
         m_isLinked = true;
         return true;
@@ -2176,11 +2644,19 @@ namespace DSL
             {
                 m_pParser = DSL_ELEMENT_NEW("h264parse", GetCStrName());
                 m_pDepay = DSL_ELEMENT_NEW("rtph264depay", GetCStrName());
+                m_pDecodeBin = DSL_ELEMENT_NEW("decodebin", GetCStrName());
             }
             else if (encoding.find("H265") != std::string::npos)
             {
                 m_pParser = DSL_ELEMENT_NEW("h265parse", GetCStrName());
                 m_pDepay = DSL_ELEMENT_NEW("rtph265depay", GetCStrName());
+                m_pDecodeBin = DSL_ELEMENT_NEW("decodebin", GetCStrName());
+            }
+            else if (encoding.find("JPEG") != std::string::npos)
+            {
+                m_pParser = DSL_ELEMENT_NEW("jpegparse", GetCStrName());
+                m_pDepay = DSL_ELEMENT_NEW("rtpjpegdepay", GetCStrName());
+                m_pDecodeBin = DSL_ELEMENT_NEW("nvjpegdec", GetCStrName());
             }
             else if (encoding.find("JPEG") != std::string::npos)
             {
@@ -2193,8 +2669,21 @@ namespace DSL
                     << GetName() << "'");
                 return false;
             }
+
+            // Connect Decode Setup Callbacks
+            g_signal_connect(m_pDecodeBin->GetGObject(), "pad-added", 
+                G_CALLBACK(RtspDecodeElementOnPadAddedCB), this);
+            g_signal_connect(m_pDecodeBin->GetGObject(), "child-added", 
+                G_CALLBACK(OnChildAddedCB), this);
+                
             AddChild(m_pDepay);
             AddChild(m_pParser);
+            AddChild(m_pDecodeBin);
+
+            if (!m_pPreDecodeQueue->LinkToSink(m_pDecodeBin))
+            {
+                return false;
+            }
 
             // If we're tapping off of the pre-decode source stream, then link to the pre-decode Tee
             // The Pre-decode Queue will already be linked downstream as the first branch on the Tee
@@ -2214,7 +2703,8 @@ namespace DSL
                 }            
             }
             if (!gst_element_sync_state_with_parent(m_pDepay->GetGstElement()) or
-                !gst_element_sync_state_with_parent(m_pParser->GetGstElement()))
+                !gst_element_sync_state_with_parent(m_pParser->GetGstElement()) or
+                !gst_element_sync_state_with_parent(m_pDecodeBin->GetGstElement()))
             {
                 LOG_ERROR("Failed to sync Parser/Decoder states with Parent for RtspSourceBitnr '" 
                     << GetName() << "'");
