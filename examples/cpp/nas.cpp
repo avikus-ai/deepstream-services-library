@@ -623,18 +623,23 @@ int main(int argc, char** argv)
         PR("primary-gie component add\n");
 
         if (trk_enable) {
-            if (trk_method == L"IOU") {
-                retval = dsl_tracker_iou_new(L"tracker", trk_config.c_str(), trk_width, trk_height);
-                if (retval != DSL_RESULT_SUCCESS) break;
-            }
-            else if (trk_method == L"KLT") {
-                retval = dsl_tracker_ktl_new(L"tracker", trk_width, trk_height);
-                if (retval != DSL_RESULT_SUCCESS) break;
-            }
-            else if (trk_method == L"DCF") {
-                retval = dsl_tracker_dcf_new(L"tracker", trk_config.c_str(), trk_width, trk_height, true, false);
-                if (retval != DSL_RESULT_SUCCESS) break;
-            }
+            // DslReturnType dsl_tracker_new(const wchar_t* name, const wchar_t* config_file, uint width, uint height);
+            retval = dsl_tracker_new(L"tracker", trk_config.c_str(), trk_width, trk_height);
+            if (retval != DSL_RESULT_SUCCESS) break;
+
+            // dsl_tracker_iou_new, dsl_tracker_ktl_new, dsl_tracker_dcf_new APIs deprecated.
+            // if (trk_method == L"IOU") {
+            //     retval = dsl_tracker_iou_new(L"tracker", trk_config.c_str(), trk_width, trk_height);
+            //     if (retval != DSL_RESULT_SUCCESS) break;
+            // }
+            // else if (trk_method == L"KLT") {
+            //     retval = dsl_tracker_ktl_new(L"tracker", trk_width, trk_height);
+            //     if (retval != DSL_RESULT_SUCCESS) break;
+            // }
+            // else if (trk_method == L"DCF") {
+            //     retval = dsl_tracker_dcf_new(L"tracker", trk_config.c_str(), trk_width, trk_height, true, false);
+            //     if (retval != DSL_RESULT_SUCCESS) break;
+            // }
 
             retval = dsl_pipeline_component_add(L"pipeline", L"tracker");
             if (retval != DSL_RESULT_SUCCESS) break;

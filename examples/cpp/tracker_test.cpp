@@ -2,34 +2,27 @@
 #include <glib.h>
 #include <X11/Xlib.h>
 
+#include <gst/gst.h>
+#include <gstnvdsmeta.h>
+
 #include "DslApi.h"
 
 
-// Set Camera RTSP URI's - these must be set to valid rtsp uri's for camera's on your network
-// RTSP Source URI
-// std::wstring rtsp_uri_1 = L"rtsp://192.168.1.140:554/jpeg";
-std::wstring rtsp_uri_1 = L"rtsp://admin:11qqaa..@192.168.1.145:554/trackID=2";
-std::wstring rtsp_uri_2 = L"rtsp://192.168.1.142:554/h264";
-std::wstring rtsp_uri_3 = L"rtsp://192.168.1.140:554/h264";
 
 // File path for the single File Source
 std::wstring file_path1(
-    L"/opt/nvidia/deepstream/deepstream-6.0/samples/streams/sample_1080p_h265.mp4");
-std::wstring file_path2(
-    L"/opt/nvidia/deepstream/deepstream-6.0/samples/streams/sample_qHD.mp4");
-std::wstring file_path3(
-    L"/opt/nvidia/deepstream/deepstream-6.0/samples/streams/sample_ride_bike.mov");
+    L"/opt/dsl/nas_data/sample_video/deepsort_person_sample.mp4");
 
-// std::wstring primary_infer_config_file(
-//     L"/opt/dsl/nas_data/YOLOV3/config_infer_primary_yoloV3.txt");
-// std::wstring primary_model_engine_file(
-//     L"/opt/dsl/nas_data/YOLOV3/model_b1_gpu0_fp16.engine");
 std::wstring primary_infer_config_file(
-    L"/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_infer_primary.txt");
+    L"/opt/dsl/nas_data/COCO_DGPU/config_infer_primary_yoloV5s.txt");
 std::wstring primary_model_engine_file(
-    L"/opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/resnet10.caffemodel_b1_gpu0_int8.engine");
+    L"/opt/dsl/nas_data/COCO_DGPU/model_b1_gpu0_fp16.engine");
 std::wstring tracker_config_file(
-    L"/opt/dsl/nas_data/YOLOV3/config_tracker_IOU.yml");
+    L"/opt/dsl/nas_data/COCO_DGPU/config_tracker_DeepSORT.yml");
+// std::wstring tracker_config_file(
+//     L"/opt/dsl/nas_data/FLL_DGPU/config_tracker_NvDCF_max_perf.yml");
+// std::wstring tracker_config_file(
+//     L"/opt/dsl/nas_data/FLL_DGPU/config_tracker_IOU.yml");
 
 // File name for .dot file output
 static const std::wstring dot_file = L"state-playing";
@@ -60,19 +53,7 @@ void xwindow_key_event_handler(const wchar_t* in_key, void* client_data)
     } else if (key == "Q" or key == "" or key == ""){
         dsl_pipeline_stop(L"pipeline");
         dsl_main_loop_quit();
-    } else if (key >= "0" and key <= "3"){
-        const wchar_t* source;
-        
-        if (dsl_source_name_get(std::stoi(key), &source) == DSL_RESULT_SUCCESS)
-            dsl_tiler_source_show_set(L"tiler", 
-                source, SHOW_SOURCE_TIMEOUT, true);
-    
-    } else if (key == "C"){
-        dsl_tiler_source_show_cycle(L"tiler", SHOW_SOURCE_TIMEOUT);
-
-    } else if (key == "A"){
-        dsl_tiler_source_show_all(L"tiler");
-    }
+    } 
 }
  
 //
@@ -128,6 +109,43 @@ void state_change_listener(uint old_state, uint new_state, void* client_data)
         << ", new state = " << dsl_state_value_to_string(new_state) << std::endl;
 }
 
+uint filter_person(void* buffer, void* client_data)
+{
+    GstBuffer* pGstBuffer = (GstBuffer*)buffer;
+
+    NvDsBatchMeta* pBatchMeta = gst_buffer_get_nvds_batch_meta(pGstBuffer);
+
+    // For each frame in the batched meta data
+    for (NvDsMetaList* pFrameMetaList = pBatchMeta->frame_meta_list;
+        pFrameMetaList; pFrameMetaList = pFrameMetaList->next)
+    {
+        // Check for valid frame data
+        NvDsFrameMeta* pFrameMeta = (NvDsFrameMeta*)(pFrameMetaList->data);
+        if (pFrameMeta != nullptr)
+        {
+            NvDsMetaList* pObjectMetaList = pFrameMeta->obj_meta_list;
+
+            // For each detected object in the frame.
+            while (pObjectMetaList)
+            {
+                // int grid;
+                // Check for valid object data
+                NvDsObjectMeta* pObjectMeta = (NvDsObjectMeta*)(pObjectMetaList->data);
+                
+                int obj_class_id = static_cast<int>(pObjectMeta->class_id);
+
+                if (obj_class_id > 0) {
+                    nvds_remove_obj_meta_from_frame(pFrameMeta, pObjectMeta);
+                }
+
+                pObjectMetaList = pObjectMetaList->next;
+            }
+       }
+    }
+
+    return DSL_PAD_PROBE_OK;
+}
+
 
 int main(int argc, char** argv)
 {  
@@ -135,45 +153,26 @@ int main(int argc, char** argv)
 
     // # Since we're not using args, we can Let DSL initialize GST on first call
     while(true)
-    {
-        // # For each camera, create a new RTSP Source for the specific RTSP URI    
-        retval = dsl_source_rtsp_new(L"rtsp-source-1", rtsp_uri_1.c_str(), DSL_RTP_ALL,     
-            false, 0, 100, 2);
-        if (retval != DSL_RESULT_SUCCESS)    
-            return retval;
-
-        // # For each camera, create a new RTSP Source for the specific RTSP URI    
-        retval = dsl_source_rtsp_new(L"rtsp-source-2", rtsp_uri_2.c_str(), DSL_RTP_ALL,     
-            false, 0, 100, 2);
-        if (retval != DSL_RESULT_SUCCESS)    
-            return retval;
-
-        // # For each camera, create a new RTSP Source for the specific RTSP URI    
-        retval = dsl_source_rtsp_new(L"rtsp-source-3", rtsp_uri_3.c_str(), DSL_RTP_ALL,     
-            false, 0, 100, 2);
-        if (retval != DSL_RESULT_SUCCESS)    
-            return retval;
+    {   
+        retval = dsl_pph_custom_new(L"filtering", filter_person, nullptr);
+            if (retval != DSL_RESULT_SUCCESS) break;
 
         retval = dsl_source_file_new(L"uri-source-1", file_path1.c_str(), true);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        retval = dsl_source_file_new(L"uri-source-2", file_path2.c_str(), true);
-        if (retval != DSL_RESULT_SUCCESS) break;
-        retval = dsl_source_file_new(L"uri-source-3", file_path3.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // // New Primary GIE using the filespecs above, with interval and Id
         retval = dsl_infer_gie_primary_new(L"primary-gie", 
-            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), 4);
+            primary_infer_config_file.c_str(), primary_model_engine_file.c_str(), 0);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // // New IOU Tracker, setting max width and height of input frame
-        retval = dsl_tracker_new(L"iou-tracker", 
-            tracker_config_file.c_str(), 480, 272);
+        retval = dsl_tracker_new(L"deepsort-tracker", 
+            tracker_config_file.c_str(), 1920, 1088);
         if (retval != DSL_RESULT_SUCCESS) break;
 
-        // New Tiler, setting width and height, use default cols/rows set by source count
-        // retval = dsl_tiler_new(L"tiler", TILER_WIDTH, TILER_HEIGHT);
-        // if (retval != DSL_RESULT_SUCCESS) break;
+        retval = dsl_tracker_pph_add(L"deepsort-tracker",
+            L"filtering", DSL_PAD_SINK);
+        if (retval != DSL_RESULT_SUCCESS) break;
 
         // New OSD with text and bbox display enabled. 
         retval = dsl_osd_new(L"on-screen-display", true, false, true, false);
@@ -184,32 +183,14 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // Create a list of Pipeline Components to add to the new Pipeline.
-        const wchar_t* components[] = {L"rtsp-source-1", //L"rtsp-source-2", L"rtsp-source-3",
-            L"primary-gie", L"iou-tracker",
+        const wchar_t* components[] = {L"uri-source-1",
+            L"primary-gie", L"deepsort-tracker",
             L"on-screen-display", L"window-sink", NULL};
 
-        // const wchar_t* components[] = {L"uri-source-1", L"uri-source-2", L"uri-source-3",
-        //     L"primary-gie", L"iou-tracker",
-            // L"on-screen-display", L"window-sink", NULL};
-        
         // Add all the components to our pipeline
         retval = dsl_pipeline_new_component_add_many(L"pipeline", components);
         if (retval != DSL_RESULT_SUCCESS) break;
         
-        // IMPORTANT! in this example we add the Tiler to the Stream-Muxer's output.
-        // The tiled stream is provided as input to the Pirmary GIE
-        // retval = dsl_pipeline_streammux_tiler_add(L"pipeline", L"tiler");
-        // if (retval != DSL_RESULT_SUCCESS) break;
-        
-        // IMPORTANT! explicity set the PGIE batch-size to 1 otherwise the Pipeline will set
-        // it to the number of Sources added to the Pipeline.
-        // retval = dsl_infer_batch_size_set(L"primary-gie", 1);
-        // if (retval != DSL_RESULT_SUCCESS) break;
-            
-        // Enabled the XWindow for full-screen-mode
-        // retval = dsl_pipeline_xwindow_fullscreen_enabled_set(L"pipeline", true);
-        // if (retval != DSL_RESULT_SUCCESS) break;
-
         // Add the EOS listener and XWindow event handler functions defined above
         retval = dsl_pipeline_eos_listener_add(L"pipeline", eos_event_listener, NULL);
         if (retval != DSL_RESULT_SUCCESS) break;

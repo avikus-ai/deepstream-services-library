@@ -7,6 +7,11 @@ FILE(GLOB SOURCES_FILES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/nas.cpp
 )
 
+#FILE(GLOB SOURCES_FILES CONFIGURE_DEPENDS
+#    ${CMAKE_CURRENT_SOURCE_DIR}/nas_rtsp_connection.cpp
+#)
+
+
 ### MAKE TARGET FILE ###
 #ADD_EXECUTABLE(multiple_pipelines.out multiple_pipelines.cpp)
 

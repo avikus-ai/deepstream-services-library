@@ -1797,7 +1797,7 @@ namespace DSL
 
         // Set RTSP latency
         m_latency = latency;
-
+        
         // New RTSP Specific Elementrs for this Source
         m_pPreDecodeTee = DSL_ELEMENT_NEW("tee", name);
         m_pPreDecodeQueue = DSL_ELEMENT_EXT_NEW("queue", name, "decodebin");
@@ -2182,6 +2182,11 @@ namespace DSL
                 m_pParser = DSL_ELEMENT_NEW("h265parse", GetCStrName());
                 m_pDepay = DSL_ELEMENT_NEW("rtph265depay", GetCStrName());
             }
+            else if (encoding.find("JPEG") != std::string::npos)
+            {
+                m_pParser = DSL_ELEMENT_NEW("jpegparse", GetCStrName());
+                m_pDepay = DSL_ELEMENT_NEW("rtpjpegdepay", GetCStrName());
+            }
             else
             {
                 LOG_ERROR("Unsupported encoding = '" << encoding << "' for RtspSourceBitnr '" 
@@ -2234,6 +2239,7 @@ namespace DSL
         
         if (name.find("x-rtp") != std::string::npos and 
             media.find("video")!= std::string::npos)
+            // !(encoding.find("JPEG") != std::string::npos)
         {
             m_pGstStaticSinkPad = gst_element_get_static_pad(m_pDepay->GetGstElement(), "sink");
             if (!m_pGstStaticSinkPad)
