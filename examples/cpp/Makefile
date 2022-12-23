@@ -27,7 +27,8 @@
 .PHONY: all clean
 CXX = g++
 #SRCS = $(wildcard *.cpp)
-SRCS = tracker_test.cpp
+SRCS = rtsp2jpeg_player_to_test_connections.cpp
+#SRCS = tracker_test.cpp
 SRCS := $(filter-out nas.cpp, $(SRCS))
 SRCS := $(filter-out cmd.cpp, $(SRCS))
 

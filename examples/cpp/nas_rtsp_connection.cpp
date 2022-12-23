@@ -8,7 +8,7 @@
 // Set Camera RTSP URI's - these must be set to valid rtsp uri's for camera's on your network
 // RTSP Source URI
 // std::wstring rtsp_uri_1 = L"rtsp://192.168.1.140:554/jpeg";
-std::wstring rtsp_uri_1 = L"rtsp://admin:11qqaa..@192.168.1.145:554/trackID=2";
+std::wstring rtsp_uri_1 = L"rtsp://admin:11qqaa..@192.168.1.145:554/trackID=1";
 std::wstring rtsp_uri_2 = L"rtsp://192.168.1.142:554/h264";
 std::wstring rtsp_uri_3 = L"rtsp://192.168.1.140:554/h264";
 

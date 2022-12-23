@@ -1,0 +1,181 @@
+0:00:00.007689952 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:136:GetServices:[00m  : Services Initialization
+0:00:00.007812473 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesInfo.cpp:58:InfoInitDebugSettings:[00m  : Pre-start log level  = 1,DSL:4
+0:00:00.007822040 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesInfo.cpp:59:InfoInitDebugSettings:[00m  : Pre-start Log file  = log_fail_reconnection.txt
+0:00:00.008193942 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:154:GetServices:[00m  : DSL Version: v0.26.alpha
+0:00:00.008238177 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:165:GetServices:[00m  : Libcurl Initialized Successfully
+0:00:00.008244714 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:166:GetServices:[00m  : Version: 7.58.0
+0:00:00.008248743 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:167:GetServices:[00m  : Host: x86_64-pc-linux-gnu
+0:00:00.008256279 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:168:GetServices:[00m  : Features: 4179869
+0:00:00.008260427 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:169:GetServices:[00m  : SSL Version: GnuTLS/3.5.18
+0:00:00.008264118 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:170:GetServices:[00m  : Libz Version: 1.2.11
+0:00:00.008270019 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:171:GetServices:[00m  : Protocols: 0x7f3066a0a620
+0:00:00.014254980 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:999:DecodeSourceBintr:[00m  : URI Path for File Source 'rtsp-source' = rtsp://192.168.1.140:554/jpeg
+0:00:00.014994180 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesSource.cpp:1410:SourceRtspNew:[00m  : New RTSP Source 'rtsp-source' created successfully
+0:00:00.016665491 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesSink.cpp:212:SinkWindowNew:[00m  : New Window Sink 'window-sink' created successfully
+0:00:00.017058870 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesPlayer.cpp:60:PlayerNew:[00m  : New Player 'player' created successfully
+0:00:00.017107769 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesPlayer.cpp:655:PlayerXWindowKeyEventHandlerAdd:[00m  : Player 'player' added X Window Key Event Handler successfully
+0:00:30.045853184 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:759:SetState:[00m  : Changing state to 'PLAYING' for Bintr 'player'
+0:00:30.050375719 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineXWinMgr.cpp:250:HandleBusSyncMessage:[00m  : Prepare window handle received from source window-sink-nveglglessink
+0:00:30.050482352 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineXWinMgr.cpp:373:CreateXWindow:[00m  : Creating new XWindow: x-offset = 0, y-offset = 0, width = 1920, height = 1080
+0:00:30.050910937 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:765:SetState:[00m  : State change completed synchronously for Bintr'player'
+0:00:30.050940584 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesPlayer.cpp:710:PlayerPlay:[00m  : Player 'player' transitioned to a state of PLAYING successfully
+0:00:30.050962509 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: need-context
+0:00:30.050970944 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: have-context
+0:00:30.051004757 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:341:HandleStateChanged:[00m  : GST_STATE_NULL => GST_STATE_READY
+0:00:30.051019795 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051026386 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051037230 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051043056 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051051360 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051058430 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051064373 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051072882 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.051078939 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051088037 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:341:HandleStateChanged:[00m  : GST_STATE_READY => GST_STATE_PAUSED
+0:00:30.051094455 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.051100381 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: new-clock
+0:00:30.051119232 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.051128244 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:341:HandleStateChanged:[00m  : GST_STATE_PAUSED => GST_STATE_PLAYING
+0:00:30.051138425 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.055360176 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.068599827 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.070610958 [331m  450[00m 0x55a75ffd4000 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2634:HandleSelectStream:[00m  : Media = 'video' for RtspSourceBitnr 'rtsp-source'
+0:00:30.070624671 [331m  450[00m 0x55a75ffd4000 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2635:HandleSelectStream:[00m  : Encoding = 'JPEG' for RtspSourceBitnr 'rtsp-source'
+0:00:30.072751091 [331m  450[00m 0x55a75ffd4000 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2778:HandleDecodeElementOnPadAdded:[00m  : Caps structs name video/x-raw
+0:00:30.072871461 [331m  450[00m 0x55a75ffd4000 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2805:HandleDecodeElementOnPadAdded:[00m  : Starting stream management for RTSP Source 'rtsp-source'
+0:00:30.072885428 [331m  450[00m 0x55a75ffd4000 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from NULL to READY for RtspSourceBintr 'rtsp-source'
+0:00:30.072896679 [331m  450[00m 0x55a75ffd4000 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2810:HandleDecodeElementOnPadAdded:[00m  : Video decode linked for RTSP Source 'rtsp-source'
+0:00:30.074852707 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.074884383 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from READY to PLAYING for RtspSourceBintr 'rtsp-source'
+0:00:30.078461963 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.078483144 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.078541883 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.078556125 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.081133321 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.081175447 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.081189394 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.081216570 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:30.081225287 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.090539490 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.090694865 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.090903666 [331m  450[00m 0x7f2fe0004b70 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2746:HandleSourceElementOnPadAdded:[00m  : Caps structs name application/x-rtp
+0:00:30.090918510 [331m  450[00m 0x7f2fe0004b70 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2747:HandleSourceElementOnPadAdded:[00m  : Media = 'video' for RtspSourceBitnr 'rtsp-source'
+0:00:30.090942233 [331m  450[00m 0x7f2fe0004b70 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2766:HandleSourceElementOnPadAdded:[00m  : Video decode linked for RTSP source 'rtsp-source'
+0:00:30.091200896 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: stream-start
+0:00:30.274216270 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: element
+0:00:30.327468297 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:30.327562425 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.367370590 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2851:StreamManager:[00m  : Buffer timeout of 2 seconds exceeded for source 'rtsp-source'
+0:00:38.367493500 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2906:ReconnectionManager:[00m  : Resetting RTSP Source 'rtsp-source' with retry count = 1
+0:00:38.367547855 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:759:SetState:[00m  : Changing state to 'NULL' for Bintr 'rtsp-source'
+0:00:38.403127569 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:765:SetState:[00m  : State change completed synchronously for Bintr'rtsp-source'
+0:00:38.403214147 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from PLAYING to NULL for RtspSourceBintr 'rtsp-source'
+0:00:38.403249635 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2865:StreamManager:[00m  : Starting Re-connection Manager for source 'rtsp-source'
+0:00:38.403320248 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:38.403364995 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:38.403392742 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.403427866 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.403461219 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.403503172 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:38.403549031 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:38.403619117 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.403686243 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.403723180 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.403754574 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:38.403909335 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:38.404280583 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:39.406874838 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslNodetr.h:800:SyncStateWithParent:[00m  : State change completed synchronously for Bintr'rtsp-source'
+0:00:39.407071794 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:39.407135227 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:39.407180129 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:39.407234424 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:39.407287171 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:39.407383488 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:39.407444176 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:40.403703329 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from NULL to PLAYING for RtspSourceBintr 'rtsp-source'
+0:00:40.403729803 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2942:ReconnectionManager:[00m  : Re-connection complete for RTSP Source'rtsp-source'
+0:00:42.405614340 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2851:StreamManager:[00m  : Buffer timeout of 2 seconds exceeded for source 'rtsp-source'
+0:00:42.405649360 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2906:ReconnectionManager:[00m  : Resetting RTSP Source 'rtsp-source' with retry count = 1
+0:00:42.405662513 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:759:SetState:[00m  : Changing state to 'NULL' for Bintr 'rtsp-source'
+0:00:42.406018548 [331m  450[00m 0x55a7600c1800 [31;01mERROR  [00m [00;04m             default gstrtspconnection.c:1004:gst_rtsp_connection_connect_with_response:[00m failed to connect: Operation was cancelled
+0:00:42.406053344 [331m  450[00m 0x55a7600c1800 [31;01mERROR  [00m [00m             rtspsrc gstrtspsrc.c:4702:gst_rtsp_conninfo_connect:<rtsp-source-rtspsrc>[00m Could not connect to server. (Generic error)
+0:00:42.406289086 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:765:SetState:[00m  : State change completed synchronously for Bintr'rtsp-source'
+0:00:42.406320326 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from PLAYING to NULL for RtspSourceBintr 'rtsp-source'
+0:00:42.406338108 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2865:StreamManager:[00m  : Starting Re-connection Manager for source 'rtsp-source'
+0:00:42.406376312 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:42.406393085 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:42.406413483 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:42.406447851 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:42.406475536 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:42.406490366 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:42.406525993 [331m  450[00m 0x55a75ff612d0 [31;01mERROR  [00m [00m                 DSL src/DslPipelineStateMgr.cpp:413:HandleErrorMessage:[00m  : Error message 'Could not open resource for reading and writing.' received from 'rtsp-source-rtspsrc'
+0:00:42.406585329 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:42.406600272 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:43.408647322 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslNodetr.h:800:SyncStateWithParent:[00m  : State change completed synchronously for Bintr'rtsp-source'
+0:00:43.408725219 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:43.408751745 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:43.408783921 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:43.408800782 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:43.408815479 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:43.408854548 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:43.408869483 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:43.408889940 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:43.408909629 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:44.407605216 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from NULL to PLAYING for RtspSourceBintr 'rtsp-source'
+0:00:44.407707166 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2942:ReconnectionManager:[00m  : Re-connection complete for RTSP Source'rtsp-source'
+0:00:46.409305029 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2851:StreamManager:[00m  : Buffer timeout of 2 seconds exceeded for source 'rtsp-source'
+0:00:46.409415883 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2906:ReconnectionManager:[00m  : Resetting RTSP Source 'rtsp-source' with retry count = 1
+0:00:46.409469438 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:759:SetState:[00m  : Changing state to 'NULL' for Bintr 'rtsp-source'
+0:00:46.410351264 [331m  450[00m 0x7f2ff006dca0 [31;01mERROR  [00m [00;04m             default gstrtspconnection.c:1004:gst_rtsp_connection_connect_with_response:[00m failed to connect: Operation was cancelled
+0:00:46.410429237 [331m  450[00m 0x7f2ff006dca0 [31;01mERROR  [00m [00m             rtspsrc gstrtspsrc.c:4702:gst_rtsp_conninfo_connect:<rtsp-source-rtspsrc>[00m Could not connect to server. (Generic error)
+0:00:46.411074696 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL DslNodetr.h:765:SetState:[00m  : State change completed synchronously for Bintr'rtsp-source'
+0:00:46.411163108 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from PLAYING to NULL for RtspSourceBintr 'rtsp-source'
+0:00:46.411206428 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2865:StreamManager:[00m  : Starting Re-connection Manager for source 'rtsp-source'
+0:00:46.411311657 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:46.411368229 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:46.411424007 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:46.411491901 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:46.411525626 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:46.411621345 [331m  450[00m 0x55a75ff612d0 [31;01mERROR  [00m [00m                 DSL src/DslPipelineStateMgr.cpp:413:HandleErrorMessage:[00m  : Error message 'Could not open resource for reading and writing.' received from 'rtsp-source-rtspsrc'
+0:00:46.411709597 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:46.411747712 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:46.411780568 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.412223748 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslNodetr.h:800:SyncStateWithParent:[00m  : State change completed synchronously for Bintr'rtsp-source'
+0:00:47.412261154 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.412272705 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.412281030 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.412291732 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.412325453 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.412332687 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.412361134 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.412370406 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.412378980 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.412913414 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.423970109 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.425852885 [331m  450[00m 0x55a75ffd4320 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2634:HandleSelectStream:[00m  : Media = 'video' for RtspSourceBitnr 'rtsp-source'
+0:00:47.425867704 [331m  450[00m 0x55a75ffd4320 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2635:HandleSelectStream:[00m  : Encoding = 'JPEG' for RtspSourceBitnr 'rtsp-source'
+0:00:47.426189320 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.430810179 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.430831515 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.430843642 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.430917117 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.434174738 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.434196388 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.434211967 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: progress
+0:00:47.434225212 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.434237510 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.454401418 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.454454122 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.454638429 [331m  450[00m 0x7f2fdc004230 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2746:HandleSourceElementOnPadAdded:[00m  : Caps structs name application/x-rtp
+0:00:47.454655040 [331m  450[00m 0x7f2fdc004230 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2747:HandleSourceElementOnPadAdded:[00m  : Media = 'video' for RtspSourceBitnr 'rtsp-source'
+0:00:47.454686061 [331m  450[00m 0x7f2fdc004230 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2766:HandleSourceElementOnPadAdded:[00m  : Video decode linked for RTSP source 'rtsp-source'
+0:00:47.454933360 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:326:HandleBusWatchMessage:[00m  : Unhandled message type:: stream-start
+0:00:47.564177556 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:47.564254588 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslPipelineStateMgr.cpp:304:HandleBusWatchMessage:[00m  : Message type:: stream-status
+0:00:48.411454183 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2998:SetCurrentState:[00m  : Changing state from NULL to PLAYING for RtspSourceBintr 'rtsp-source'
+0:00:48.411481280 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslSourceBintr.cpp:2942:ReconnectionManager:[00m  : Re-connection complete for RTSP Source'rtsp-source'
+0:00:53.596164151 [331m  450[00m 0x55a75ffd40f0 [36mINFO   [00m [00m                 DSL src/DslPipelineXWinMgr.cpp:293:HandleXWindowEvents:[00m  : Button '1' pressed: xpos = 997: ypos = 508
+0:01:13.278417543 [331m  450[00m 0x55a75ffd40f0 [36mINFO   [00m [00m                 DSL src/DslPipelineXWinMgr.cpp:293:HandleXWindowEvents:[00m  : Button '1' pressed: xpos = 1334: ypos = 374
+0:02:09.572409032 [331m  450[00m 0x55a75ffd40f0 [36mINFO   [00m [00m                 DSL src/DslPipelineXWinMgr.cpp:293:HandleXWindowEvents:[00m  : Button '1' pressed: xpos = 1408: ypos = 221
+0:02:12.273126417 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServices.cpp:253:ReturnValueToString:[00m  : Result = 0 = DSL_RESULT_SUCCESS
+0:02:12.273209460 [331m  450[00m 0x55a75ff612d0 [36mINFO   [00m [00m                 DSL src/DslServicesPipeline.cpp:96:PipelineDeleteAll:[00m  : All Pipelines deleted successfully

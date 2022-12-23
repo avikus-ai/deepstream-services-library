@@ -34,8 +34,8 @@ THE SOFTWARE.
 
 // Set Camera RTSP URI's - these must be set to valid rtsp uri's for camera's on your network
 // RTSP Source URI
-// std::wstring rtsp_uri_1 = L"rtsp://192.168.1.140:554/jpeg";
-std::wstring rtsp_uri_1 = L"rtsp://admin:11qqaa..@192.168.1.145:554/trackID=1";
+std::wstring rtsp_uri_1 = L"rtsp://192.168.1.140:554/jpeg";
+// std::wstring rtsp_uri_1 = L"rtsp://admin:11qqaa..@192.168.1.145:554/trackID=1";
 // std::wstring rtsp_uri_1 = L"rtsp://admin:Password1!@10.0.0.37:554/cam/realmonitor?channel=1&subtype=1";
 std::wstring rtsp_uri_2 = L"rtsp://admin:Password1!@10.0.0.37:554/cam/realmonitor?channel=2&subtype=1";
 

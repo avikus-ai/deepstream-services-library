@@ -10,15 +10,18 @@
 
 
 // File path for the single File Source
+//std::wstring file_path1(
+//    L"/opt/dsl/nas_data/sample_video/deepsort_person_sample.mp4");
+
 std::wstring file_path1(
-    L"/opt/dsl/nas_data/sample_video/deepsort_person_sample.mp4");
+	L"/opt/nvidia/deepstream/deepstream-6.0/samples/streams/sample_1080p_h264.mp4");
 
 std::wstring primary_infer_config_file(
     L"/opt/dsl/nas_data/COCO_DGPU/config_infer_primary_yoloV5s.txt");
 std::wstring primary_model_engine_file(
     L"/opt/dsl/nas_data/COCO_DGPU/model_b1_gpu0_fp16.engine");
 std::wstring tracker_config_file(
-    L"/opt/dsl/nas_data/COCO_DGPU/config_tracker_DeepSORT.yml");
+    L"/opt/dsl/nas_data/COCO_DGPU/config_tracker_DeepSORT_with_osnet.yml");
 // std::wstring tracker_config_file(
 //     L"/opt/dsl/nas_data/FLL_DGPU/config_tracker_NvDCF_max_perf.yml");
 // std::wstring tracker_config_file(
