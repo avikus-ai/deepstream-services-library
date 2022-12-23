@@ -2682,11 +2682,6 @@ namespace DSL
                 // the decode's source pad is available so we can link now once added as a child.
                 linkDecoderNow = true;
             }
-            else if (encoding.find("JPEG") != std::string::npos)
-            {
-                m_pParser = DSL_ELEMENT_NEW("jpegparse", GetCStrName());
-                m_pDepay = DSL_ELEMENT_NEW("rtpjpegdepay", GetCStrName());
-            }
             else
             {
                 LOG_ERROR("Unsupported encoding = '" << encoding << "' for RtspSourceBitnr '" 
