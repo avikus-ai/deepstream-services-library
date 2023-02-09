@@ -96,6 +96,10 @@ struct ClientData
     std::wstring window_sink;
 };
 
+// Client data for two Pipelines
+ClientData client_data_1(1);
+ClientData client_data_2(2);
+
 // Prototypes
 DslReturnType create_pipeline(ClientData* client_data);
 DslReturnType delete_pipeline(ClientData* client_data);
@@ -110,21 +114,27 @@ static void xwindow_key_event_handler(const wchar_t* in_key, void* client_data)
     std::wstring wkey(in_key); 
     std::string key(wkey.begin(), wkey.end());
 
-    ClientData* c_data = (ClientData*) client_data;
-
+    // ClientData* c_data = (ClientData*) client_data;
+    ClientData* c_data1 = &client_data_1;
+    ClientData* c_data2 = &client_data_2;
+    
     key = std::toupper(key[0]);
     if(key == "P"){
-        dsl_pipeline_pause(c_data->pipeline.c_str());
+        dsl_pipeline_pause(c_data1->pipeline.c_str());
+        dsl_pipeline_pause(c_data2->pipeline.c_str());
     } else if(key == "S"){
-        dsl_pipeline_stop(c_data->pipeline.c_str());
+        dsl_pipeline_stop(c_data1->pipeline.c_str());
+        dsl_pipeline_stop(c_data2->pipeline.c_str());
     } else if (key == "R"){
-        dsl_pipeline_play(c_data->pipeline.c_str());
+        dsl_pipeline_play(c_data1->pipeline.c_str());
+        dsl_pipeline_play(c_data2->pipeline.c_str());
     } else if (key == "Q"){
         std::wcout << L"Pipeline Quit" << std::endl;
 
         // quiting the main loop will allow the pipeline thread to 
         // stop and delete the pipeline and its components
-        dsl_pipeline_main_loop_quit(c_data->pipeline.c_str());
+        dsl_pipeline_main_loop_quit(c_data1->pipeline.c_str());
+        dsl_pipeline_main_loop_quit(c_data2->pipeline.c_str());
     }
 }
 
@@ -300,15 +310,10 @@ int main(int argc, char** argv)
         retval = dsl_player_new(L"player", L"file-source", L"interpipe-sink");
         if (retval != DSL_RESULT_SUCCESS) break;
     
-        // Client data for two Pipelines
-        ClientData client_data_1(1);
-        ClientData client_data_2(2);
-
         // --------------------------------------------------------------------------
         // Create the first Pipeline with common components 
         // - interpipe source, OSD, and window sink,
         // - then add PGIE and Tracker using first set of configs
-        
         retval = create_pipeline(&client_data_1);
         if (retval != DSL_RESULT_SUCCESS) break;
 
@@ -378,7 +383,7 @@ int main(int argc, char** argv)
     }
 
     // Print out the final result
-    std::cout << dsl_return_value_to_string(retval) << std::endl;
+    std::wcout << dsl_return_value_to_string(retval) << std::endl;
 
     dsl_delete_all();
 

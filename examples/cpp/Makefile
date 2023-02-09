@@ -26,7 +26,11 @@
 
 .PHONY: all clean
 CXX = g++
-SRCS = $(wildcard *.cpp)
+#SRCS = $(wildcard *.cpp)
+#SRCS = rtsp2jpeg_player_to_test_connections.cpp
+SRCS = deepsort_person_track_test.cpp
+SRCS := $(filter-out nas.cpp, $(SRCS))
+SRCS := $(filter-out cmd.cpp, $(SRCS))
 
 TARGET_DEVICE = $(shell gcc -dumpmachine | cut -f1 -d -)
 
@@ -46,14 +50,17 @@ OBJS:= $(SRCS:.c=.o)
 OBJS:= $(OBJS:.cpp=.o)
 APP:= $(patsubst %.cpp,%.out,$(SRCS))
 
+# $(info $$APP is [${APP}])
+
 CXXFLAGS+= -I$(DS_INC_INSTALL_DIR) \
 	-std=$(CXX_VERSION) \
 	-I$(INC_INSTALL_DIR) \
 	-I$(DS_SRC_INSTALL_DIR)/gst-plugins/gst-nvdspreprocess/include \
 	-I/usr/include/gstreamer-$(GSTREAMER_VERSION) \
 	-I/usr/include/glib-$(GLIB_VERSION) \
-	-I/usr/include/glib-$(GLIB_VERSION)/glib
-	
+	-I/usr/include/glib-$(GLIB_VERSION)/glib \
+	-Iyaml
+
 LIBS+= -L$(DS_LIB_INSTALL_DIR) \
 	-ldsl \
 	-lnvdsgst_meta \
@@ -75,7 +82,7 @@ debug: CXXFLAGS += -DDEBUG -g
 debug: $(APP)
 
 %.out: %.cpp $(INCS)
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
+	$(CXX) $(CXXFLAGS) yaml/yaml.cpp -o $@ $< $(LIBS)
 
 clean:
 	rm -rf $(APP)

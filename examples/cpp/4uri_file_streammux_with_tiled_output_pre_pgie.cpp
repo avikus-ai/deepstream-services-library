@@ -1,39 +1,3 @@
-
-/*
-The MIT License
-
-Copyright (c) 2021-2022, Prominence AI, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in-
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
-
-/**
- * This example demonstrates how a Pipeline's Stream-Muxer output can be
- * tiled prior to Primary GIE. The Tiler can be set to show an individual source
- * button press events -- the 2D Tiler's output stream to: 
- *   - show a specific source on key input (source No.) or mouse click on tile.
- *   - to return to showing all sources on 'A' key input, mouse click, or timeout.
- *   - to cycle through all sources on 'C' input showing each for timeout.
- * 
- * Note: timeout is controled with the global variable SHOW_SOURCE_TIMEOUT 
- */
-
 #include <iostream>
 #include <glib.h>
 #include <X11/Xlib.h>
@@ -60,8 +24,8 @@ std::wstring tracker_config_file(
 // File name for .dot file output
 static const std::wstring dot_file = L"state-playing";
 
-int TILER_WIDTH = DSL_STREAMMUX_DEFAULT_WIDTH;
-int TILER_HEIGHT = DSL_STREAMMUX_DEFAULT_HEIGHT;
+int TILER_WIDTH = DSL_STREAMMUX_1K_HD_WIDTH; 
+int TILER_HEIGHT = DSL_STREAMMUX_1K_HD_HEIGHT;
 
 
 // Window Sink Dimensions - used to create the sink, however, in this
@@ -245,11 +209,10 @@ int main(int argc, char** argv)
     }
 
     // # Print out the final result
-    std::cout << dsl_return_value_to_string(retval) << std::endl;
+    std::wcout << dsl_return_value_to_string(retval) << std::endl;
 
     dsl_delete_all();
 
     std::cout<<"Goodbye!"<<std::endl;  
     return 0;
 }
-        

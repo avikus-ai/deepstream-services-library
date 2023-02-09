@@ -49,8 +49,8 @@ BUILD_INTER_PIPE:=false
 
 # To enable the Non Maximum Processor (NMP) Pad Probe Handler (PPH)
 # - set BUILD_NMP_PPH:=true and NUM_CPP_PATH:=<path-to-numcpp-include-folder>
-BUILD_NMP_PPH:=false
-NUM_CPP_PATH:=
+BUILD_NMP_PPH:=true
+NUM_CPP_PATH:=../NumCpp/include
 
 SRC_INSTALL_DIR?=/opt/nvidia/deepstream/deepstream/sources
 INC_INSTALL_DIR?=/opt/nvidia/deepstream/deepstream/sources/includes
@@ -114,6 +114,9 @@ CFLAGS+= -I$(INC_INSTALL_DIR) \
 	-DBUILD_INTER_PIPE=$(BUILD_INTER_PIPE) \
 	-DBUILD_NMP_PPH=$(BUILD_NMP_PPH) \
 	-DBUILD_MESSAGE_SINK=$(BUILD_MESSAGE_SINK) \
+	-DNVDS_DCF_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvdcf.so"' \
+	-DNVDS_KLT_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_klt.so"' \
+	-DNVDS_IOU_LIB='"$(LIB_INSTALL_DIR)/libnvds_mot_iou.so"' \
 	-DNVDS_MOT_LIB='"$(LIB_INSTALL_DIR)/libnvds_nvmultiobjecttracker.so"' \
 	-DNVDS_AMQP_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_amqp_proto.so"' \
 	-DNVDS_AZURE_PROTO_LIB='L"$(LIB_INSTALL_DIR)/libnvds_azure_proto.so"' \
@@ -175,7 +178,7 @@ PKGS:= gstreamer-$(GSTREAMER_VERSION) \
 	gstreamer-video-$(GSTREAMER_VERSION) \
 	gstreamer-rtsp-server-$(GSTREAMER_VERSION) \
 	x11 \
-	opencv4
+	opencv
 
 ifeq ($(shell test $(GSTREAMER_SUB_VERSION) -gt 16; echo $$?),0)
 PKGS+= gstreamer-sdp-$(GSTREAMER_SDP_VERSION) \

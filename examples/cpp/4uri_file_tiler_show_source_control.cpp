@@ -253,7 +253,7 @@ int main(int argc, char** argv)
         if (retval != DSL_RESULT_SUCCESS) break;
             
         // Enabled the XWindow for full-screen-mode
-        retval = dsl_pipeline_xwindow_fullscreen_enabled_set(L"pipeline", true);
+        retval = dsl_pipeline_xwindow_fullscreen_enabled_set(L"pipeline", false);
         if (retval != DSL_RESULT_SUCCESS) break;
 
         // Add the EOS listener and XWindow event handler functions defined above

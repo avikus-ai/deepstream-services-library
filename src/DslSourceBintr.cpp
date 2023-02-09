@@ -2510,8 +2510,11 @@ namespace DSL
         , m_previousState(GST_STATE_NULL)
         , m_listenerNotifierTimerId(0)
     {
-        m_isLive = true;
+        LOG_FUNC();
 
+        // Set RTSP latency
+        m_latency = latency;
+        
         // New RTSP Specific Elementrs for this Source
         m_pSourceElement = DSL_ELEMENT_NEW("rtspsrc", name);
         
@@ -3032,6 +3035,7 @@ namespace DSL
         
         if (name.find("x-rtp") != std::string::npos and 
             media.find("video")!= std::string::npos)
+            // !(encoding.find("JPEG") != std::string::npos)
         {
             // get the Depays static sink pad so we can link the rtspsrc elementr
             // to the depay elementr.

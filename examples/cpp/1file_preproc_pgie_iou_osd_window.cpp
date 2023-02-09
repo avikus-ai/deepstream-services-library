@@ -112,7 +112,6 @@ int main(int argc, char** argv)
     // Since we're not using args, we can Let DSL initialize GST on first call    
     while(true) 
     {    
-
         // New File Source
         retval = dsl_source_file_new(L"uri-source-1", uri_h265.c_str(), true);
         if (retval != DSL_RESULT_SUCCESS) break;
@@ -181,7 +180,7 @@ int main(int argc, char** argv)
     }
     
     // Print out the final result
-    std::cout << dsl_return_value_to_string(retval) << std::endl;
+    std::wcout << dsl_return_value_to_string(retval) << std::endl;
 
     dsl_delete_all();
 
